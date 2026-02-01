@@ -189,8 +189,8 @@ async function startGame() {
         const playerIds = Object.keys(players);
         const spyIndex = Math.floor(Math.random() * playerIds.length);
 
-        // Shuffle animal names
-        const shuffledAnimals = [...animalNames].sort(() => Math.random() - 0.5);
+        // Pick ONE common animal for everyone
+        const commonAnimal = animalNames[Math.floor(Math.random() * animalNames.length)];
 
         // Assign roles to each player
         const updates = {};
@@ -198,7 +198,7 @@ async function startGame() {
             if (index === spyIndex) {
                 updates[`players/${playerId}/role`] = '🕵️ SPY';
             } else {
-                updates[`players/${playerId}/role`] = shuffledAnimals[index];
+                updates[`players/${playerId}/role`] = commonAnimal;
             }
         });
 
