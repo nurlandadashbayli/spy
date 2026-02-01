@@ -61,6 +61,8 @@ const roleDisplay = document.getElementById('role-display');
 const gamePlayersList = document.getElementById('game-players-list');
 const resetLobbyBtn = document.getElementById('reset-lobby-btn');
 const newGameBtn = document.getElementById('new-game-btn');
+const joinSection = document.getElementById('join-section');
+const lobbyControls = document.getElementById('lobby-controls');
 
 // Room reference (single room for all players)
 const roomRef = ref(database, 'game/room');
@@ -126,9 +128,9 @@ async function joinGame() {
         await set(newPlayerRef, gameState.currentPlayer);
         console.log('✅ Joined game!');
 
-        // Show waiting area
-        playersWaiting.style.display = 'block';
-        document.querySelector('.card:first-of-type').style.display = 'none';
+        // Update UI state
+        joinSection.style.display = 'none';
+        lobbyControls.style.display = 'block';
 
     } catch (error) {
         console.error('Error joining game:', error);
@@ -315,8 +317,10 @@ function resetLocalState() {
     gameState.gameStarted = false;
 
     playerNameInput.value = '';
-    playersWaiting.style.display = 'none';
-    document.querySelector('.card:first-of-type').style.display = 'block';
+
+    // UI Reset
+    joinSection.style.display = 'block';
+    lobbyControls.style.display = 'none';
 }
 
 // Clean up on page unload

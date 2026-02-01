@@ -21,7 +21,8 @@
                 <p class="game-subtitle">Find the spy among your friends!</p>
             </div>
 
-            <div class="card">
+            <!-- Join Game Section -->
+            <div id="join-section" class="card">
                 <div class="input-group">
                     <label for="player-name">Enter Your Name</label>
                     <input type="text" id="player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
@@ -29,14 +30,22 @@
                 <button id="join-btn" class="btn btn-primary">Join Game</button>
             </div>
 
-            <div id="players-waiting" class="card" style="display: none;">
+            <!-- Player List Section (Always Visible) -->
+            <div id="players-waiting" class="card">
                 <h3>Players in Lobby</h3>
+
+                <!-- Lobby Controls (Only visible after joining) -->
+                <div id="lobby-controls" style="display: none; margin-bottom: 1rem;">
+                    <p class="waiting-text" style="font-weight: bold; color: #4CAF50;">You have joined!</p>
+                    <div class="button-group">
+                        <button id="start-game-btn" class="btn btn-primary" disabled>Start Game</button>
+                        <button id="leave-btn" class="btn btn-secondary">Leave</button>
+                    </div>
+                </div>
+
                 <div id="players-list" class="players-list"></div>
                 <p class="waiting-text">Waiting for more players...</p>
-                <div class="button-group">
-                    <button id="start-game-btn" class="btn btn-primary" disabled>Start Game</button>
-                    <button id="leave-btn" class="btn btn-secondary">Leave</button>
-                </div>
+
                 <button id="reset-lobby-btn" class="btn btn-danger" style="margin-top: 1rem; width: 100%;">Reset Lobby
                     (Kick All)</button>
             </div>
