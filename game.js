@@ -59,6 +59,7 @@ const startGameBtn = document.getElementById('start-game-btn');
 const leaveBtn = document.getElementById('leave-btn');
 const roleDisplay = document.getElementById('role-display');
 const gamePlayersList = document.getElementById('game-players-list');
+const resetLobbyBtn = document.getElementById('reset-lobby-btn');
 const newGameBtn = document.getElementById('new-game-btn');
 
 // Room reference (single room for all players)
@@ -74,6 +75,7 @@ playerNameInput.addEventListener('keypress', (e) => {
 startGameBtn.addEventListener('click', startGame);
 leaveBtn.addEventListener('click', leaveGame);
 newGameBtn.addEventListener('click', resetGame);
+resetLobbyBtn.addEventListener('click', resetLobby);
 
 // Listen for players changes
 onValue(playersRef, (snapshot) => {
@@ -280,6 +282,29 @@ async function resetGame() {
     } catch (error) {
         console.error('Error resetting game:', error);
         alert('Failed to reset game. Please try again.');
+    }
+}
+
+// Reset Lobby function (Global Cleanup)
+async function resetLobby() {
+    if (confirm('Are you sure? This will kick ALL players and reset the lobby.')) {
+        try {
+            console.log('Resetting lobby...');
+
+            // Delete the entire players node
+            await remove(playersRef);
+
+            // Ensure status is lobby
+            await update(roomRef, {
+                status: 'lobby'
+            });
+
+            console.log('✅ Lobby reset successful');
+
+        } catch (error) {
+            console.error('Error resetting lobby:', error);
+            alert('Failed to reset lobby: ' + error.message);
+        }
     }
 }
 
