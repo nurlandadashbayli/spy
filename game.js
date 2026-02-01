@@ -64,20 +64,27 @@ const newGameBtn = document.getElementById('new-game-btn');
 const joinSection = document.getElementById('join-section');
 const lobbyControls = document.getElementById('lobby-controls');
 
+// Ensure essential elements exist
+if (!joinSection || !lobbyControls) {
+    console.error('Critical DOM elements missing!');
+}
+
 // Room reference (single room for all players)
 const roomRef = ref(database, 'game/room');
 const playersRef = ref(database, 'game/room/players');
 const gameStatusRef = ref(database, 'game/room/status');
 
 // Event Listeners
-joinBtn.addEventListener('click', joinGame);
-playerNameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') joinGame();
-});
-startGameBtn.addEventListener('click', startGame);
-leaveBtn.addEventListener('click', leaveGame);
-newGameBtn.addEventListener('click', resetGame);
-resetLobbyBtn.addEventListener('click', resetLobby);
+if (joinBtn) joinBtn.addEventListener('click', joinGame);
+if (playerNameInput) {
+    playerNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') joinGame();
+    });
+}
+if (startGameBtn) startGameBtn.addEventListener('click', startGame);
+if (leaveBtn) leaveBtn.addEventListener('click', leaveGame);
+if (newGameBtn) newGameBtn.addEventListener('click', resetGame);
+if (resetLobbyBtn) resetLobbyBtn.addEventListener('click', resetLobby);
 
 // Listen for players changes
 onValue(playersRef, (snapshot) => {
@@ -129,8 +136,8 @@ async function joinGame() {
         console.log('✅ Joined game!');
 
         // Update UI state
-        joinSection.style.display = 'none';
-        lobbyControls.style.display = 'block';
+        if (joinSection) joinSection.style.display = 'none';
+        if (lobbyControls) lobbyControls.style.display = 'block';
 
     } catch (error) {
         console.error('Error joining game:', error);
@@ -319,8 +326,8 @@ function resetLocalState() {
     playerNameInput.value = '';
 
     // UI Reset
-    joinSection.style.display = 'block';
-    lobbyControls.style.display = 'none';
+    if (joinSection) joinSection.style.display = 'block';
+    if (lobbyControls) lobbyControls.style.display = 'none';
 }
 
 // Clean up on page unload
