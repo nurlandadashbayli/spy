@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Multiplayer Spy Game - Find the spy among your friends!">
+    <title>Spy Game - Who's the Spy?</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="screen active">
+            <div class="game-header">
+                <h1 class="game-title">🕵️ Spy Game</h1>
+                <p class="game-subtitle">Find the spy among your friends!</p>
+            </div>
+
+            <div class="card">
+                <div class="input-group">
+                    <label for="player-name">Enter Your Name</label>
+                    <input type="text" id="player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
+                </div>
+                <button id="join-btn" class="btn btn-primary">Join Game</button>
+            </div>
+
+            <div id="players-waiting" class="card" style="display: none;">
+                <h3>Players in Lobby</h3>
+                <div id="players-list" class="players-list"></div>
+                <p class="waiting-text">Waiting for more players...</p>
+                <div class="button-group">
+                    <button id="start-game-btn" class="btn btn-primary" disabled>Start Game</button>
+                    <button id="leave-btn" class="btn btn-secondary">Leave</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <h1 class="game-title">🕵️ Your Role</h1>
+            </div>
+
+            <div class="role-card">
+                <div id="role-display" class="role-display">
+                    <div class="role-icon">🦊</div>
+                    <div class="role-name">Fox</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>All Players</h3>
+                <div id="game-players-list" class="players-list"></div>
+            </div>
+
+            <div class="instructions card">
+                <h3>How to Play</h3>
+                <p><strong>If you're an animal:</strong> Discuss and figure out who the spy is!</p>
+                <p><strong>If you're the spy:</strong> Blend in and don't get caught!</p>
+            </div>
+
+            <button id="new-game-btn" class="btn btn-secondary">New Game</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="game.js"></script>
+</body>
+
+</html>
