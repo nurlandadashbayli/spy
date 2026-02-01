@@ -42,10 +42,16 @@ const gameState = {
 
 // Animal names pool
 const animalNames = [
-    '🦊 Fox', '🐻 Bear', '🐼 Panda', '🦁 Lion', '🐯 Tiger',
-    '🐨 Koala', '🐰 Rabbit', '🦝 Raccoon', '🦉 Owl', '🐺 Wolf',
-    '🦌 Deer', '🐧 Penguin', '🦒 Giraffe', '🐘 Elephant', '🦛 Hippo',
-    '🦓 Zebra', '🐆 Leopard', '🦘 Kangaroo', '🦥 Sloth', '🦦 Otter'
+    '🐶 Dog', '🐱 Cat', '🐭 Mouse', '🐹 Hamster', '🐰 Rabbit', '🦊 Fox', '🐻 Bear', '🐼 Panda', '🐻‍❄️ Polar Bear', '🐨 Koala',
+    '🐯 Tiger', '🦁 Lion', '� Cow', '🐷 Pig', '🐸 Frog', '🐵 Monkey', '🐔 Chicken', '🐧 Penguin', '🐦 Bird', '🐤 Chick',
+    '🦆 Duck', '🦅 Eagle', '🦉 Owl', '🦇 Bat', '� Wolf', '🐗 Boar', '� Horse', '🦄 Unicorn', '🐝 Bee', '🐛 Bug',
+    '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', '� Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
+    '🦂 Scorpion', '🐊 Crocodile', '� Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', '� Whale',
+    '� Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', '� Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
+    '� Giraffe', '🦘 Kangaroo', '🐃 Buffalo', '🐂 Ox', '🐏 Ram', '🐑 Sheep', '� Goat', '🦙 Llama', '🦌 Deer', '🦃 Turkey',
+    '🐓 Rooster', '🦚 Peacock', '🦜 Parrot', '🦢 Swan', '� Flamingo', '🕊️ Dove', '🦫 Beaver', '🦡 Badger', '🦥 Sloth', '🦦 Otter',
+    '🦨 Skunk', '🦔 Hedgehog', '🦕 Sauropod', '🦖 T-Rex', '🐉 Dragon', '🐋 Whale', '🐀 Rat', '🐁 Mouse', '🐈‍⬛ Black Cat', '🐩 Poodle',
+    '🦮 Guide Dog', '🐕‍🦺 Service Dog', '🐅 Tiger', '🐎 Horse', '🐖 Pig', '🦣 Mammoth', '🦤 Dodo', '🦖 T-Rex', '🐡 Blowfish', '🦈 Shark'
 ];
 
 // DOM Elements
