@@ -296,24 +296,22 @@ async function resetGame() {
 
 // Reset Lobby function (Global Cleanup)
 async function resetLobby() {
-    if (confirm('Are you sure? This will kick ALL players and reset the lobby.')) {
-        try {
-            console.log('Resetting lobby...');
+    try {
+        console.log('Resetting lobby...');
 
-            // Delete the entire players node
-            await remove(playersRef);
+        // Delete the entire players node
+        await remove(playersRef);
 
-            // Ensure status is lobby
-            await update(roomRef, {
-                status: 'lobby'
-            });
+        // Ensure status is lobby
+        await update(roomRef, {
+            status: 'lobby'
+        });
 
-            console.log('✅ Lobby reset successful');
+        console.log('✅ Lobby reset successful');
 
-        } catch (error) {
-            console.error('Error resetting lobby:', error);
-            alert('Failed to reset lobby: ' + error.message);
-        }
+    } catch (error) {
+        console.error('Error resetting lobby:', error);
+        alert('Failed to reset lobby: ' + error.message);
     }
 }
 
