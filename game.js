@@ -129,7 +129,25 @@ onValue(playersRef, (snapshot) => {
     updatePlayersList(players);
 
     // Check if host exists, if not and we are in lobby, maybe claim it?
-    // Actually, migration is better handled on leave.
+    // Self-healing: Check for zombie host
+    if (!gameState.gameStarted && gameState.playerId && Object.keys(players).length > 0) {
+        // Check if the current known host is actually in the room
+        const currentHostId = gameState.hostId;
+        const hostExistsInRoom = currentHostId && players[currentHostId];
+
+        if (!hostExistsInRoom) {
+            console.log('⚠️ Host appears to be missing/zombie. Checking for promotion...');
+
+            // Find oldest player
+            const sortedPlayers = Object.entries(players).sort((a, b) => a[1].joinedAt - b[1].joinedAt);
+            const oldestPlayerId = sortedPlayers[0][0];
+
+            if (oldestPlayerId === gameState.playerId) {
+                console.log('👑 Promoting myself to host (Oldest Player)');
+                set(hostRef, gameState.playerId);
+            }
+        }
+    }
 
     // Check if we are host and need to enable buttons
     checkHostStatus();
