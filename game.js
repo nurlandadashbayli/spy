@@ -255,8 +255,13 @@ async function joinGame() {
         await set(newPlayerRef, gameState.currentPlayer);
 
         // Check if there is a host, if not, claim it
+        // OR if we are the only player, claim it (overwrites stale host)
+        const playersSnap = await get(playersRef);
+        const currentPlayers = playersSnap.val();
+        const playerCount = currentPlayers ? Object.keys(currentPlayers).length : 0;
+
         const hostSnap = await get(hostRef);
-        if (!hostSnap.exists()) {
+        if (!hostSnap.exists() || playerCount === 1) {
             await set(hostRef, gameState.playerId);
             gameState.hostId = gameState.playerId;
             console.log('👑 You are now the Host!');
