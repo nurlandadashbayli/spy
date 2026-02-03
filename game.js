@@ -150,7 +150,7 @@ onValue(playersRef, (snapshot) => {
     }
 
     // Check if we are host and need to enable buttons
-    checkHostStatus();
+    checkHostStatus(players);
 });
 
 // Listen for Host changes to update UI
@@ -180,20 +180,26 @@ onValue(categoryRef, (snapshot) => {
 });
 
 // Check if current player is host and update UI
-function checkHostStatus() {
+function checkHostStatus(currentPlayers = null) {
     const isHost = gameState.playerId && gameState.hostId === gameState.playerId;
     const isLobby = !gameState.gameStarted;
+
 
     if (isHost && isLobby) {
         startGameBtn.style.display = 'inline-block';
         resetLobbyBtn.style.display = 'inline-block';
         if (categorySelect) categorySelect.disabled = false;
 
-        // Count players for disabled state
-        get(playersRef).then(snap => {
-            const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+        // Use provided players or fetch them
+        if (currentPlayers) {
+            const count = Object.keys(currentPlayers).length;
             startGameBtn.disabled = count < 2;
-        });
+        } else {
+            get(playersRef).then(snap => {
+                const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+                startGameBtn.disabled = count < 2;
+            });
+        }
 
         // Hide "Waiting" text if it was used for non-hosts
         const waitingMsg = document.getElementById('waiting-for-host-msg');
@@ -219,7 +225,9 @@ function checkHostStatus() {
             waitingMsg.style.display = 'block';
         }
     }
+
 }
+
 
 // Join game function - No changes needed to initialization, but ensure default category
 get(categoryRef).then(snap => {
@@ -265,7 +273,9 @@ async function joinGame() {
             await set(hostRef, gameState.playerId);
             gameState.hostId = gameState.playerId;
             console.log('👑 You are now the Host!');
-            // Reset category to default on new host claim? No, keep existing.
+
+            // Force reset status to lobby if we are the only one (fixes stale 'started' state)
+            await set(gameStatusRef, 'lobby');
         }
 
         console.log('✅ Joined game!');
@@ -320,7 +330,9 @@ async function startGame() {
         const snapshot = await get(playersRef);
         const players = snapshot.val();
 
+
         if (!players || Object.keys(players).length < 2) {
+            console.warn('❌ Not enough players');
             alert('Need at least 2 players to start!');
             return;
         }
@@ -338,6 +350,7 @@ async function startGame() {
         const commonWord = wordPool[Math.floor(Math.random() * wordPool.length)];
 
         // Assign roles to each player
+
         const updates = {};
         playerIds.forEach((playerId, index) => {
             if (index === spyIndex) {
@@ -351,6 +364,7 @@ async function startGame() {
         updates['status'] = 'started';
 
         await update(roomRef, updates);
+
 
     } catch (error) {
         console.error('Error starting game:', error);
