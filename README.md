@@ -74,7 +74,6 @@ After testing, update your Firebase Realtime Database rules:
 
 ```bash
 # Navigate to the project folder
-cd /Users/nurlan/Documents/Antigravity/spy
 
 # Start a local server
 npx -y http-server -p 8080
