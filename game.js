@@ -48,10 +48,24 @@ const animalNames = [
     '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', '� Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
     '🦂 Scorpion', '🐊 Crocodile', '� Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', '� Whale',
     '� Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', '� Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
-    '� Giraffe', '🦘 Kangaroo', '🐃 Buffalo', '🐂 Ox', '🐏 Ram', '🐑 Sheep', '� Goat', '🦙 Llama', '🦌 Deer', '🦃 Turkey',
-    '🐓 Rooster', '🦚 Peacock', '🦜 Parrot', '🦢 Swan', '� Flamingo', '🕊️ Dove', '🦫 Beaver', '🦡 Badger', '🦥 Sloth', '🦦 Otter',
+    '🐯 Tiger', '🦁 Lion', ' Cow', '🐷 Pig', '🐸 Frog', '🐵 Monkey', '🐔 Chicken', '🐧 Penguin', '🐦 Bird', '🐤 Chick',
+    '🦆 Duck', '🦅 Eagle', '🦉 Owl', '🦇 Bat', ' Wolf', '🐗 Boar', ' Horse', '🦄 Unicorn', '🐝 Bee', '🐛 Bug',
+    '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', ' Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
+    '🦂 Scorpion', '🐊 Crocodile', ' Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', ' Whale',
+    ' Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', ' Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
+    ' Giraffe', '🦘 Kangaroo', '🐃 Buffalo', '🐂 Ox', '🐏 Ram', '🐑 Sheep', ' Goat', '🦙 Llama', '🦌 Deer', '🦃 Turkey',
+    '🐓 Rooster', '🦚 Peacock', '🦜 Parrot', '🦢 Swan', ' Flamingo', '🕊️ Dove', '🦫 Beaver', '🦡 Badger', '🦥 Sloth', '🦦 Otter',
     '🦨 Skunk', '🦔 Hedgehog', '🦕 Sauropod', '🦖 T-Rex', '🐉 Dragon', '🐋 Whale', '🐀 Rat', '🐁 Mouse', '🐈‍⬛ Black Cat', '🐩 Poodle',
     '🦮 Guide Dog', '🐕‍🦺 Service Dog', '🐅 Tiger', '🐎 Horse', '🐖 Pig', '🦣 Mammoth', '🦤 Dodo', '🦖 T-Rex', '🐡 Blowfish', '🦈 Shark'
+];
+
+// Capitals pool
+const capitals = [
+    'Paris', 'London', 'Berlin', 'Rome', 'Madrid', 'Lisbon', 'Amsterdam', 'Brussels', 'Vienna', 'Bern',
+    'Stockholm', 'Oslo', 'Copenhagen', 'Helsinki', 'Reykjavik', 'Dublin', 'Warsaw', 'Prague', 'Budapest', 'Athens',
+    'Moscow', 'Kyiv', 'Ankara', 'Beijing', 'Tokyo', 'Seoul', 'Bangkok', 'Hanoi', 'New Delhi', 'Cairo',
+    'Ottawa', 'Washington D.C.', 'Mexico City', 'Brasilia', 'Buenos Aires', 'Santiago', 'Lima', 'Bogota', 'Canberra', 'Wellington',
+    'Riyadh', 'Baghdad', 'Tehran', 'Jerusalem', 'Beirut', 'Doha', 'Dubai (Not Capital, but fun)', 'Abu Dhabi', 'Nairobi', 'Cape Town'
 ];
 
 // DOM Elements
@@ -69,6 +83,7 @@ const resetLobbyBtn = document.getElementById('reset-lobby-btn');
 const newGameBtn = document.getElementById('new-game-btn');
 const joinSection = document.getElementById('join-section');
 const lobbyControls = document.getElementById('lobby-controls');
+const categorySelect = document.getElementById('category-select');
 
 // Ensure essential elements exist
 if (!joinSection || !lobbyControls) {
@@ -79,6 +94,8 @@ if (!joinSection || !lobbyControls) {
 const roomRef = ref(database, 'game/room');
 const playersRef = ref(database, 'game/room/players');
 const gameStatusRef = ref(database, 'game/room/status');
+const hostRef = ref(database, 'game/room/host');
+const categoryRef = ref(database, 'game/room/category');
 
 // Event Listeners
 if (joinBtn) joinBtn.addEventListener('click', joinGame);
@@ -87,6 +104,20 @@ if (playerNameInput) {
         if (e.key === 'Enter') joinGame();
     });
 }
+// Category change (Host only - validated in listener but good to have)
+if (categorySelect) {
+    categorySelect.addEventListener('change', () => {
+        if (gameState.hostId === gameState.playerId) {
+            set(categoryRef, categorySelect.value);
+        } else {
+            // Revert if non-host tries to change (UI should disable, but safety net)
+            get(categoryRef).then(snap => {
+                categorySelect.value = snap.val() || 'animals';
+            });
+        }
+    });
+}
+// Start and Reset only work if you are host (UI prevents clicking, but good to check state too)
 if (startGameBtn) startGameBtn.addEventListener('click', startGame);
 if (leaveBtn) leaveBtn.addEventListener('click', leaveGame);
 if (newGameBtn) newGameBtn.addEventListener('click', resetGame);
@@ -97,8 +128,38 @@ onValue(playersRef, (snapshot) => {
     const players = snapshot.val() || {};
     updatePlayersList(players);
 
-    // Enable start button if at least 2 players
-    startGameBtn.disabled = Object.keys(players).length < 2;
+    // Check if host exists, if not and we are in lobby, maybe claim it?
+    // Self-healing: Check for zombie host
+    if (!gameState.gameStarted && gameState.playerId && Object.keys(players).length > 0) {
+        // Check if the current known host is actually in the room
+        const currentHostId = gameState.hostId;
+        const hostExistsInRoom = currentHostId && players[currentHostId];
+
+        if (!hostExistsInRoom) {
+            console.log('⚠️ Host appears to be missing/zombie. Checking for promotion...');
+
+            // Find oldest player
+            const sortedPlayers = Object.entries(players).sort((a, b) => a[1].joinedAt - b[1].joinedAt);
+            const oldestPlayerId = sortedPlayers[0][0];
+
+            if (oldestPlayerId === gameState.playerId) {
+                console.log('👑 Promoting myself to host (Oldest Player)');
+                set(hostRef, gameState.playerId);
+            }
+        }
+    }
+
+    // Check if we are host and need to enable buttons
+    checkHostStatus(players);
+});
+
+// Listen for Host changes to update UI
+onValue(hostRef, (snapshot) => {
+    gameState.hostId = snapshot.val();
+    checkHostStatus();
+
+    // Re-render player list to show new host icon
+    get(playersRef).then(snap => updatePlayersList(snap.val() || {}));
 });
 
 // Listen for game status changes
@@ -112,7 +173,68 @@ onValue(gameStatusRef, (snapshot) => {
     }
 });
 
-// Join game function
+// Listen for Category changes
+onValue(categoryRef, (snapshot) => {
+    const category = snapshot.val() || 'animals';
+    if (categorySelect) categorySelect.value = category;
+});
+
+// Check if current player is host and update UI
+function checkHostStatus(currentPlayers = null) {
+    const isHost = gameState.playerId && gameState.hostId === gameState.playerId;
+    const isLobby = !gameState.gameStarted;
+
+
+    if (isHost && isLobby) {
+        startGameBtn.style.display = 'inline-block';
+        resetLobbyBtn.style.display = 'inline-block';
+        if (categorySelect) categorySelect.disabled = false;
+
+        // Use provided players or fetch them
+        if (currentPlayers) {
+            const count = Object.keys(currentPlayers).length;
+            startGameBtn.disabled = count < 2;
+        } else {
+            get(playersRef).then(snap => {
+                const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+                startGameBtn.disabled = count < 2;
+            });
+        }
+
+        // Hide "Waiting" text if it was used for non-hosts
+        const waitingMsg = document.getElementById('waiting-for-host-msg');
+        if (waitingMsg) waitingMsg.style.display = 'none';
+
+    } else {
+        // Non-host or game started
+        startGameBtn.style.display = 'none';
+        resetLobbyBtn.style.display = 'none';
+        if (categorySelect) categorySelect.disabled = true;
+
+        // Show "Waiting for host" if in lobby and joined
+        if (isLobby && gameState.playerId) {
+            let waitingMsg = document.getElementById('waiting-for-host-msg');
+            if (!waitingMsg) {
+                waitingMsg = document.createElement('p');
+                waitingMsg.id = 'waiting-for-host-msg';
+                waitingMsg.className = 'waiting-text';
+                waitingMsg.innerText = 'Waiting for Host to start game...';
+                const container = document.querySelector('#lobby-controls .button-group');
+                if (container) container.parentNode.insertBefore(waitingMsg, container);
+            }
+            waitingMsg.style.display = 'block';
+        }
+    }
+
+}
+
+
+// Join game function - No changes needed to initialization, but ensure default category
+get(categoryRef).then(snap => {
+    if (!snap.exists()) set(categoryRef, 'animals');
+});
+
+// Join game function (EXISTING CODE BELOW...)
 async function joinGame() {
     const playerName = playerNameInput.value.trim();
 
@@ -139,6 +261,23 @@ async function joinGame() {
         };
 
         await set(newPlayerRef, gameState.currentPlayer);
+
+        // Check if there is a host, if not, claim it
+        // OR if we are the only player, claim it (overwrites stale host)
+        const playersSnap = await get(playersRef);
+        const currentPlayers = playersSnap.val();
+        const playerCount = currentPlayers ? Object.keys(currentPlayers).length : 0;
+
+        const hostSnap = await get(hostRef);
+        if (!hostSnap.exists() || playerCount === 1) {
+            await set(hostRef, gameState.playerId);
+            gameState.hostId = gameState.playerId;
+            console.log('👑 You are now the Host!');
+
+            // Force reset status to lobby if we are the only one (fixes stale 'started' state)
+            await set(gameStatusRef, 'lobby');
+        }
+
         console.log('✅ Joined game!');
 
         // Update UI state
@@ -162,12 +301,14 @@ function updatePlayersList(players) {
     playerArray.sort((a, b) => a.joinedAt - b.joinedAt);
 
     // Update lobby list
-    playersList.innerHTML = playerArray.map(player => `
+    playersList.innerHTML = playerArray.map(player => {
+        const isHost = player.id === gameState.hostId;
+        return `
         <div class="player-item">
-            <span class="player-icon">👤</span>
-            <span class="player-name">${escapeHtml(player.name)}</span>
+            <span class="player-icon">${isHost ? '👑' : '👤'}</span>
+            <span class="player-name">${escapeHtml(player.name)}${isHost ? ' (Host)' : ''}</span>
         </div>
-    `).join('');
+    `}).join('');
 
     // Update game screen list if game started
     if (gameState.gameStarted) {
@@ -182,29 +323,40 @@ function updatePlayersList(players) {
 
 // Start game function
 async function startGame() {
+    // Double check host
+    if (gameState.hostId !== gameState.playerId) return;
+
     try {
         const snapshot = await get(playersRef);
         const players = snapshot.val();
 
+
         if (!players || Object.keys(players).length < 2) {
+            console.warn('❌ Not enough players');
             alert('Need at least 2 players to start!');
             return;
         }
+
+        // Get Selected Category
+        const categorySnap = await get(categoryRef);
+        const category = categorySnap.val() || 'animals';
+        const wordPool = category === 'capitals' ? capitals : animalNames;
 
         // Assign roles
         const playerIds = Object.keys(players);
         const spyIndex = Math.floor(Math.random() * playerIds.length);
 
-        // Pick ONE common animal for everyone
-        const commonAnimal = animalNames[Math.floor(Math.random() * animalNames.length)];
+        // Pick ONE common item logic
+        const commonWord = wordPool[Math.floor(Math.random() * wordPool.length)];
 
         // Assign roles to each player
+
         const updates = {};
         playerIds.forEach((playerId, index) => {
             if (index === spyIndex) {
                 updates[`players/${playerId}/role`] = '🕵️ SPY';
             } else {
-                updates[`players/${playerId}/role`] = commonAnimal;
+                updates[`players/${playerId}/role`] = commonWord;
             }
         });
 
@@ -212,6 +364,7 @@ async function startGame() {
         updates['status'] = 'started';
 
         await update(roomRef, updates);
+
 
     } catch (error) {
         console.error('Error starting game:', error);
@@ -263,6 +416,23 @@ async function leaveGame() {
     if (gameState.playerId) {
         try {
             await remove(ref(database, `game/room/players/${gameState.playerId}`));
+
+            // Host Migration Logic
+            if (gameState.hostId === gameState.playerId) {
+                const snap = await get(playersRef);
+                const players = snap.val();
+                if (players && Object.keys(players).length > 0) {
+                    // Find oldest player
+                    const sortedPlayers = Object.entries(players).sort((a, b) => a[1].joinedAt - b[1].joinedAt);
+                    const newHostId = sortedPlayers[0][0];
+                    await set(hostRef, newHostId);
+                } else {
+                    // No players left
+                    await set(hostRef, null);
+                    await set(gameStatusRef, 'lobby'); // Reset status if empty
+                }
+            }
+
             resetLocalState();
         } catch (error) {
             console.error('Error leaving game:', error);
@@ -272,6 +442,9 @@ async function leaveGame() {
 
 // Reset game function
 async function resetGame() {
+    // Only host can reset
+    if (gameState.hostId !== gameState.playerId) return;
+
     try {
         // Reset room to lobby state
         await update(roomRef, {
@@ -307,6 +480,7 @@ async function resetLobby() {
 
         // Delete the entire players node
         await remove(playersRef);
+        await set(hostRef, null); // Clear host
 
         // Ensure status is lobby
         await update(roomRef, {
@@ -337,6 +511,12 @@ function resetLocalState() {
 // Clean up on page unload
 window.addEventListener('beforeunload', () => {
     if (gameState.playerId) {
+        // We can't easily do async await here reliably, but we try.
+        // For host migration on close, we rely on checking active players or periodic cleanup,
+        // but for this simple app, we can try to trigger leave.
+        // Ideally, we'd use onDisconnect() from Firebase.
+
+        // Basic cleanup attempt
         remove(ref(database, `game/room/players/${gameState.playerId}`));
     }
 });
