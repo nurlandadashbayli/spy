@@ -69,8 +69,13 @@ const capitals = [
 ];
 
 // DOM Elements
+const selectionScreen = document.getElementById('selection-screen');
 const lobbyScreen = document.getElementById('lobby-screen');
 const gameScreen = document.getElementById('game-screen');
+const selectSpy = document.getElementById('select-spy');
+const selectWordle = document.getElementById('select-wordle');
+const backToHubBtn = document.getElementById('back-to-hub-btn');
+
 const playerNameInput = document.getElementById('player-name');
 const joinBtn = document.getElementById('join-btn');
 const playersWaiting = document.getElementById('players-waiting');
@@ -122,6 +127,32 @@ if (startGameBtn) startGameBtn.addEventListener('click', startGame);
 if (leaveBtn) leaveBtn.addEventListener('click', leaveGame);
 if (newGameBtn) newGameBtn.addEventListener('click', resetGame);
 if (resetLobbyBtn) resetLobbyBtn.addEventListener('click', resetLobby);
+
+// Selection Screen Navigation
+if (selectSpy) {
+    selectSpy.addEventListener('click', () => {
+        selectionScreen.classList.remove('active');
+        lobbyScreen.classList.add('active');
+    });
+}
+
+if (selectWordle) {
+    selectWordle.addEventListener('click', () => {
+        selectionScreen.classList.remove('active');
+        document.getElementById('wordle-lobby-screen').classList.add('active');
+    });
+}
+
+if (backToHubBtn) {
+    backToHubBtn.addEventListener('click', async () => {
+        if (gameState.playerId) {
+            await leaveGame();
+        }
+        lobbyScreen.classList.remove('active');
+        gameScreen.classList.remove('active');
+        selectionScreen.classList.add('active');
+    });
+}
 
 // Listen for players changes
 onValue(playersRef, (snapshot) => {
