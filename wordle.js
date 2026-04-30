@@ -1,4 +1,4 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import {
     getDatabase,
     ref,
@@ -22,7 +22,13 @@ const firebaseConfig = {
     appId: "1:20232358549:web:feb22d19fb56e13ec9699c"
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase safely
+let app;
+if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApp();
+}
 const database = getDatabase(app);
 
 // State
@@ -87,7 +93,7 @@ newGameBtn.addEventListener('click', resetWordleGame);
 onValue(playersRef, (snapshot) => {
     players = snapshot.val() || {};
     updatePlayersUI();
-    
+
     const playerIds = Object.keys(players);
     if (playerIds.length > 2 && !playerIds.includes(playerId)) {
         joinSection.style.display = 'none';
@@ -120,7 +126,7 @@ async function joinWordle() {
 
     const newPlayerRef = push(playersRef);
     playerId = newPlayerRef.key;
-    
+
     await set(newPlayerRef, {
         name,
         ready: false,
@@ -129,7 +135,7 @@ async function joinWordle() {
     });
 
     onDisconnect(newPlayerRef).remove();
-    
+
     joinSection.style.display = 'none';
     setupSection.style.display = 'block';
 }
@@ -137,13 +143,13 @@ async function joinWordle() {
 async function setReady() {
     const word = secretWordInput.value.trim().toLowerCase();
     if (word.length < 3) return alert('Word too short (min 3 letters)');
-    
+
     secretWord = word;
     await update(ref(database, `game/wordle/players/${playerId}`), {
         ready: true,
         word: secretWord
     });
-    
+
     readyBtn.disabled = true;
     readyBtn.innerText = 'Word Set!';
     changeBtn.style.display = 'block';
@@ -155,7 +161,7 @@ async function changeWord() {
         ready: false,
         word: ''
     });
-    
+
     readyBtn.disabled = false;
     readyBtn.innerText = 'Set Word & Ready';
     changeBtn.style.display = 'none';
@@ -200,7 +206,7 @@ async function startGame() {
 function showGameScreen() {
     lobbyScreen.classList.remove('active');
     gameScreen.classList.add('active');
-    
+
     // Listen for guesses
     onValue(ref(database, 'game/wordle/guesses'), (snap) => {
         const guesses = snap.val() || {};
@@ -228,9 +234,9 @@ function showGameScreen() {
             turnIndicator.innerText = "Opponent's Turn";
             submitGuessBtn.disabled = true;
         }
-        
+
         targetLengthDisp.innerText = `Length: ${data.wordLength}`;
-        
+
         // Show New Game button if anyone finished or it's just available
         newGameBtn.style.display = 'block';
     });
@@ -244,7 +250,7 @@ async function submitGuess() {
 
     const opponent = players[opponentId];
     const feedback = calculateFeedback(guess, opponent.word);
-    
+
     const guessRef = push(ref(database, 'game/wordle/guesses'));
     await set(guessRef, {
         playerId,
@@ -260,7 +266,7 @@ async function submitGuess() {
     });
 
     guessInput.value = '';
-    
+
     if (feedback.plus === opponent.word.length) {
         await update(ref(database, `game/wordle/players/${playerId}`), {
             winner: true
@@ -271,7 +277,7 @@ async function submitGuess() {
 function calculateFeedback(guess, target) {
     let plus = 0;
     let minus = 0;
-    
+
     const targetArr = target.split('');
     const guessArr = guess.split('');
     const targetUsed = new Array(targetArr.length).fill(false);
@@ -320,7 +326,7 @@ function updatePlayersUI() {
 
 function updateGuessesUI(guesses) {
     const guessArray = Object.values(guesses).sort((a, b) => b.timestamp - a.timestamp);
-    
+
     const myGuesses = guessArray.filter(g => g.playerId === playerId);
     const oppGuesses = guessArray.filter(g => g.playerId !== playerId);
 
@@ -349,7 +355,7 @@ async function resetWordleGame() {
     // Reset room state
     await set(statusRef, 'lobby');
     await remove(ref(database, 'game/wordle/guesses'));
-    
+
     // Reset turn and word length
     await update(wordleRef, {
         currentTurn: null,
@@ -369,7 +375,7 @@ async function resetWordleGame() {
     gameScreen.classList.remove('active');
     lobbyScreen.classList.add('active');
     setupSection.style.display = 'block';
-    
+
     // Reset local inputs
     readyBtn.disabled = false;
     readyBtn.innerText = 'Set Word & Ready';
@@ -377,7 +383,7 @@ async function resetWordleGame() {
     secretWordInput.disabled = false;
     secretWordInput.value = '';
     secretWord = '';
-    
+
     // Refresh page or just ensure UI reflects changes
     // location.reload() is a bit harsh, let's just use state
 }
@@ -386,11 +392,11 @@ async function leaveWordle() {
     if (playerId) {
         await remove(ref(database, `game/wordle/players/${playerId}`));
     }
-    
+
     const snap = await get(playersRef);
     if (!snap.exists()) {
         await remove(wordleRef);
     }
 
-    location.reload(); 
+    location.reload();
 }

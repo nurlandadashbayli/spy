@@ -39,6 +39,15 @@
                         <span class="badge">Online</span>
                     </div>
                 </div>
+
+                <div class="game-card" id="select-scribble">
+                    <div class="game-card-icon">🎨</div>
+                    <div class="game-card-content">
+                        <h3>Scribble</h3>
+                        <p>Draw and guess with friends!</p>
+                        <span class="badge">New</span>
+                    </div>
+                </div>
             </div>
         </div> <!-- Selection Screen -->
 
@@ -118,92 +127,178 @@
         </div> <!-- Game Screen -->
 
         <!-- Wordle Lobby Screen -->
-    <div id="wordle-lobby-screen" class="screen">
-        <div class="game-header">
-            <button id="wordle-back-btn" class="back-btn">← Back to Hub</button>
-            <h1 class="game-title">🔠 Wordle Duel</h1>
-            <p class="game-subtitle">Guess your opponent's word!</p>
-        </div>
-
-        <div id="wordle-join-section" class="card">
-            <div class="input-group">
-                <label for="wordle-player-name">Enter Your Name</label>
-                <input type="text" id="wordle-player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
-            </div>
-            <button id="wordle-join-btn" class="btn btn-primary">Join Duel</button>
-        </div>
-
-        <div id="wordle-setup-section" class="card" style="display: none;">
-            <h3>Game Setup</h3>
-            <div class="input-group">
-                <label for="wordle-secret-word">Your Secret Word</label>
-                <input type="text" id="wordle-secret-word" placeholder="Enter word..." maxlength="10" autocomplete="off"
-                    style="font-size: 1.5rem; text-align: center; letter-spacing: 2px; text-transform: uppercase;">
-                <p class="input-hint">Must match opponent's word length to start.</p>
-            </div>
-            <div class="button-group">
-                <button id="wordle-ready-btn" class="btn btn-primary">Set Word & Ready</button>
-                <button id="wordle-change-btn" class="btn btn-secondary" style="display: none;">Change Word</button>
+        <div id="wordle-lobby-screen" class="screen">
+            <div class="game-header">
+                <button id="wordle-back-btn" class="back-btn">← Back to Hub</button>
+                <h1 class="game-title">🔠 Wordle Duel</h1>
+                <p class="game-subtitle">Guess your opponent's word!</p>
             </div>
 
-            <div class="players-status card" style="margin-top: 1.5rem; background: var(--bg-elevated);">
-                <div id="wordle-players-list" class="players-list"></div>
-                <p id="wordle-length-warning" class="warning-text"
-                    style="display: none; color: var(--danger); margin-top: 1rem; text-align: center; font-size: 0.9rem;">
-                    Words must have the same length!</p>
+            <div id="wordle-join-section" class="card">
+                <div class="input-group">
+                    <label for="wordle-player-name">Enter Your Name</label>
+                    <input type="text" id="wordle-player-name" placeholder="Your name..." maxlength="20"
+                        autocomplete="off">
+                </div>
+                <button id="wordle-join-btn" class="btn btn-primary">Join Duel</button>
             </div>
 
-            <button id="wordle-start-btn" class="btn btn-success"
-                style="margin-top: 1rem; background: var(--success); display: none;">Start Game</button>
-        </div>
+            <div id="wordle-setup-section" class="card" style="display: none;">
+                <h3>Game Setup</h3>
+                <div class="input-group">
+                    <label for="wordle-secret-word">Your Secret Word</label>
+                    <input type="text" id="wordle-secret-word" placeholder="Enter word..." maxlength="10"
+                        autocomplete="off"
+                        style="font-size: 1.5rem; text-align: center; letter-spacing: 2px; text-transform: uppercase;">
+                    <p class="input-hint">Must match opponent's word length to start.</p>
+                </div>
+                <div class="button-group">
+                    <button id="wordle-ready-btn" class="btn btn-primary">Set Word & Ready</button>
+                    <button id="wordle-change-btn" class="btn btn-secondary" style="display: none;">Change Word</button>
+                </div>
 
-        <div id="wordle-full-msg" class="card" style="display: none; text-align: center;">
-            <p>Room is full (Max 2 players). Please wait or try later.</p>
-            <button id="wordle-full-back-btn" class="btn btn-secondary" style="margin-top: 1rem;">Back to Hub</button>
-        </div>
-    </div>
+                <div class="players-status card" style="margin-top: 1.5rem; background: var(--bg-elevated);">
+                    <div id="wordle-players-list" class="players-list"></div>
+                    <p id="wordle-length-warning" class="warning-text"
+                        style="display: none; color: var(--danger); margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+                        Words must have the same length!</p>
+                </div>
 
-    <!-- Wordle Game Screen -->
-    <div id="wordle-game-screen" class="screen">
-        <div class="game-header">
-            <h1 class="game-title">🔠 Duel in Progress</h1>
-            <div id="wordle-info-bar" class="info-bar">
-                <span id="wordle-target-length">Length: 5</span>
-                <span id="wordle-turn-indicator">Waiting...</span>
+                <button id="wordle-start-btn" class="btn btn-success"
+                    style="margin-top: 1rem; background: var(--success); display: none;">Start Game</button>
+            </div>
+
+            <div id="wordle-full-msg" class="card" style="display: none; text-align: center;">
+                <p>Room is full (Max 2 players). Please wait or try later.</p>
+                <button id="wordle-full-back-btn" class="btn btn-secondary" style="margin-top: 1rem;">Back to
+                    Hub</button>
             </div>
         </div>
 
-        <div class="game-layout">
-            <!-- My Guesses -->
-            <div class="card">
-                <h3>Your Guesses</h3>
-                <div id="wordle-guesses-list" class="guesses-list"></div>
-
-                <div id="wordle-input-area" style="margin-top: 1.5rem;">
-                    <div class="input-group">
-                        <input type="text" id="wordle-guess-input" placeholder="Enter guess..." autocomplete="off">
-                    </div>
-                    <button id="wordle-submit-guess" class="btn btn-primary">Submit Guess</button>
+        <!-- Wordle Game Screen -->
+        <div id="wordle-game-screen" class="screen">
+            <div class="game-header">
+                <h1 class="game-title">🔠 Duel in Progress</h1>
+                <div id="wordle-info-bar" class="info-bar">
+                    <span id="wordle-target-length">Length: 5</span>
+                    <span id="wordle-turn-indicator">Waiting...</span>
                 </div>
             </div>
 
-            <!-- Opponent's Progress (Summary) -->
-            <div class="card">
-                <h3>Opponent's Progress</h3>
-                <div id="wordle-opponent-history" class="guesses-list"></div>
+            <div class="game-layout">
+                <!-- My Guesses -->
+                <div class="card">
+                    <h3>Your Guesses</h3>
+                    <div id="wordle-guesses-list" class="guesses-list"></div>
+
+                    <div id="wordle-input-area" style="margin-top: 1.5rem;">
+                        <div class="input-group">
+                            <input type="text" id="wordle-guess-input" placeholder="Enter guess..." autocomplete="off">
+                        </div>
+                        <button id="wordle-submit-guess" class="btn btn-primary">Submit Guess</button>
+                    </div>
+                </div>
+
+                <!-- Opponent's Progress (Summary) -->
+                <div class="card">
+                    <h3>Opponent's Progress</h3>
+                    <div id="wordle-opponent-history" class="guesses-list"></div>
+                </div>
+            </div>
+
+            <div class="button-group" style="margin-top: 1.5rem;">
+                <button id="wordle-quit-btn" class="btn btn-secondary">Quit Game</button>
+                <button id="wordle-new-game-btn" class="btn btn-primary" style="display: none;">New Game</button>
             </div>
         </div>
 
-        <div class="button-group" style="margin-top: 1.5rem;">
-            <button id="wordle-quit-btn" class="btn btn-secondary">Quit Game</button>
-            <button id="wordle-new-game-btn" class="btn btn-primary" style="display: none;">New Game</button>
+
+        <!-- Scribble Lobby Screen -->
+        <div id="scribble-lobby-screen" class="screen">
+            <div class="game-header">
+                <button id="scribble-back-btn" class="back-btn">← Back to Hub</button>
+                <h1 class="game-title">🎨 Scribble Duel</h1>
+                <p class="game-subtitle">One draws, one guesses!</p>
+            </div>
+
+            <div id="scribble-join-section" class="card">
+                <div class="input-group">
+                    <label for="scribble-player-name">Enter Your Name</label>
+                    <input type="text" id="scribble-player-name" placeholder="Your name..." maxlength="20"
+                        autocomplete="off">
+                </div>
+                <button id="scribble-join-btn" class="btn btn-primary">Join Lobby</button>
+            </div>
+
+            <div id="scribble-setup-section" class="card" style="display: none;">
+                <h3>Waiting for Players</h3>
+                <div class="players-status card" style="background: var(--bg-elevated);">
+                    <div id="scribble-players-list" class="players-list"></div>
+                </div>
+                <button id="scribble-start-btn" class="btn btn-success" style="margin-top: 1.5rem; display: none;">Start
+                    Game</button>
+            </div>
+
+            <div id="scribble-full-msg" class="card" style="display: none; text-align: center;">
+                <p>Room is full. Please try later.</p>
+                <button id="scribble-full-back-btn" class="btn btn-secondary" style="margin-top: 1rem;">Back to
+                    Hub</button>
+            </div>
         </div>
-    </div>
 
+        <!-- Scribble Game Screen -->
+        <div id="scribble-game-screen" class="screen">
+            <div class="game-header">
+                <h1 class="game-title" id="scribble-game-title">🎨 Scribble</h1>
+                <div id="scribble-info-bar" class="info-bar">
+                    <span id="scribble-role-indicator">Waiting...</span>
+                    <span id="scribble-word-display" style="color: var(--secondary); font-weight: 800;">•••••</span>
+                </div>
+            </div>
 
-    <!-- Firebase SDK -->
-    <script type="module" src="game.js?v=1.4"></script>
-    <script type="module" src="wordle.js?v=1.0"></script>
+            <div class="game-layout" style="grid-template-columns: 2fr 1fr;">
+                <!-- Canvas Area -->
+                <div class="card" style="padding: 0; overflow: hidden; position: relative;">
+                    <canvas id="scribble-canvas" width="600" height="450"
+                        style="background: white; cursor: crosshair; width: 100%; height: auto; display: block;"></canvas>
+
+                    <div id="scribble-tools" class="drawing-tools"
+                        style="padding: 1rem; background: var(--bg-card); display: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display: flex; gap: 1rem; align-items: center; justify-content: center;">
+                            <input type="color" id="scribble-color" value="#9333ea"
+                                style="border: none; background: none; width: 40px; height: 40px; cursor: pointer;">
+                            <input type="range" id="scribble-size" min="2" max="20" value="5" style="width: 100px;">
+                            <button id="scribble-clear-btn" class="btn btn-secondary"
+                                style="width: auto; padding: 0.5rem 1rem;">Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guessing Area -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h3>Guesses</h3>
+                    <div id="scribble-guess-list" class="guesses-list" style="flex: 1; min-height: 300px;"></div>
+
+                    <div id="scribble-guess-area" style="margin-top: 1rem; display: none;">
+                        <div class="input-group" style="margin-bottom: 0.5rem;">
+                            <input type="text" id="scribble-guess-input" placeholder="Type your guess..."
+                                autocomplete="off">
+                        </div>
+                        <button id="scribble-submit-guess" class="btn btn-primary">Guess</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group" style="margin-top: 1.5rem;">
+                <button id="scribble-quit-btn" class="btn btn-secondary">Quit Game</button>
+                <button id="scribble-new-game-btn" class="btn btn-primary" style="display: none;">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Firebase SDK -->
+        <script type="module" src="game.js?v=1.4"></script>
+        <script type="module" src="wordle.js?v=1.0"></script>
+        <script type="module" src="scribble.js?v=1.0"></script>
     </div> <!-- Final Container Closing -->
 </body>
 

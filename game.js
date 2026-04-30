@@ -1,5 +1,5 @@
 // Import Firebase SDK (ES modules require imports at the top)
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import {
     getDatabase,
     ref,
@@ -23,9 +23,15 @@ const firebaseConfig = {
     appId: "1:20232358549:web:feb22d19fb56e13ec9699c"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase safely
+let app;
+if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApp();
+}
 const database = getDatabase(app);
+
 console.log('✅ Firebase initialized');
 
 // Monitor connection
