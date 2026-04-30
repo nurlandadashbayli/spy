@@ -8,7 +8,8 @@ import {
     onValue,
     remove,
     update,
-    get
+    get,
+    onDisconnect
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
 // Firebase Configuration
@@ -40,21 +41,20 @@ const gameState = {
     gameStarted: false
 };
 
+// Interval references for ghost player detection
+let heartbeatInterval = null;
+let ghostCheckInterval = null;
+
 // Animal names pool
 const animalNames = [
     '🐶 Dog', '🐱 Cat', '🐭 Mouse', '🐹 Hamster', '🐰 Rabbit', '🦊 Fox', '🐻 Bear', '🐼 Panda', '🐻‍❄️ Polar Bear', '🐨 Koala',
-    '🐯 Tiger', '🦁 Lion', '� Cow', '🐷 Pig', '🐸 Frog', '🐵 Monkey', '🐔 Chicken', '🐧 Penguin', '🐦 Bird', '🐤 Chick',
-    '🦆 Duck', '🦅 Eagle', '🦉 Owl', '🦇 Bat', '� Wolf', '🐗 Boar', '� Horse', '🦄 Unicorn', '🐝 Bee', '🐛 Bug',
-    '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', '� Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
-    '🦂 Scorpion', '🐊 Crocodile', '� Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', '� Whale',
-    '� Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', '� Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
-    '🐯 Tiger', '🦁 Lion', ' Cow', '🐷 Pig', '🐸 Frog', '🐵 Monkey', '🐔 Chicken', '🐧 Penguin', '🐦 Bird', '🐤 Chick',
-    '🦆 Duck', '🦅 Eagle', '🦉 Owl', '🦇 Bat', ' Wolf', '🐗 Boar', ' Horse', '🦄 Unicorn', '🐝 Bee', '🐛 Bug',
-    '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', ' Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
-    '🦂 Scorpion', '🐊 Crocodile', ' Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', ' Whale',
-    ' Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', ' Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
-    ' Giraffe', '🦘 Kangaroo', '🐃 Buffalo', '🐂 Ox', '🐏 Ram', '🐑 Sheep', ' Goat', '🦙 Llama', '🦌 Deer', '🦃 Turkey',
-    '🐓 Rooster', '🦚 Peacock', '🦜 Parrot', '🦢 Swan', ' Flamingo', '🕊️ Dove', '🦫 Beaver', '🦡 Badger', '🦥 Sloth', '🦦 Otter',
+    '🐯 Tiger', '🦁 Lion', '🐮 Cow', '🐷 Pig', '🐸 Frog', '🐵 Monkey', '🐔 Chicken', '🐧 Penguin', '🐦 Bird', '🐤 Chick',
+    '🦆 Duck', '🦅 Eagle', '🦉 Owl', '🦇 Bat', '🐺 Wolf', '🐗 Boar', '🐴 Horse', '🦄 Unicorn', '🐝 Bee', '🐛 Bug',
+    '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', '🦟 Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
+    '🦂 Scorpion', '🐊 Crocodile', '🦑 Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', '🐋 Whale',
+    '🦈 Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', '🦍 Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
+    '🦒 Giraffe', '🦘 Kangaroo', '🐃 Buffalo', '🐂 Ox', '🐏 Ram', '🐑 Sheep', '🐐 Goat', '🦙 Llama', '🦌 Deer', '🦃 Turkey',
+    '🐓 Rooster', '🦚 Peacock', '🦜 Parrot', '🦢 Swan', '🦩 Flamingo', '🕊️ Dove', '🦫 Beaver', '🦡 Badger', '🦥 Sloth', '🦦 Otter',
     '🦨 Skunk', '🦔 Hedgehog', '🦕 Sauropod', '🦖 T-Rex', '🐉 Dragon', '🐋 Whale', '🐀 Rat', '🐁 Mouse', '🐈‍⬛ Black Cat', '🐩 Poodle',
     '🦮 Guide Dog', '🐕‍🦺 Service Dog', '🐅 Tiger', '🐎 Horse', '🐖 Pig', '🦣 Mammoth', '🦤 Dodo', '🦖 T-Rex', '🐡 Blowfish', '🦈 Shark'
 ];
@@ -184,6 +184,35 @@ function checkHostStatus(currentPlayers = null) {
     const isHost = gameState.playerId && gameState.hostId === gameState.playerId;
     const isLobby = !gameState.gameStarted;
 
+    // Ghost Check Logic (Host Only)
+    if (isHost) {
+        if (!ghostCheckInterval) {
+            ghostCheckInterval = setInterval(async () => {
+                try {
+                    const snap = await get(playersRef);
+                    const players = snap.val();
+                    if (!players) return;
+
+                    const now = Date.now();
+                    for (const [id, player] of Object.entries(players)) {
+                        // If no ping for 15 seconds, or ping is missing, assume ghost
+                        const isStale = player.lastPing === undefined || (now - player.lastPing) > 15000;
+                        if (isStale) {
+                            console.log(`👻 Removing ghost player: ${player.name} (${id})`);
+                            await remove(ref(database, `game/room/players/${id}`));
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error during ghost check:', e);
+                }
+            }, 10000);
+        }
+    } else {
+        if (ghostCheckInterval) {
+            clearInterval(ghostCheckInterval);
+            ghostCheckInterval = null;
+        }
+    }
 
     if (isHost && isLobby) {
         startGameBtn.style.display = 'inline-block';
@@ -257,10 +286,24 @@ async function joinGame() {
             id: gameState.playerId,
             name: playerName,
             role: null,
-            joinedAt: Date.now()
+            joinedAt: Date.now(),
+            lastPing: Date.now()
         };
 
         await set(newPlayerRef, gameState.currentPlayer);
+
+        // Start heartbeat to prevent being marked as a ghost
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        heartbeatInterval = setInterval(() => {
+            if (gameState.playerId) {
+                update(ref(database, `game/room/players/${gameState.playerId}`), {
+                    lastPing: Date.now()
+                }).catch(e => console.error("Heartbeat failed", e));
+            }
+        }, 5000);
+
+        // Register server-side cleanup: Firebase will auto-remove this player on disconnect
+        onDisconnect(newPlayerRef).remove();
 
         // Check if there is a host, if not, claim it
         // OR if we are the only player, claim it (overwrites stale host)
@@ -415,7 +458,10 @@ async function showGameScreen() {
 async function leaveGame() {
     if (gameState.playerId) {
         try {
-            await remove(ref(database, `game/room/players/${gameState.playerId}`));
+            // Cancel the onDisconnect hook since we're leaving cleanly
+            const playerRef = ref(database, `game/room/players/${gameState.playerId}`);
+            await onDisconnect(playerRef).cancel();
+            await remove(playerRef);
 
             // Host Migration Logic
             if (gameState.hostId === gameState.playerId) {
@@ -497,6 +543,11 @@ async function resetLobby() {
 
 // Reset local state
 function resetLocalState() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (ghostCheckInterval) clearInterval(ghostCheckInterval);
+    heartbeatInterval = null;
+    ghostCheckInterval = null;
+
     gameState.currentPlayer = null;
     gameState.playerId = null;
     gameState.gameStarted = false;
@@ -523,6 +574,8 @@ window.addEventListener('beforeunload', () => {
 
 // Utility function to escape HTML
 function escapeHtml(text) {
+    if (!text) return '';
+    const stringText = String(text);
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -530,7 +583,7 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    return stringText.replace(/[&<>"']/g, m => map[m]);
 }
 
 // Initialize - set room to lobby status if it doesn't exist
