@@ -1,4 +1,4 @@
-import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import {
     getDatabase,
     ref,
@@ -21,13 +21,7 @@ const firebaseConfig = {
     appId: "1:20232358549:web:feb22d19fb56e13ec9699c"
 };
 
-// Initialize Firebase safely
-let app;
-if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-} else {
-    app = getApp();
-}
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // State
@@ -50,7 +44,7 @@ const lobbyScreen = document.getElementById('scribble-lobby-screen');
 const gameScreen = document.getElementById('scribble-game-screen');
 const joinSection = document.getElementById('scribble-join-section');
 const setupSection = document.getElementById('scribble-setup-section');
-const fullMsg = document.getElementById('scribble-full-msg');
+
 
 const nameInput = document.getElementById('scribble-player-name');
 const joinBtn = document.getElementById('scribble-join-btn');
@@ -88,7 +82,7 @@ document.getElementById('select-scribble').addEventListener('click', () => {
 });
 
 document.getElementById('scribble-back-btn').addEventListener('click', leaveScribble);
-document.getElementById('scribble-full-back-btn').addEventListener('click', leaveScribble);
+
 document.getElementById('scribble-quit-btn').addEventListener('click', leaveScribble);
 document.getElementById('scribble-new-game-btn').addEventListener('click', resetGame);
 
@@ -113,7 +107,7 @@ canvas.addEventListener('mouseout', stopDrawing);
 onValue(playersRef, (snapshot) => {
     players = snapshot.val() || {};
     updatePlayersUI();
-    
+
     const ids = Object.keys(players);
     console.log('Scribble Players Update:', ids.length);
     if (ids.length >= 2 && playerId) {
@@ -169,25 +163,27 @@ async function joinScribble() {
     if (!name) return alert('Enter name');
 
     console.log('Joining Scribble as:', name);
-    const snap = await get(playersRef);
-    if (Object.keys(snap.val() || {}).length >= 2) {
-        joinSection.style.display = 'none';
-        fullMsg.style.display = 'block';
-        return;
-    }
+    // Removed 2-player limit
+
 
     const newPlayerRef = push(playersRef);
     playerId = newPlayerRef.key;
-    
+
     await set(newPlayerRef, {
         name,
         joinedAt: Date.now()
     });
 
     onDisconnect(newPlayerRef).remove();
-    
+
     joinSection.style.display = 'none';
     setupSection.style.display = 'block';
+
+    // Reset stale game status if it was left on 'playing'
+    const statusSnap = await get(statusRef);
+    if (statusSnap.val() === 'playing') {
+        await set(statusRef, 'lobby');
+    }
 }
 
 async function startGame() {
@@ -195,22 +191,34 @@ async function startGame() {
     const ids = Object.keys(players).sort();
     if (ids.length < 2) return alert('Wait for more players');
 
-    const drawerId = ids[Math.floor(Math.random() * ids.length)];
-    const guesserId = ids.find(id => id !== drawerId);
+    try {
+        const drawerId = ids[Math.floor(Math.random() * ids.length)];
 
-    const randomWord = words[Math.floor(Math.random() * words.length)];
+        const roles = {};
+        ids.forEach(id => {
+            roles[id] = (id === drawerId) ? 'drawer' : 'guesser';
+        });
 
-    await update(scribbleRef, {
-        status: 'playing',
-        word: randomWord,
-        roles: {
-            [drawerId]: 'drawer',
-            [guesserId]: 'guesser'
-        },
-        drawing: null,
-        guesses: null,
-        winner: null
-    });
+        const randomWord = words[Math.floor(Math.random() * words.length)];
+
+        // Clear old game data first
+        await remove(drawingRef);
+        await remove(guessesRef);
+
+        // Reset status first to ensure the listener fires when we set 'playing'
+        await set(statusRef, 'lobby');
+
+        // Set game state
+        await set(ref(database, 'game/scribble/word'), randomWord);
+        await set(ref(database, 'game/scribble/roles'), roles);
+        await set(ref(database, 'game/scribble/winner'), null);
+        await set(statusRef, 'playing');
+
+        console.log('Game started! Word:', randomWord, 'Drawer:', drawerId);
+    } catch (error) {
+        console.error('Error starting game:', error);
+        alert('Failed to start game: ' + error.message);
+    }
 }
 
 function showGameScreen() {
@@ -253,7 +261,7 @@ function startDrawing(e) {
 
 function draw(e) {
     if (!isDrawing || myRole !== 'drawer') return;
-    
+
     const [x, y] = getMousePos(e);
     const color = currentTool === 'eraser' ? '#ffffff' : colorPicker.value;
     const size = sizePicker.value;
@@ -363,17 +371,33 @@ async function leaveScribble() {
     }
     const snap = await get(playersRef);
     if (!snap.exists()) {
+        // No players left — clean up entire game state
         await remove(scribbleRef);
+    } else {
+        // Reset status so remaining players aren't stuck
+        await set(statusRef, 'lobby');
     }
     location.reload();
 }
 
 function updatePlayersUI() {
-    playersList.innerHTML = Object.entries(players).map(([id, p]) => {
+    console.log('Updating Scribble Players UI:', players);
+    if (!playersList) {
+        console.error('Scribble Players List element NOT FOUND!');
+        return;
+    }
+
+    const playerEntries = Object.entries(players);
+    if (playerEntries.length === 0) {
+        playersList.innerHTML = '<p class="waiting-text">No players in lobby yet.</p>';
+        return;
+    }
+
+    playersList.innerHTML = playerEntries.map(([id, p]) => {
         return `
             <div class="player-item">
                 <span class="player-icon">👤</span>
-                <span class="player-name">${p.name} ${id === playerId ? '(You)' : ''}</span>
+                <span class="player-name">${p.name || 'Unknown'} ${id === playerId ? '(You)' : ''}</span>
                 <span class="badge">Joined</span>
             </div>
         `;

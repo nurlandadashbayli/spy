@@ -230,19 +230,14 @@
                 <button id="scribble-join-btn" class="btn btn-primary">Join Lobby</button>
             </div>
 
-            <div id="scribble-setup-section" class="card" style="display: none;">
-                <h3>Waiting for Players</h3>
-                <div class="players-status card" style="background: var(--bg-elevated);">
-                    <div id="scribble-players-list" class="players-list"></div>
+            <div class="card">
+                <h3>Players in Lobby</h3>
+                <div id="scribble-players-list" class="players-list"></div>
+                
+                <div id="scribble-setup-section" style="display: none; margin-top: 1.5rem;">
+                    <p class="waiting-text" style="color: var(--success); font-weight: bold; margin-bottom: 1rem;">You have joined!</p>
+                    <button id="scribble-start-btn" class="btn btn-success" style="width: 100%; display: none;">Start Game</button>
                 </div>
-                <button id="scribble-start-btn" class="btn btn-success" style="margin-top: 1.5rem; display: none;">Start
-                    Game</button>
-            </div>
-
-            <div id="scribble-full-msg" class="card" style="display: none; text-align: center;">
-                <p>Room is full. Please try later.</p>
-                <button id="scribble-full-back-btn" class="btn btn-secondary" style="margin-top: 1rem;">Back to
-                    Hub</button>
             </div>
         </div>
 
@@ -264,10 +259,14 @@
 
                     <div id="scribble-tools" class="drawing-tools"
                         style="padding: 1rem; background: var(--bg-card); display: none; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: flex; gap: 1rem; align-items: center; justify-content: center;">
+                        <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button id="scribble-pencil-btn" class="btn btn-secondary active" style="width: auto; padding: 0.5rem 1rem;">✏️</button>
+                                <button id="scribble-eraser-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">🧽</button>
+                            </div>
                             <input type="color" id="scribble-color" value="#9333ea"
                                 style="border: none; background: none; width: 40px; height: 40px; cursor: pointer;">
-                            <input type="range" id="scribble-size" min="2" max="20" value="5" style="width: 100px;">
+                            <input type="range" id="scribble-size" min="2" max="50" value="5" style="width: 100px;">
                             <button id="scribble-clear-btn" class="btn btn-secondary"
                                 style="width: auto; padding: 0.5rem 1rem;">Clear</button>
                         </div>
