@@ -109,9 +109,16 @@ newGameBtn.addEventListener('click', resetWordleGame);
 document.getElementById('wordle-special-chars').addEventListener('click', (e) => {
     const btn = e.target.closest('.special-char-btn');
     if (!btn) return;
-    const char = btn.dataset.char;
-    guessInput.value += char;
+    guessInput.value += btn.dataset.char;
     guessInput.focus();
+});
+
+// Special character buttons — append clicked char to the secret word input
+document.getElementById('wordle-secret-special-chars').addEventListener('click', (e) => {
+    const btn = e.target.closest('.special-char-btn');
+    if (!btn) return;
+    secretWordInput.value += btn.dataset.char;
+    secretWordInput.focus();
 });
 
 
