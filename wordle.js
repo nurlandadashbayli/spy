@@ -64,6 +64,30 @@ const wordleRef = ref(database, 'game/wordle');
 const playersRef = ref(database, 'game/wordle/players');
 const statusRef = ref(database, 'game/wordle/status');
 
+// ── Alphabet Note Panel ──────────────────────────────────────────────────────
+function initAlphabetPanel() {
+    const grid = document.getElementById('wordle-alphabet-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    'ABCÇDEƏFGĞHİIJKLMNOÖÜPQRSŞTUVWXYZ'.split('').forEach(letter => {
+        const tile = document.createElement('button');
+        tile.className = 'letter-tile';
+        tile.textContent = letter;
+        tile.setAttribute('aria-label', `Toggle letter ${letter}`);
+        tile.addEventListener('click', () => tile.classList.toggle('hidden'));
+        grid.appendChild(tile);
+    });
+    // 9 cols × 4 rows = 36 slots; pad the remaining 3 with invisible spacers
+    // so the last row fills the full width (no trailing gap on the right)
+    for (let i = 0; i < 3; i++) {
+        const spacer = document.createElement('div');
+        spacer.className = 'letter-spacer';
+        grid.appendChild(spacer);
+    }
+}
+
+initAlphabetPanel();
+
 // Selection Logic
 document.getElementById('select-wordle').addEventListener('click', () => {
     selectionScreen.classList.remove('active');
@@ -80,6 +104,15 @@ changeBtn.addEventListener('click', changeWord);
 startBtn.addEventListener('click', startGame);
 submitGuessBtn.addEventListener('click', submitGuess);
 newGameBtn.addEventListener('click', resetWordleGame);
+
+// Special character buttons — append clicked char to the guess input
+document.getElementById('wordle-special-chars').addEventListener('click', (e) => {
+    const btn = e.target.closest('.special-char-btn');
+    if (!btn) return;
+    const char = btn.dataset.char;
+    guessInput.value += char;
+    guessInput.focus();
+});
 
 
 
@@ -102,8 +135,9 @@ onValue(statusRef, (snapshot) => {
     const status = snapshot.val();
     if (status === 'playing' && playerId) {
         showGameScreen();
-    } else if (status === 'lobby') {
-        // Handle reset
+    } else if (status === 'lobby' && gameScreen.classList.contains('active')) {
+        // The other player pressed New Game — bring this player back too
+        returnToLobby();
     }
 });
 
@@ -112,10 +146,24 @@ async function joinWordle() {
     if (!name) return alert('Enter name');
 
     const snap = await get(playersRef);
-    if (Object.keys(snap.val() || {}).length >= 2) {
+    const existingPlayers = snap.val() || {};
+    if (Object.keys(existingPlayers).length >= 2) {
         joinSection.style.display = 'none';
         fullMsg.style.display = 'block';
         return;
+    }
+
+    // First player joining: wipe any stale state from a previous game
+    // (players may have closed the tab without pressing Quit, leaving
+    //  status='playing' in Firebase which prevents the onValue listener
+    //  from re-firing when startGame sets it to 'playing' again)
+    if (Object.keys(existingPlayers).length === 0) {
+        await set(statusRef, 'lobby');
+        await remove(ref(database, 'game/wordle/guesses'));
+        await update(wordleRef, { currentTurn: null, wordLength: null });
+        // Clear winner flags on any lingering player nodes
+        const playerSnap = await get(playersRef);
+        if (playerSnap.exists()) await remove(playersRef);
     }
 
     const newPlayerRef = push(playersRef);
@@ -188,13 +236,18 @@ function checkReadyStatus() {
 }
 
 async function startGame() {
-    await set(statusRef, 'playing');
-    // Set initial turn
     const firstPlayer = Object.keys(players).sort()[0];
+    const wordLen = players[playerId]?.word?.length || secretWord.length;
+
+    // Set to null first so the onValue listener always re-fires even
+    // if the previous game left status as 'playing' in Firebase.
+    await set(statusRef, null);
     await update(wordleRef, {
         currentTurn: firstPlayer,
-        wordLength: secretWord.length
+        wordLength: wordLen
     });
+    await remove(ref(database, 'game/wordle/guesses'));
+    await set(statusRef, 'playing');
 }
 
 function showGameScreen() {
@@ -345,18 +398,33 @@ function updateGuessesUI(guesses) {
     `).join('');
 }
 
+// Shared local UI reset – called by whoever triggers New Game AND by the
+// other player's statusRef listener when they detect status flipped to 'lobby'.
+function returnToLobby() {
+    gameScreen.classList.remove('active');
+    lobbyScreen.classList.add('active');
+    setupSection.style.display = 'block';
+
+    readyBtn.disabled = false;
+    readyBtn.innerText = 'Set Word & Ready';
+    changeBtn.style.display = 'none';
+    secretWordInput.disabled = false;
+    secretWordInput.value = '';
+    secretWord = '';
+    newGameBtn.style.display = 'none';
+
+    const notesArea = document.getElementById('wordle-notes');
+    if (notesArea) notesArea.value = '';
+
+    initAlphabetPanel();
+}
+
 async function resetWordleGame() {
-    // Reset room state
+    // Reset Firebase state (guesses, turn, player ready/word/winner)
     await set(statusRef, 'lobby');
     await remove(ref(database, 'game/wordle/guesses'));
+    await update(wordleRef, { currentTurn: null, wordLength: null });
 
-    // Reset turn and word length
-    await update(wordleRef, {
-        currentTurn: null,
-        wordLength: null
-    });
-
-    // Reset all players
     const updates = {};
     Object.keys(players).forEach(id => {
         updates[`players/${id}/ready`] = false;
@@ -365,21 +433,9 @@ async function resetWordleGame() {
     });
     await update(wordleRef, updates);
 
-    // Return to setup
-    gameScreen.classList.remove('active');
-    lobbyScreen.classList.add('active');
-    setupSection.style.display = 'block';
-
-    // Reset local inputs
-    readyBtn.disabled = false;
-    readyBtn.innerText = 'Set Word & Ready';
-    changeBtn.style.display = 'none';
-    secretWordInput.disabled = false;
-    secretWordInput.value = '';
-    secretWord = '';
-
-    // Refresh page or just ensure UI reflects changes
-    // location.reload() is a bit harsh, let's just use state
+    // The statusRef listener will fire 'lobby' and call returnToLobby()
+    // for BOTH players (including this one, since gameScreen is still active
+    // at the time we write to Firebase).
 }
 
 async function leaveWordle() {

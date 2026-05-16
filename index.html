@@ -185,30 +185,55 @@
                 </div>
             </div>
 
-            <div class="game-layout">
-                <!-- My Guesses -->
-                <div class="card">
-                    <h3>Your Guesses</h3>
-                    <div id="wordle-guesses-list" class="guesses-list"></div>
+            <div class="wordle-game-wrapper">
+                <!-- Letter Note Panel (Left) -->
+                <div class="wordle-note-panel card">
+                    <h3 class="note-panel-title">Notes</h3>
+                    <div class="alphabet-grid" id="wordle-alphabet-grid">
+                        <!-- Letters injected by JS -->
+                    </div>
+                    <p class="note-hint">Tap letters to hide/show</p>
+                    <label class="note-label" for="wordle-notes">Notes</label>
+                    <textarea id="wordle-notes" class="note-textarea" placeholder="Type your notes here..." spellcheck="false"></textarea>
+                </div>
 
-                    <div id="wordle-input-area" style="margin-top: 1.5rem;">
-                        <div class="input-group">
-                            <input type="text" id="wordle-guess-input" placeholder="Enter guess..." autocomplete="off">
+                <!-- Main Game Area -->
+                <div class="wordle-main">
+                    <div class="game-layout">
+                        <!-- My Guesses -->
+                        <div class="card">
+                            <h3>Your Guesses</h3>
+                            <div id="wordle-guesses-list" class="guesses-list"></div>
+
+                            <div id="wordle-input-area" style="margin-top: 1.5rem;">
+                                <div class="input-group">
+                                    <input type="text" id="wordle-guess-input" placeholder="Enter guess..." autocomplete="off">
+                                </div>
+                                <button id="wordle-submit-guess" class="btn btn-primary">Submit Guess</button>
+                                <div class="special-chars" id="wordle-special-chars">
+                                    <button class="special-char-btn" data-char="ı">ı</button>
+                                    <button class="special-char-btn" data-char="ə">ə</button>
+                                    <button class="special-char-btn" data-char="ö">ö</button>
+                                    <button class="special-char-btn" data-char="ü">ü</button>
+                                    <button class="special-char-btn" data-char="ğ">ğ</button>
+                                    <button class="special-char-btn" data-char="ç">ç</button>
+                                    <button class="special-char-btn" data-char="ş">ş</button>
+                                </div>
+                            </div>
                         </div>
-                        <button id="wordle-submit-guess" class="btn btn-primary">Submit Guess</button>
+
+                        <!-- Opponent's Progress (Summary) -->
+                        <div class="card">
+                            <h3>Opponent's Progress</h3>
+                            <div id="wordle-opponent-history" class="guesses-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 1.5rem;">
+                        <button id="wordle-quit-btn" class="btn btn-secondary">Quit Game</button>
+                        <button id="wordle-new-game-btn" class="btn btn-primary" style="display: none;">New Game</button>
                     </div>
                 </div>
-
-                <!-- Opponent's Progress (Summary) -->
-                <div class="card">
-                    <h3>Opponent's Progress</h3>
-                    <div id="wordle-opponent-history" class="guesses-list"></div>
-                </div>
-            </div>
-
-            <div class="button-group" style="margin-top: 1.5rem;">
-                <button id="wordle-quit-btn" class="btn btn-secondary">Quit Game</button>
-                <button id="wordle-new-game-btn" class="btn btn-primary" style="display: none;">New Game</button>
             </div>
         </div>
 
