@@ -1,4 +1,5 @@
 // Import Firebase SDK (ES modules require imports at the top)
+import { animalNames, cities, countries, adjectives } from './constants.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import {
     getDatabase,
@@ -42,28 +43,7 @@ const gameState = {
     roomName: null
 };
 
-// Animal names pool
-const animalNames = [
-    '🐶 Dog', '🐱 Cat', '🐭 Mouse', '🐹 Hamster', '🐰 Rabbit', '🦊 Fox', '🐻 Bear', '🐼 Panda', '🐻‍❄️ Polar Bear', '🐨 Koala',
-    '🐯 Tiger', '🦁 Lion', '🐮 Cow', '🐷 Pig', '🐸 Frog', '🐵 Monkey', '🐔 Chicken', '🐧 Penguin', '🐦 Bird', '🐤 Chick',
-    '🦆 Duck', '🦅 Eagle', '🦉 Owl', '🦇 Bat', '🐺 Wolf', '🐗 Boar', '🐴 Horse', '🦄 Unicorn', '🐝 Bee', '🐛 Bug',
-    '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', '🦟 Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
-    '🦂 Scorpion', '🐊 Crocodile', '🦑 Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', '🐋 Whale',
-    '🦈 Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', '🦍 Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
-    '🦒 Giraffe', '🦘 Kangaroo', '🐃 Buffalo', '🐂 Ox', '🐏 Ram', '🐑 Sheep', '🐐 Goat', '🦙 Llama', '🦌 Deer', '🦃 Turkey',
-    '🐓 Rooster', '🦚 Peacock', '🦜 Parrot', '🦢 Swan', '🦩 Flamingo', '🕊️ Dove', '🦫 Beaver', '🦡 Badger', '🦥 Sloth', '🦦 Otter',
-    '🦨 Skunk', '🦔 Hedgehog', '🦕 Sauropod', '🦖 T-Rex', '🐉 Dragon', '🐋 Whale', '🐀 Rat', '🐁 Mouse', '🐈‍⬛ Black Cat', '🐩 Poodle',
-    '🦮 Guide Dog', '🐕‍🦺 Service Dog', '🐅 Tiger', '🐎 Horse', '🐖 Pig', '🦣 Mammoth', '🦤 Dodo', '🦖 T-Rex', '🐡 Blowfish', '🦈 Shark'
-];
-
-// Capitals pool
-const capitals = [
-    'Paris', 'London', 'Berlin', 'Rome', 'Madrid', 'Lisbon', 'Amsterdam', 'Brussels', 'Vienna', 'Bern',
-    'Stockholm', 'Oslo', 'Copenhagen', 'Helsinki', 'Reykjavik', 'Dublin', 'Warsaw', 'Prague', 'Budapest', 'Athens',
-    'Moscow', 'Kyiv', 'Ankara', 'Beijing', 'Tokyo', 'Seoul', 'Bangkok', 'Hanoi', 'New Delhi', 'Cairo',
-    'Ottawa', 'Washington D.C.', 'Mexico City', 'Brasilia', 'Buenos Aires', 'Santiago', 'Lima', 'Bogota', 'Canberra', 'Wellington',
-    'Riyadh', 'Baghdad', 'Tehran', 'Jerusalem', 'Beirut', 'Doha', 'Dubai (Not Capital, but fun)', 'Abu Dhabi', 'Nairobi', 'Cape Town'
-];
+// Pools are imported from constants.js
 
 // DOM Elements
 const selectionScreen = document.getElementById('selection-screen');
@@ -88,6 +68,8 @@ const joinSection = document.getElementById('join-section');
 const lobbyControls = document.getElementById('lobby-controls');
 const lobbyControlsBottom = document.getElementById('lobby-controls-bottom');
 const categorySelect = document.getElementById('category-select');
+const activeRoomsSection = document.getElementById('active-rooms-section');
+const activeRoomsList = document.getElementById('active-rooms-list');
 
 // Ensure essential elements exist
 if (!joinSection || !lobbyControls) {
@@ -102,6 +84,9 @@ let gameStatusRef = null;
 // Firebase listener cleanup functions
 let unsubscribePlayers = null;
 let unsubscribeStatus = null;
+let unsubscribeActiveRooms = null;
+
+// Adjectives pool is imported from constants.js
 
 // Event Listeners
 if (joinBtn) joinBtn.addEventListener('click', joinGame);
@@ -136,6 +121,7 @@ if (selectSpy) {
     selectSpy.addEventListener('click', () => {
         selectionScreen.classList.remove('active');
         lobbyScreen.classList.add('active');
+        startActiveRoomsListener();
     });
 }
 
@@ -151,10 +137,88 @@ if (backToHubBtn) {
         if (gameState.playerId) {
             await leaveGame();
         }
+        stopActiveRoomsListener();
         lobbyScreen.classList.remove('active');
         gameScreen.classList.remove('active');
         selectionScreen.classList.add('active');
     });
+}
+
+function startActiveRoomsListener() {
+    if (unsubscribeActiveRooms) return;
+
+    // Only show if we haven't joined a room
+    if (!gameState.playerId && activeRoomsSection) {
+        activeRoomsSection.style.display = 'block';
+    }
+
+    const roomsRef = ref(database, 'game/rooms');
+    unsubscribeActiveRooms = onValue(roomsRef, (snapshot) => {
+        const rooms = snapshot.val() || {};
+        const activeRooms = [];
+
+        for (const [roomName, roomData] of Object.entries(rooms)) {
+            // Check if there are players
+            const players = roomData.players || {};
+            const playerCount = Object.keys(players).length;
+
+            // Exclude rooms that are already started
+            if (playerCount > 0 && roomData.status === 'lobby') {
+                activeRooms.push({
+                    name: roomName,
+                    count: playerCount
+                });
+            }
+        }
+
+        if (activeRoomsList) {
+            if (activeRooms.length === 0) {
+                activeRoomsList.innerHTML = '<p class="waiting-text">No active rooms found. Create one above!</p>';
+            } else {
+                activeRoomsList.innerHTML = activeRooms.map(room => `
+                    <button class="btn btn-secondary active-room-btn" data-room="${escapeHtml(room.name)}" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; width: 100%;">
+                        <span>${escapeHtml(room.name)}</span>
+                        <span class="badge" style="background: var(--primary);">${room.count} player${room.count > 1 ? 's' : ''}</span>
+                    </button>
+                `).join('');
+
+                // Add click listeners to new buttons
+                document.querySelectorAll('.active-room-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const targetRoom = e.currentTarget.getAttribute('data-room');
+                        quickJoinRoom(targetRoom);
+                    });
+                });
+            }
+        }
+    });
+}
+
+function stopActiveRoomsListener() {
+    if (unsubscribeActiveRooms) {
+        unsubscribeActiveRooms();
+        unsubscribeActiveRooms = null;
+    }
+    if (activeRoomsSection) {
+        activeRoomsSection.style.display = 'none';
+    }
+}
+
+function quickJoinRoom(targetRoom) {
+    if (roomNameInput) roomNameInput.value = targetRoom;
+
+    // Generate random name
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    // get random animal name without emoji
+    const randomAnimalStr = animalNames[Math.floor(Math.random() * animalNames.length)];
+    // Split by space, take the word part
+    const [, ...animalParts] = randomAnimalStr.split(' ');
+    const randomAnimal = animalParts.join('');
+
+    const randomName = `${randomAdjective}${randomAnimal}`;
+    if (playerNameInput) playerNameInput.value = randomName;
+
+    joinGame();
 }
 
 function setupRoomListeners() {
@@ -219,7 +283,7 @@ async function joinGame() {
 
     try {
         console.log(`Joining room: ${roomName}...`);
-        
+
         gameState.roomName = roomName;
         roomRef = ref(database, `game/rooms/${roomName}`);
         playersRef = ref(database, `game/rooms/${roomName}/players`);
@@ -236,7 +300,7 @@ async function joinGame() {
         gameState.currentPlayer = {
             id: gameState.playerId,
             name: playerName,
-            categoryVote: categorySelect ? categorySelect.value : 'capitals',
+            categoryVote: categorySelect ? categorySelect.value : 'cities',
             role: null,
             joinedAt: Date.now()
         };
@@ -244,7 +308,8 @@ async function joinGame() {
         await set(newPlayerRef, gameState.currentPlayer);
 
         console.log('✅ Joined game!');
-        
+
+        stopActiveRoomsListener();
         setupRoomListeners();
 
         // Update UI state
@@ -304,19 +369,26 @@ async function startGame() {
         }
 
         // Tally category votes
-        let votes = { animals: 0, capitals: 0 };
+        let votes = { animals: 0, cities: 0, countries: 0 };
         Object.values(players).forEach(p => {
-            const vote = p.categoryVote || 'capitals';
+            const vote = p.categoryVote || 'cities';
             votes[vote] = (votes[vote] || 0) + 1;
         });
 
         // Determine winning category
-        let winningCategory = 'capitals';
-        if (votes.animals > votes.capitals) {
-            winningCategory = 'animals';
+        let winningCategory = 'cities';
+        let maxVotes = 0;
+        for (const [cat, count] of Object.entries(votes)) {
+            if (count > maxVotes) {
+                maxVotes = count;
+                winningCategory = cat;
+            }
         }
 
-        const wordPool = winningCategory === 'capitals' ? capitals : animalNames;
+        let wordPool;
+        if (winningCategory === 'cities') wordPool = cities;
+        else if (winningCategory === 'countries') wordPool = countries;
+        else wordPool = animalNames;
 
         // Assign roles
         const playerIds = Object.keys(players);
@@ -370,19 +442,24 @@ async function showGameScreen() {
 
             // Fetch category to update instructions
             const roomSnap = await get(ref(database, `game/rooms/${gameState.roomName}/category`));
-            const category = roomSnap.val() || 'capitals';
+            const category = roomSnap.val() || 'cities';
             
             const categoryDisplay = document.getElementById('game-category-display');
             if (categoryDisplay) {
-                categoryDisplay.innerText = `Category: ${category === 'animals' ? '🐶 Animals' : '🏛️ Capitals'}`;
+                let displayStr = '🏙️ Cities';
+                if (category === 'animals') displayStr = '🐶 Animals';
+                if (category === 'countries') displayStr = '🌍 Countries';
+                categoryDisplay.innerText = `Category: ${displayStr}`;
             }
             
             const instructionCivilian = document.getElementById('instruction-civilian');
             if (instructionCivilian) {
                 if (category === 'animals') {
                     instructionCivilian.innerHTML = "<strong>If you're an animal:</strong> Discuss and figure out who the spy is!";
-                } else if (category === 'capitals') {
+                } else if (category === 'cities') {
                     instructionCivilian.innerHTML = "<strong>If you're a city:</strong> Discuss and figure out who the spy is!";
+                } else if (category === 'countries') {
+                    instructionCivilian.innerHTML = "<strong>If you're a country:</strong> Discuss and figure out who the spy is!";
                 }
             }
 

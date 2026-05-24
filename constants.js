@@ -1,0 +1,59 @@
+// Animal names pool
+export const animalNames = [
+    '🐶 Dog', '🐱 Cat', '🐭 Mouse', '🐹 Hamster', '🐰 Rabbit', '🦊 Fox', '🐻 Bear', '🐼 Panda', '🐻‍❄️ Polar Bear', '🐨 Koala',
+    '🐯 Tiger', '🦁 Lion', '🐮 Cow', '🐷 Pig', '🐸 Frog', '🐵 Monkey', '🐔 Chicken', '🐧 Penguin', '🐦 Bird', '🐤 Chick',
+    '🦆 Duck', '🦅 Eagle', '🦉 Owl', '🦇 Bat', '🐺 Wolf', '🐗 Boar', '🐴 Horse', '🦄 Unicorn', '🐝 Bee', '🐛 Bug',
+    '🦋 Butterfly', '🐌 Snail', '🐞 Beetle', '🐜 Ant', '🦟 Mosquito', '🦗 Cricket', '🕷️ Spider', '🐢 Turtle', '🐍 Snake', '🦎 Lizard',
+    '🦂 Scorpion', '🐊 Crocodile', '🦑 Squid', '🐙 Octopus', '🦐 Shrimp', '🦀 Crab', '🐡 Pufferfish', '🐠 Fish', '🐬 Dolphin', '🐋 Whale',
+    '🦈 Shark', '🦭 Seal', '🐆 Leopard', '🦓 Zebra', '🦍 Gorilla', '🦧 Orangutan', '🐘 Elephant', '🦛 Hippo', '🦏 Rhino', '🐪 Camel',
+    '🦒 Giraffe', '🦘 Kangaroo', '🐃 Buffalo', '🐂 Ox', '🐏 Ram', '🐑 Sheep', '🐐 Goat', '🦙 Llama', '🦌 Deer', '🦃 Turkey',
+    '🐓 Rooster', '🦚 Peacock', '🦜 Parrot', '🦢 Swan', '🦩 Flamingo', '🕊️ Dove', '🦫 Beaver', '🦡 Badger', '🦥 Sloth', '🦦 Otter',
+    '🦨 Skunk', '🦔 Hedgehog', '🦕 Sauropod', '🦖 T-Rex', '🐉 Dragon', '🐀 Rat', '🐁 Mouse', '🐈‍⬛ Black Cat', '🐩 Poodle',
+    '🦮 Guide Dog', '🐅 Tiger', '🐎 Horse', '🐖 Pig', '🦣 Mammoth', '🦤 Dodo', '🐡 Blowfish'
+];
+
+// Expanded Cities pool (replacing Capitals)
+export const cities = [
+    // North America
+    'New York', 'Los Angeles', 'Chicago', 'Miami', 'Las Vegas', 'San Francisco', 'Toronto', 'Vancouver', 'Montreal', 'Mexico City', 'Cancun', 'Havana', 'Washington D.C.', 'Boston', 'Seattle', 'Honolulu',
+    // South America
+    'Rio de Janeiro', 'São Paulo', 'Buenos Aires', 'Santiago', 'Lima', 'Bogotá', 'Caracas', 'Medellín', 'Quito', 'La Paz',
+    // Europe
+    'London', 'Paris', 'Rome', 'Berlin', 'Madrid', 'Barcelona', 'Amsterdam', 'Vienna', 'Prague', 'Budapest', 'Athens', 'Dublin', 'Lisbon', 'Stockholm', 'Oslo', 'Copenhagen', 'Helsinki', 'Warsaw', 'Moscow', 'St. Petersburg', 'Kyiv', 'Istanbul', 'Milan', 'Venice', 'Florence', 'Munich', 'Frankfurt', 'Zurich', 'Geneva', 'Brussels', 'Edinburgh',
+    // Asia
+    'Tokyo', 'Kyoto', 'Osaka', 'Beijing', 'Shanghai', 'Hong Kong', 'Taipei', 'Seoul', 'Busan', 'Bangkok', 'Phuket', 'Singapore', 'Kuala Lumpur', 'Jakarta', 'Bali', 'Manila', 'Ho Chi Minh City', 'Hanoi', 'Mumbai', 'New Delhi', 'Bangalore', 'Dubai', 'Abu Dhabi', 'Riyadh', 'Doha', 'Jerusalem', 'Tel Aviv', 'Tehran', 'Beirut', 'Amman',
+    // Africa
+    'Cairo', 'Marrakech', 'Casablanca', 'Nairobi', 'Cape Town', 'Johannesburg', 'Lagos', 'Accra', 'Dakar', 'Addis Ababa',
+    // Oceania
+    'Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Auckland', 'Wellington', 'Queenstown', 'Fiji (Suva)'
+];
+
+// Adjectives pool for random names
+export const adjectives = [
+    'Sneaky', 'Brave', 'Clever', 'Swift', 'Silent', 'Mighty', 'Hidden', 'Fierce', 'Wild', 'Shadow',
+    'Lucky', 'Crazy', 'Happy', 'Sleepy', 'Fast', 'Super', 'Epic', 'Mystic', 'Golden', 'Dark'
+];
+
+// Countries pool
+export const countries = [
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria',
+    'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan',
+    'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', "Côte d'Ivoire", 'Cabo Verde',
+    'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo',
+    'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czechia', 'Democratic Republic of the Congo', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
+    'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland',
+    'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea',
+    'Guinea-Bissau', 'Guyana', 'Haiti', 'Holy See', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran',
+    'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati',
+    'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania',
+    'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius',
+    'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia',
+    'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway',
+    'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland',
+    'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino',
+    'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands',
+    'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland',
+    'Syria', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey',
+    'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu',
+    'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+];

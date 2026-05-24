@@ -72,6 +72,13 @@
                 <button id="join-btn" class="btn btn-primary" style="margin-top: 1rem;">Join Room</button>
             </div>
 
+            <!-- Active Rooms Section -->
+            <div id="active-rooms-section" class="card" style="display: none;">
+                <h3>Active Rooms</h3>
+                <p class="game-subtitle" style="margin-bottom: 1rem; font-size: 0.9rem;">Click a room to join instantly!</p>
+                <div id="active-rooms-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
             <!-- Player List Section (Always Visible) -->
             <div id="players-waiting" class="card">
                 <h3>Players in Lobby</h3>
@@ -84,7 +91,8 @@
                         <label for="category-select" style="font-size: 0.9rem; color: #666;">Your Preferred Category:</label>
                         <select id="category-select" class="form-control"
                             style="width: 100%; padding: 0.5rem; margin-top: 0.2rem;">
-                            <option value="capitals">🏛️ Capitals</option>
+                            <option value="cities">🏙️ Cities</option>
+                            <option value="countries">🌍 Countries</option>
                             <option value="animals">🐶 Animals</option>
                         </select>
                     </div>
