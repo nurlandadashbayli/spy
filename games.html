@@ -84,7 +84,8 @@
             <!-- Active Rooms Section -->
             <div id="active-rooms-section" class="card" style="display: none;">
                 <h3>Active Rooms</h3>
-                <p class="game-subtitle" style="margin-bottom: 1rem; font-size: 0.9rem;">Click a room to join instantly!</p>
+                <p class="game-subtitle" style="margin-bottom: 1rem; font-size: 0.9rem;">Click a room to join instantly!
+                </p>
                 <div id="active-rooms-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
             </div>
 
@@ -97,7 +98,8 @@
                     <p class="waiting-text" style="font-weight: bold; color: #4CAF50;">You have joined!</p>
 
                     <div class="category-group" style="margin-bottom: 1rem;">
-                        <label for="category-select" style="font-size: 0.9rem; color: #666;">Your Preferred Category:</label>
+                        <label for="category-select" style="font-size: 0.9rem; color: #666;">Your Preferred
+                            Category:</label>
                         <select id="category-select" class="form-control"
                             style="width: 100%; padding: 0.5rem; margin-top: 0.2rem;">
                             <option value="cities">🏙️ Cities</option>
@@ -116,7 +118,8 @@
                 <p class="waiting-text">Waiting for more players...</p>
 
                 <div id="lobby-controls-bottom" style="display: none; margin-top: 1rem;">
-                    <button id="reset-lobby-btn" class="btn btn-danger" style="width: 100%;">Reset Lobby (Kick All)</button>
+                    <button id="reset-lobby-btn" class="btn btn-danger" style="width: 100%;">Reset Lobby (Kick
+                        All)</button>
                 </div>
             </div>
         </div>
@@ -142,7 +145,8 @@
 
             <div class="instructions card">
                 <h3>How to Play</h3>
-                <p id="instruction-civilian"><strong>If you're an animal:</strong> Discuss and figure out who the spy is!</p>
+                <p id="instruction-civilian"><strong>If you're an animal:</strong> Discuss and figure out who the spy
+                    is!</p>
                 <p id="instruction-spy"><strong>If you're the spy:</strong> Blend in and don't get caught!</p>
             </div>
 
@@ -226,7 +230,8 @@
                     </div>
                     <p class="note-hint">Tap letters to hide/show</p>
                     <label class="note-label" for="wordle-notes">Notes</label>
-                    <textarea id="wordle-notes" class="note-textarea" placeholder="Type your notes here..." spellcheck="false"></textarea>
+                    <textarea id="wordle-notes" class="note-textarea" placeholder="Type your notes here..."
+                        spellcheck="false"></textarea>
                 </div>
 
                 <!-- Main Game Area -->
@@ -239,7 +244,8 @@
 
                             <div id="wordle-input-area" style="margin-top: 1.5rem;">
                                 <div class="input-group">
-                                    <input type="text" id="wordle-guess-input" placeholder="Enter guess..." autocomplete="off">
+                                    <input type="text" id="wordle-guess-input" placeholder="Enter guess..."
+                                        autocomplete="off">
                                 </div>
                                 <button id="wordle-submit-guess" class="btn btn-primary">Submit Guess</button>
                                 <div class="special-chars" id="wordle-special-chars">
@@ -263,7 +269,8 @@
 
                     <div class="button-group" style="margin-top: 1.5rem;">
                         <button id="wordle-quit-btn" class="btn btn-secondary">Quit Game</button>
-                        <button id="wordle-new-game-btn" class="btn btn-primary" style="display: none;">New Game</button>
+                        <button id="wordle-new-game-btn" class="btn btn-primary" style="display: none;">New
+                            Game</button>
                     </div>
                 </div>
             </div>
@@ -290,10 +297,12 @@
             <div class="card">
                 <h3>Players in Lobby</h3>
                 <div id="scribble-players-list" class="players-list"></div>
-                
+
                 <div id="scribble-setup-section" style="display: none; margin-top: 1.5rem;">
-                    <p class="waiting-text" style="color: var(--success); font-weight: bold; margin-bottom: 1rem;">You have joined!</p>
-                    <button id="scribble-start-btn" class="btn btn-success" style="width: 100%; display: none;">Start Game</button>
+                    <p class="waiting-text" style="color: var(--success); font-weight: bold; margin-bottom: 1rem;">You
+                        have joined!</p>
+                    <button id="scribble-start-btn" class="btn btn-success" style="width: 100%; display: none;">Start
+                        Game</button>
                 </div>
             </div>
         </div>
@@ -316,10 +325,13 @@
 
                     <div id="scribble-tools" class="drawing-tools"
                         style="padding: 1rem; background: var(--bg-card); display: none; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                        <div
+                            style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
                             <div style="display: flex; gap: 0.5rem;">
-                                <button id="scribble-pencil-btn" class="btn btn-secondary active" style="width: auto; padding: 0.5rem 1rem;">✏️</button>
-                                <button id="scribble-eraser-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">🧽</button>
+                                <button id="scribble-pencil-btn" class="btn btn-secondary active"
+                                    style="width: auto; padding: 0.5rem 1rem;">✏️</button>
+                                <button id="scribble-eraser-btn" class="btn btn-secondary"
+                                    style="width: auto; padding: 0.5rem 1rem;">🧽</button>
                             </div>
                             <input type="color" id="scribble-color" value="#9333ea"
                                 style="border: none; background: none; width: 40px; height: 40px; cursor: pointer;">
@@ -362,11 +374,13 @@
             <div id="password-join-section" class="card">
                 <div class="input-group">
                     <label for="password-room-name">Enter Room Name</label>
-                    <input type="text" id="password-room-name" placeholder="e.g. secret123" maxlength="15" autocomplete="off">
+                    <input type="text" id="password-room-name" placeholder="e.g. secret123" maxlength="15"
+                        autocomplete="off">
                 </div>
                 <div class="input-group" style="margin-top: 1rem;">
                     <label for="password-player-name">Enter Your Name</label>
-                    <input type="text" id="password-player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
+                    <input type="text" id="password-player-name" placeholder="Your name..." maxlength="20"
+                        autocomplete="off">
                 </div>
                 <button id="password-join-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Join Room</button>
             </div>
@@ -374,14 +388,15 @@
             <!-- Active Rooms Section -->
             <div id="password-active-rooms-section" class="card" style="display: none;">
                 <h3>Active Rooms</h3>
-                <p class="game-subtitle" style="margin-bottom: 1rem; font-size: 0.9rem;">Click a room to join instantly!</p>
+                <p class="game-subtitle" style="margin-bottom: 1rem; font-size: 0.9rem;">Click a room to join instantly!
+                </p>
                 <div id="password-active-rooms-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
             </div>
 
             <div id="password-lobby-section" class="card" style="display: none;">
                 <h3>Players in Lobby</h3>
                 <div id="password-players-list" class="players-list" style="margin-top: 1rem;"></div>
-                
+
                 <div class="button-group" style="margin-top: 1.5rem;">
                     <button id="password-start-btn" class="btn btn-success" style="display: none;">Start Game</button>
                     <button id="password-leave-btn" class="btn btn-secondary">Leave Lobby</button>
@@ -393,7 +408,7 @@
         <div id="password-game-screen" class="screen">
             <div class="game-header">
                 <h1 class="game-title">🔑 Password</h1>
-                <p class="game-subtitle">Click nouns to highlight/select them. Both players must agree to skip!</p>
+                <p class="game-subtitle">Click nouns to highlight them.</p>
             </div>
 
             <div class="card" style="text-align: center;">
@@ -401,9 +416,10 @@
                 <div id="password-nouns-grid" class="nouns-grid" style="margin-bottom: 2rem;">
                     <!-- 5 nouns will be injected here -->
                 </div>
-                
+
                 <div style="display: flex; justify-content: space-around; gap: 1rem;">
-                    <button id="password-skip-btn" class="btn btn-secondary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <button id="password-skip-btn" class="btn btn-secondary"
+                        style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                         <span>⏭️ Skip Nouns</span>
                     </button>
                 </div>
@@ -424,7 +440,7 @@
         <script type="module" src="wordle.js?v=1.0"></script>
         <script type="module" src="scribble.js?v=1.0"></script>
         <script type="module" src="password.js?v=1.0"></script>
-        
+
         <script>
             const originalTitle = document.title;
             document.addEventListener('visibilitychange', () => {
