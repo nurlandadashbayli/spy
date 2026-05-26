@@ -346,6 +346,17 @@
         <script type="module" src="game.js?v=1.4"></script>
         <script type="module" src="wordle.js?v=1.0"></script>
         <script type="module" src="scribble.js?v=1.0"></script>
+        
+        <script>
+            const originalTitle = document.title;
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    document.title = 'Son Xeber';
+                } else {
+                    document.title = originalTitle;
+                }
+            });
+        </script>
     </div> <!-- Final Container Closing -->
 </body>
 
