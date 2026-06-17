@@ -605,6 +605,37 @@
             </div>
         </div>
 
+        <!-- Scrabble Modals -->
+        <div id="scrabble-fail-modal" class="scrabble-modal-overlay" style="display: none;">
+            <div class="scrabble-modal-card card">
+                <h3 style="color: var(--danger); margin-bottom: 0.5rem;">Word Not Found</h3>
+                <p id="scrabble-fail-text" style="margin-bottom: 1rem;">The word was not found in the dictionary.</p>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button id="scrabble-fail-cancel-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                    <button id="scrabble-fail-request-btn" class="btn btn-primary" style="flex: 1;">Request Approval</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="scrabble-waiting-modal" class="scrabble-modal-overlay" style="display: none;">
+            <div class="scrabble-modal-card card">
+                <h3 style="color: var(--warning); margin-bottom: 0.5rem;">Waiting...</h3>
+                <p>Waiting for opponent to approve your word...</p>
+            </div>
+        </div>
+
+        <div id="scrabble-decision-modal" class="scrabble-modal-overlay" style="display: none;">
+            <div class="scrabble-modal-card card">
+                <h3 style="color: var(--primary-light); margin-bottom: 0.5rem;">Word Approval</h3>
+                <p id="scrabble-decision-text" style="margin-bottom: 1rem;">Opponent wants to play a word. Allow?</p>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button id="scrabble-decision-no-btn" class="btn btn-danger" style="flex: 1;">Reject</button>
+                    <button id="scrabble-decision-yes-btn" class="btn btn-success" style="flex: 1;">Accept</button>
+                </div>
+            </div>
+        </div>
+        <!-- End Scrabble Modals -->
+
         <!-- Firebase SDK -->
         <script type="module" src="game.js?v=1.4"></script>
         <script type="module" src="scrabble-game.js?v=1.0"></script>

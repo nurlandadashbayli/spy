@@ -105,6 +105,21 @@ const scoresList = document.getElementById('scrabble-scores-list');
 const bagCount = document.getElementById('scrabble-bag-count');
 const turnIndicator = document.getElementById('scrabble-turn-indicator');
 
+// Modal DOM
+const failModal = document.getElementById('scrabble-fail-modal');
+const failText = document.getElementById('scrabble-fail-text');
+const failCancelBtn = document.getElementById('scrabble-fail-cancel-btn');
+const failRequestBtn = document.getElementById('scrabble-fail-request-btn');
+
+const waitingModal = document.getElementById('scrabble-waiting-modal');
+
+const decisionModal = document.getElementById('scrabble-decision-modal');
+const decisionText = document.getElementById('scrabble-decision-text');
+const decisionNoBtn = document.getElementById('scrabble-decision-no-btn');
+const decisionYesBtn = document.getElementById('scrabble-decision-yes-btn');
+
+let pendingCommitData = null; // {word, wordScore, tempBoard}
+
 // Event Listeners
 if (selectScrabble) {
     selectScrabble.addEventListener('click', () => {
@@ -124,6 +139,43 @@ if (passBtn) passBtn.addEventListener('click', handlePassTurn);
 if (recallBtn) recallBtn.addEventListener('click', () => {
     pendingPlacements = [];
     renderGame();
+});
+
+// Modal Event Listeners
+if (failCancelBtn) failCancelBtn.addEventListener('click', () => {
+    failModal.style.display = 'none';
+    playBtn.disabled = false;
+    playBtn.innerText = 'Play Word';
+});
+
+if (failRequestBtn) failRequestBtn.addEventListener('click', async () => {
+    failModal.style.display = 'none';
+    if (!pendingCommitData) return;
+    try {
+        await update(ref(database, `game/scrabble/rooms/${roomName}`), {
+            approvalRequest: {
+                status: 'pending',
+                word: pendingCommitData.word,
+                from: playerId
+            }
+        });
+        waitingModal.style.display = 'flex';
+    } catch (e) {
+        console.error(e);
+        alert('Failed to send request.');
+        playBtn.disabled = false;
+        playBtn.innerText = 'Play Word';
+    }
+});
+
+if (decisionYesBtn) decisionYesBtn.addEventListener('click', async () => {
+    decisionModal.style.display = 'none';
+    await update(ref(database, `game/scrabble/rooms/${roomName}/approvalRequest`), { status: 'approved' });
+});
+
+if (decisionNoBtn) decisionNoBtn.addEventListener('click', async () => {
+    decisionModal.style.display = 'none';
+    await update(ref(database, `game/scrabble/rooms/${roomName}/approvalRequest`), { status: 'rejected' });
 });
 
 // Setup Rack Drop Zone
@@ -204,6 +256,12 @@ function setupRealtimeListeners() {
                 pendingPlacements = [];
             }
             renderGame();
+            if (gameData.approvalRequest) {
+                handleApprovalRequest(gameData.approvalRequest);
+            } else {
+                if (waitingModal) waitingModal.style.display = 'none';
+                if (decisionModal) decisionModal.style.display = 'none';
+            }
         } else {
             gameScreen.classList.remove('active');
             lobbyScreen.classList.add('active');
@@ -489,6 +547,66 @@ function renderBoard() {
 
 // --- Validation ---
 
+function toWikiLower(word) {
+    const map = {
+        'I': 'ı', 'İ': 'i', 'Ə': 'ə', 'Ö': 'ö', 
+        'Ü': 'ü', 'Ğ': 'ğ', 'Ç': 'ç', 'Ş': 'ş'
+    };
+    return word.replace(/[IİƏÖÜĞÇŞ]/g, m => map[m]).toLowerCase();
+}
+
+async function isValidWord(word) {
+    if (!word || word.length < 2) return false;
+    let url;
+    
+    // Custom mapping to prevent JS converting 'İ' to 'i\u0307'
+    let lowerWord = toWikiLower(word);
+    let capitalizedWord = word.charAt(0) + toWikiLower(word.slice(1));
+
+    try {
+        // 1. Check az.wiktionary.org
+        url = `https://az.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&format=json&origin=*`;
+        let response = await fetch(url);
+        let data = await response.json();
+        if (data.query && data.query.pages) {
+            for (let pageId in data.query.pages) {
+                if (!data.query.pages[pageId].hasOwnProperty('missing')) return true;
+            }
+        }
+
+        // 2. Check az.wikipedia.org
+        url = `https://az.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&format=json&origin=*`;
+        response = await fetch(url);
+        data = await response.json();
+        if (data.query && data.query.pages) {
+            for (let pageId in data.query.pages) {
+                if (!data.query.pages[pageId].hasOwnProperty('missing')) return true;
+            }
+        }
+
+        // 3. Check en.wiktionary.org for "Azerbaijani" section (like user provided URL)
+        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(lowerWord)}&prop=sections&format=json&origin=*`;
+        response = await fetch(url);
+        data = await response.json();
+        if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
+            return true;
+        }
+
+        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalizedWord)}&prop=sections&format=json&origin=*`;
+        response = await fetch(url);
+        data = await response.json();
+        if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
+            return true;
+        }
+
+        return false;
+    } catch (e) {
+        console.error("API check failed", e);
+        // Fallback to true so the game doesn't break if API is blocked by CORS/network
+        return true; 
+    }
+}
+
 async function handlePassTurn() {
     if (gameData.currentTurn !== playerId) return;
     playBtn.disabled = true;
@@ -612,10 +730,7 @@ async function handlePlayWord() {
 
     if (word.length < 2) return alert('Word must be at least 2 letters.');
 
-    // 5. Validation bypassed (User requested no Wikipedia validation)
-    // The word is accepted directly.
-
-    // 6. Scoring
+    // 5. Scoring (Compute before validation so we can store it)
     let wordScore = 0;
     let wordMultiplier = 1;
 
@@ -648,6 +763,27 @@ async function handlePlayWord() {
     wordScore *= wordMultiplier;
     if (pendingPlacements.length === 7) wordScore += 50;
 
+    pendingCommitData = { word: word, wordScore: wordScore, tempBoard: tempBoard };
+
+    // 6. Validation
+    playBtn.disabled = true;
+    playBtn.innerText = 'Checking...';
+    
+    const isValid = await isValidWord(word);
+    if (!isValid) {
+        failText.innerText = `The word "${word}" was not found in the dictionary.`;
+        failModal.style.display = 'flex';
+        return;
+    }
+
+    // If valid, commit directly
+    await commitWord();
+}
+
+async function commitWord() {
+    if (!pendingCommitData) return;
+    const { tempBoard, wordScore } = pendingCommitData;
+
     // 7. Update Firebase
     let bag = [...(gameData.bag || [])];
     const originalRack = gameData.players[playerId].rack || [];
@@ -668,6 +804,7 @@ async function handlePlayWord() {
         board: tempBoard,
         bag: bag,
         currentTurn: nextTurn,
+        approvalRequest: null,
         [`players/${playerId}/rack`]: originalRack,
         [`players/${playerId}/score`]: currentScore + wordScore
     };
@@ -676,10 +813,42 @@ async function handlePlayWord() {
         await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
         pendingPlacements = [];
         playBtn.innerText = 'Play Word';
+        pendingCommitData = null;
     } catch (e) {
         console.error(e);
         playBtn.disabled = false;
         playBtn.innerText = 'Play Word';
+    }
+}
+
+function handleApprovalRequest(req) {
+    if (!req) return;
+
+    if (req.status === 'pending') {
+        if (req.from === playerId) {
+            waitingModal.style.display = 'flex';
+            if (failModal) failModal.style.display = 'none';
+        } else {
+            decisionText.innerText = `Opponent wants to play the word "${req.word}". Allow?`;
+            decisionModal.style.display = 'flex';
+        }
+    } else if (req.status === 'approved') {
+        waitingModal.style.display = 'none';
+        decisionModal.style.display = 'none';
+        if (req.from === playerId && pendingCommitData) {
+            commitWord();
+        }
+    } else if (req.status === 'rejected') {
+        waitingModal.style.display = 'none';
+        decisionModal.style.display = 'none';
+        if (req.from === playerId) {
+            alert('Your opponent rejected the word.');
+            playBtn.disabled = false;
+            playBtn.innerText = 'Play Word';
+            pendingCommitData = null;
+            // Clear request
+            update(ref(database, `game/scrabble/rooms/${roomName}`), { approvalRequest: null });
+        }
     }
 }
 
