@@ -57,6 +57,24 @@
                         <span class="badge">New</span>
                     </div>
                 </div>
+
+                <div class="game-card" id="select-storyboard">
+                    <div class="game-card-icon">🎬</div>
+                    <div class="game-card-content">
+                        <h3>Storyboarding</h3>
+                        <p>Sketch and write script underneath!</p>
+                        <span class="badge" style="background: var(--text-secondary);">Local</span>
+                    </div>
+                </div>
+
+                <div class="game-card" id="select-scrabble">
+                    <div class="game-card-icon">🔠</div>
+                    <div class="game-card-content">
+                        <h3>Scrabble</h3>
+                        <p>Multiplayer Azerbaijani Scrabble.</p>
+                        <span class="badge">New</span>
+                    </div>
+                </div>
             </div>
         </div> <!-- Selection Screen -->
 
@@ -467,11 +485,133 @@
             </div>
         </div>
 
+        <!-- Storyboard Screen -->
+        <div id="storyboard-screen" class="screen storyboard-theme">
+            <div class="storyboard-header">
+                <button id="storyboard-back-btn" class="back-btn" style="color: black; border-color: black; margin-bottom: 0;">← Back to Hub</button>
+                <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                    <h1 style="color: black; margin: 0; font-size: 2rem; white-space: nowrap;">Storyboarding</h1>
+                    <input type="text" id="storyboard-title" placeholder="Enter board title..." style="flex: 1; max-width: 400px; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; background: white; color: black;">
+                </div>
+                <button id="storyboard-save-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1.5rem; margin: 0;">Save</button>
+            </div>
+            
+            <div class="storyboard-layout">
+                <!-- Sidebar for saved boards -->
+                <div class="storyboard-sidebar">
+                    <h3 style="margin-bottom: 1rem;">Saved Boards</h3>
+                    <div id="saved-boards-list" style="display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto;">
+                        <p style="color: #666; font-style: italic;">No saved boards.</p>
+                    </div>
+                </div>
+
+                <!-- Main drawing area -->
+                <div class="storyboard-container">
+                    <div class="card" style="padding: 0; overflow: hidden; background: white; border: 1px solid #ddd; box-shadow: none; margin-bottom: 0;">
+                        <canvas id="storyboard-canvas" width="1000" height="600" style="background: white; cursor: crosshair; width: 100%; height: auto; display: block;"></canvas>
+                        
+                        <div class="drawing-tools" style="background: #f9f9f9; border-top: 1px solid #ddd; padding: 1rem;">
+                            <div style="display: flex; gap: 1rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button id="storyboard-pencil-btn" class="btn btn-secondary active" style="width: auto; padding: 0.5rem 1rem; color: black; border-color: #ccc; background: white;">✏️</button>
+                                    <button id="storyboard-eraser-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; color: black; border-color: #ccc; background: white;">🧽</button>
+                                </div>
+                                <input type="color" id="storyboard-color" value="#000000" style="border: none; background: none; width: 40px; height: 40px; cursor: pointer;">
+                                <input type="range" id="storyboard-size" min="2" max="50" value="5" style="width: 100px;">
+                                <button id="storyboard-clear-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; color: black; border-color: #ccc; background: white;">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: white; border: 1px solid #ddd; box-shadow: none; margin-top: 1rem; padding: 1rem;">
+                        <textarea id="storyboard-script" placeholder="Write your script here..." style="width: 100%; height: 200px; border: none; padding: 0; font-family: inherit; font-size: 1.1rem; resize: vertical; background: white; color: black; outline: none;"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrabble Lobby Screen -->
+        <div id="scrabble-lobby-screen" class="screen">
+            <div class="game-header">
+                <button id="scrabble-back-btn" class="back-btn">← Back to Hub</button>
+                <h1 class="game-title">🔠 Scrabble</h1>
+                <p class="game-subtitle">Multiplayer Azerbaijani Scrabble.</p>
+            </div>
+
+            <!-- Join Game Section -->
+            <div id="scrabble-join-section" class="card">
+                <div class="input-group">
+                    <label for="scrabble-room-name">Enter Room Name</label>
+                    <input type="text" id="scrabble-room-name" placeholder="e.g. soz123" maxlength="15" autocomplete="off">
+                </div>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label for="scrabble-player-name">Enter Your Name</label>
+                    <input type="text" id="scrabble-player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
+                </div>
+                <button id="scrabble-join-btn" class="btn btn-primary" style="margin-top: 1rem;">Join Room</button>
+            </div>
+
+            <div id="scrabble-lobby-section" class="card" style="display: none;">
+                <h3>Players in Room:</h3>
+                <div id="scrabble-players-list" style="margin: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                <button id="scrabble-start-btn" class="btn btn-primary" style="display: none; margin-bottom: 1rem;">Start Game</button>
+                <button id="scrabble-leave-btn" class="btn btn-secondary">Leave Room</button>
+            </div>
+        </div>
+
+        <!-- Scrabble Game Screen -->
+        <div id="scrabble-game-screen" class="screen">
+            <div class="game-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <h2 style="color: var(--primary-light); margin: 0; font-size: 1.2rem;">Scrabble</h2>
+                    <div id="scrabble-turn-indicator" style="font-weight: bold; margin-top: 0.25rem;">Waiting...</div>
+                </div>
+                <button id="scrabble-quit-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">Quit</button>
+            </div>
+
+            <div class="scrabble-layout" style="display: grid; grid-template-columns: 1fr 250px; gap: 1rem; align-items: start;">
+                <!-- Main Game Area -->
+                <div class="scrabble-main-area">
+                    <div id="scrabble-board" class="scrabble-board"></div>
+                    
+                    <div class="card" style="margin-top: 1rem;">
+                        <div id="scrabble-rack" class="scrabble-rack"></div>
+                        
+                        <div class="scrabble-controls" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Drag tiles from your rack to the board. Click "Play Word" when ready.</p>
+                            
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button id="scrabble-play-btn" class="btn btn-primary" style="flex: 2;">Play Word</button>
+                                <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1;">Recall</button>
+                                <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1;">Pass</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar Area -->
+                <div class="scrabble-sidebar-area">
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <h3>Scores</h3>
+                        <div id="scrabble-scores-list" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                    </div>
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold;">Tiles in Bag:</span>
+                            <span id="scrabble-bag-count" class="badge">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Firebase SDK -->
         <script type="module" src="game.js?v=1.4"></script>
+        <script type="module" src="scrabble-game.js?v=1.0"></script>
         <script type="module" src="wordle.js?v=1.0"></script>
         <script type="module" src="scribble.js?v=1.0"></script>
         <script type="module" src="password.js?v=1.0"></script>
+        <script type="module" src="storyboard.js?v=1.0"></script>
 
         <script>
             const originalTitle = document.title;
