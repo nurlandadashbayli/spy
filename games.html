@@ -58,6 +58,15 @@
                     </div>
                 </div>
 
+                <div class="game-card" id="select-crossword">
+                    <div class="game-card-icon">📝</div>
+                    <div class="game-card-content">
+                        <h3>Crossword</h3>
+                        <p>Solve Azerbaijani crosswords!</p>
+                        <span class="badge" style="background: var(--success);">Solo</span>
+                    </div>
+                </div>
+
                 <div class="game-card" id="select-storyboard">
                     <div class="game-card-icon">🎬</div>
                     <div class="game-card-content">
@@ -580,10 +589,23 @@
                         <div class="scrabble-controls" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
                             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Drag tiles from your rack to the board. Click "Play Word" when ready.</p>
                             
-                            <div style="display: flex; gap: 0.5rem;">
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button id="scrabble-play-btn" class="btn btn-primary" style="flex: 2;">Play Word</button>
                                 <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1;">Recall</button>
                                 <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1;">Pass</button>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button id="scrabble-shuffle-btn" class="btn btn-secondary" style="flex: 1;">🔀 Shuffle</button>
+                                <button id="scrabble-swap-btn" class="btn btn-secondary" style="flex: 1;">🔄 Swap</button>
+                            </div>
+
+                            <!-- Swap Mode UI (Hidden by default) -->
+                            <div id="scrabble-swap-ui" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                <p style="font-size: 0.85rem; color: var(--warning); margin: 0;">Select tiles to swap:</p>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button id="scrabble-confirm-swap-btn" class="btn btn-primary" style="flex: 1;">Confirm</button>
+                                    <button id="scrabble-cancel-swap-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -595,11 +617,16 @@
                         <h3>Scores</h3>
                         <div id="scrabble-scores-list" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
                     </div>
-                    <div class="card">
+                    <div class="card" style="margin-bottom: 1rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-weight: bold;">Tiles in Bag:</span>
                             <span id="scrabble-bag-count" class="badge">--</span>
                         </div>
+                    </div>
+                    <div class="card" id="scrabble-last-word-card" style="display: none;">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--primary-light);">Last Played Word</h3>
+                        <div id="scrabble-last-word-title" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.25rem;"></div>
+                        <div id="scrabble-last-word-def" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;"></div>
                     </div>
                 </div>
             </div>
@@ -634,7 +661,67 @@
                 </div>
             </div>
         </div>
+
+        <div id="scrabble-joker-modal" class="scrabble-modal-overlay" style="display: none;">
+            <div class="scrabble-modal-card card" style="text-align: center;">
+                <h3 style="color: var(--primary-light); margin-bottom: 0.5rem;">Blank Tile</h3>
+                <p style="margin-bottom: 1rem;">Enter a letter for the blank tile:</p>
+                <input type="text" id="scrabble-joker-input" maxlength="1" style="width: 3rem; text-align: center; font-size: 1.5rem; text-transform: uppercase;" />
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button id="scrabble-joker-cancel-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                    <button id="scrabble-joker-ok-btn" class="btn btn-primary" style="flex: 1;">Confirm</button>
+                </div>
+            </div>
+        </div>
         <!-- End Scrabble Modals -->
+
+        <!-- Crossword Game Screen -->
+        <div id="crossword-game-screen" class="screen">
+            <div class="crossword-header">
+                <button id="crossword-back-btn" class="back-btn" style="margin-bottom: 0;">← Back</button>
+                <h1 class="game-title" style="margin-bottom: 0; font-size: 1.6rem; margin-right: auto; margin-left: 1.5rem;">📝 Crossword</h1>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="crossword-reveal-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;">
+                        👁 Reveal
+                    </button>
+                    <button id="crossword-refresh-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Clue Bar -->
+            <div class="crossword-active-clue">
+                <button id="clue-prev-btn" class="clue-nav-btn">‹</button>
+                <span id="clue-text" class="clue-bar-text">Select a cell...</span>
+                <button id="clue-next-btn" class="clue-nav-btn">›</button>
+            </div>
+
+            <div class="crossword-layout">
+                <!-- Board Panel -->
+                <div class="crossword-board-panel">
+                    <div id="crossword-board" class="crossword-board"></div>
+                </div>
+
+                <!-- Clues Panel -->
+                <div class="crossword-clues-panel">
+                    <div class="clues-section">
+                        <h3 class="clues-heading">Across</h3>
+                        <ul id="crossword-clues-across" class="cw-clues-list"></ul>
+                    </div>
+                    <div class="clues-section">
+                        <h3 class="clues-heading">Down</h3>
+                        <ul id="crossword-clues-down" class="cw-clues-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="crossword-loading" class="crossword-loading" style="display: none;">
+                <div class="cw-spinner"></div>
+                <p>Loading questions from Wikipedia...</p>
+            </div>
+        </div>
 
         <!-- Firebase SDK -->
         <script type="module" src="game.js?v=1.4"></script>
@@ -643,6 +730,8 @@
         <script type="module" src="scribble.js?v=1.0"></script>
         <script type="module" src="password.js?v=1.0"></script>
         <script type="module" src="storyboard.js?v=1.0"></script>
+        <script type="module" src="crossword-generator.js?v=1.0"></script>
+        <script type="module" src="crossword.js?v=1.0"></script>
 
         <script>
             const originalTitle = document.title;

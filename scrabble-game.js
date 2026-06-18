@@ -59,7 +59,8 @@ const letterData = {
     'H': { count: 1, points: 5 },
     'Ü': { count: 1, points: 5 },
     'F': { count: 1, points: 8 },
-    'J': { count: 1, points: 10 }
+    'J': { count: 1, points: 10 },
+    '*': { count: 2, points: 0 }
 };
 
 const TW = ['0,0','0,7','0,14','7,0','7,14','14,0','14,7','14,14'];
@@ -118,7 +119,23 @@ const decisionText = document.getElementById('scrabble-decision-text');
 const decisionNoBtn = document.getElementById('scrabble-decision-no-btn');
 const decisionYesBtn = document.getElementById('scrabble-decision-yes-btn');
 
+const jokerModal = document.getElementById('scrabble-joker-modal');
+const jokerInput = document.getElementById('scrabble-joker-input');
+const jokerCancelBtn = document.getElementById('scrabble-joker-cancel-btn');
+const jokerOkBtn = document.getElementById('scrabble-joker-ok-btn');
+
+let pendingJokerDrop = null; // {r, c, rackIdx}
 let pendingCommitData = null; // {word, wordScore, tempBoard}
+let hasShuffledThisTurn = false;
+let isSwapMode = false;
+let tilesToSwap = [];
+
+// DOM elements for Shuffle/Swap
+const shuffleBtn = document.getElementById('scrabble-shuffle-btn');
+const swapBtn = document.getElementById('scrabble-swap-btn');
+const swapUi = document.getElementById('scrabble-swap-ui');
+const confirmSwapBtn = document.getElementById('scrabble-confirm-swap-btn');
+const cancelSwapBtn = document.getElementById('scrabble-cancel-swap-btn');
 
 // Event Listeners
 if (selectScrabble) {
@@ -139,6 +156,85 @@ if (passBtn) passBtn.addEventListener('click', handlePassTurn);
 if (recallBtn) recallBtn.addEventListener('click', () => {
     pendingPlacements = [];
     renderGame();
+});
+
+if (shuffleBtn) shuffleBtn.addEventListener('click', async () => {
+    if (gameData.currentTurn !== playerId) return alert("Not your turn.");
+    if (hasShuffledThisTurn) return alert("You have already shuffled this turn.");
+    
+    let rack = [...(gameData.players[playerId].rack || [])];
+    if (rack.length < 2) return;
+    
+    for (let i = rack.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rack[i], rack[j]] = [rack[j], rack[i]];
+    }
+    
+    hasShuffledThisTurn = true;
+    
+    // Update Firebase to persist shuffle
+    await update(ref(database, `game/scrabble/rooms/${roomName}/players/${playerId}`), {
+        rack: rack
+    });
+});
+
+if (swapBtn) swapBtn.addEventListener('click', () => {
+    if (gameData.currentTurn !== playerId) return alert("Not your turn.");
+    if (pendingPlacements.length > 0) return alert("Recall tiles from the board first.");
+    if (gameData.bag && gameData.bag.length < 1) return alert("Not enough tiles in the bag.");
+    
+    isSwapMode = true;
+    tilesToSwap = [];
+    swapUi.style.display = 'flex';
+    renderGame();
+});
+
+if (cancelSwapBtn) cancelSwapBtn.addEventListener('click', () => {
+    isSwapMode = false;
+    tilesToSwap = [];
+    swapUi.style.display = 'none';
+    renderGame();
+});
+
+if (confirmSwapBtn) confirmSwapBtn.addEventListener('click', async () => {
+    if (tilesToSwap.length === 0) return alert("Select at least 1 tile to swap.");
+    
+    const bag = [...(gameData.bag || [])];
+    const rack = [...(gameData.players[playerId].rack || [])];
+    
+    // Remove chosen tiles from rack, add to bag
+    // Important: sort descending to splice correctly
+    const sortedIndices = [...tilesToSwap].sort((a, b) => b - a);
+    for (let idx of sortedIndices) {
+        bag.push(rack[idx]);
+        rack.splice(idx, 1);
+    }
+    
+    // Shuffle bag
+    for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    
+    // Draw new tiles
+    while (rack.length < 7 && bag.length > 0) {
+        rack.push(bag.pop());
+    }
+    
+    const turnOrder = gameData.turnOrder;
+    const currIdx = turnOrder.indexOf(playerId);
+    const nextTurn = turnOrder[(currIdx + 1) % turnOrder.length];
+    
+    // Commit changes
+    await update(ref(database, `game/scrabble/rooms/${roomName}`), {
+        bag: bag,
+        [`players/${playerId}/rack`]: rack,
+        currentTurn: nextTurn
+    });
+    
+    isSwapMode = false;
+    tilesToSwap = [];
+    swapUi.style.display = 'none';
 });
 
 // Modal Event Listeners
@@ -176,6 +272,28 @@ if (decisionYesBtn) decisionYesBtn.addEventListener('click', async () => {
 if (decisionNoBtn) decisionNoBtn.addEventListener('click', async () => {
     decisionModal.style.display = 'none';
     await update(ref(database, `game/scrabble/rooms/${roomName}/approvalRequest`), { status: 'rejected' });
+});
+
+if (jokerCancelBtn) jokerCancelBtn.addEventListener('click', () => {
+    jokerModal.style.display = 'none';
+    pendingJokerDrop = null;
+});
+
+if (jokerOkBtn) jokerOkBtn.addEventListener('click', () => {
+    let val = jokerInput.value.toLocaleUpperCase('az');
+    if (!val || !letterData[val]) return alert('Please enter a valid letter.');
+    
+    jokerModal.style.display = 'none';
+    if (pendingJokerDrop) {
+        pendingPlacements.push({
+            r: pendingJokerDrop.r,
+            c: pendingJokerDrop.c,
+            letter: val.toLowerCase(), // store as lowercase to indicate joker
+            rackIdx: pendingJokerDrop.rackIdx
+        });
+        pendingJokerDrop = null;
+        renderGame();
+    }
 });
 
 // Setup Rack Drop Zone
@@ -233,6 +351,8 @@ async function joinRoom() {
     }
 }
 
+let currentLocalTurn = null;
+
 function setupRealtimeListeners() {
     const playersRef = ref(database, `game/scrabble/rooms/${roomName}/players`);
     const roomRef = ref(database, `game/scrabble/rooms/${roomName}`);
@@ -251,6 +371,15 @@ function setupRealtimeListeners() {
         if (gameData.status === 'started') {
             lobbyScreen.classList.remove('active');
             gameScreen.classList.add('active');
+            
+            if (gameData.currentTurn !== currentLocalTurn) {
+                currentLocalTurn = gameData.currentTurn;
+                hasShuffledThisTurn = false;
+                isSwapMode = false;
+                tilesToSwap = [];
+                if (swapUi) swapUi.style.display = 'none';
+            }
+
             // If turn changes or board updates from another player, clear pending to prevent conflicts
             if (!gameData.currentTurn || gameData.currentTurn !== playerId) {
                 pendingPlacements = [];
@@ -405,6 +534,18 @@ function renderGame() {
         passBtn.disabled = true;
     }
 
+    const lastWordCard = document.getElementById('scrabble-last-word-card');
+    const lastWordTitle = document.getElementById('scrabble-last-word-title');
+    const lastWordDef = document.getElementById('scrabble-last-word-def');
+
+    if (gameData.lastPlay) {
+        lastWordCard.style.display = 'block';
+        lastWordTitle.innerText = gameData.lastPlay.word;
+        lastWordDef.innerText = gameData.lastPlay.definition || 'No definition found.';
+    } else {
+        lastWordCard.style.display = 'none';
+    }
+
     renderBoard();
     renderRack();
 }
@@ -412,6 +553,7 @@ function renderGame() {
 function createTileElement(letter, isPending) {
     const tile = document.createElement('div');
     tile.className = `scrabble-tile ${isPending ? 'pending-tile' : ''}`;
+    
     if (gameData.currentTurn === playerId && isPending !== false) {
         tile.draggable = true;
         tile.addEventListener('dragstart', (e) => {
@@ -422,9 +564,20 @@ function createTileElement(letter, isPending) {
             draggedTileInfo = null;
         });
     }
+
+    // Handle Joker styling
+    const isJoker = letter === letter.toLowerCase() && letter !== '*';
+    const displayLetter = letter.toLocaleUpperCase('az');
+    const points = isJoker ? 0 : (letterData[displayLetter]?.points || 0);
+
+    if (isJoker) {
+        tile.style.color = '#ef4444'; // Red text for Joker
+        tile.style.backgroundColor = '#fee2e2';
+    }
+
     tile.innerHTML = `
-        ${letter}
-        <span class="points">${letterData[letter]?.points || 0}</span>
+        ${displayLetter}
+        <span class="points">${points}</span>
     `;
     return tile;
 }
@@ -437,19 +590,41 @@ function renderRack() {
     const pendingIndices = pendingPlacements.map(p => p.rackIdx);
 
     myRack.forEach((letter, idx) => {
-        if (!pendingIndices.includes(idx)) {
-            const tile = createTileElement(letter, true); // true just for draggability logic
-            tile.addEventListener('dragstart', () => {
-                draggedTileInfo = {source: 'rack', rackIdx: idx, letter: letter};
-            });
-            rackDiv.appendChild(tile);
-        } else {
-            // Placeholder to preserve rack layout
+        if (pendingIndices.includes(idx)) {
+            // Keep the empty space where the tile was dragged from to preserve rack structure
             const placeholder = document.createElement('div');
             placeholder.style.width = '45px';
             placeholder.style.height = '45px';
             rackDiv.appendChild(placeholder);
+            return;
         }
+        
+        // If in swap mode, tiles shouldn't be draggable
+        const tile = createTileElement(letter, isSwapMode ? false : undefined);
+        
+        if (isSwapMode) {
+            tile.draggable = false;
+            tile.style.cursor = 'pointer';
+            if (tilesToSwap.includes(idx)) {
+                tile.style.border = '3px solid var(--primary-light)';
+                tile.style.transform = 'translateY(-8px)';
+                tile.style.boxShadow = '0 8px 15px rgba(0,0,0,0.2)';
+            }
+            tile.addEventListener('click', () => {
+                if (tilesToSwap.includes(idx)) {
+                    tilesToSwap = tilesToSwap.filter(i => i !== idx);
+                } else {
+                    tilesToSwap.push(idx);
+                }
+                renderRack();
+            });
+        } else {
+            tile.addEventListener('dragstart', () => {
+                draggedTileInfo = { source: 'rack', letter, rackIdx: idx };
+            });
+        }
+        
+        rackDiv.appendChild(tile);
     });
 }
 
@@ -497,11 +672,20 @@ function renderBoard() {
                 }
 
                 if (draggedTileInfo.source === 'rack') {
-                    pendingPlacements.push({
-                        r: r, c: c, 
-                        letter: draggedTileInfo.letter, 
-                        rackIdx: draggedTileInfo.rackIdx
-                    });
+                    if (draggedTileInfo.letter === '*') {
+                        // Prompt for Joker
+                        pendingJokerDrop = { r: r, c: c, rackIdx: draggedTileInfo.rackIdx };
+                        jokerInput.value = '';
+                        jokerModal.style.display = 'flex';
+                        setTimeout(() => jokerInput.focus(), 50);
+                        return; // Wait for modal
+                    } else {
+                        pendingPlacements.push({
+                            r: r, c: c, 
+                            letter: draggedTileInfo.letter, 
+                            rackIdx: draggedTileInfo.rackIdx
+                        });
+                    }
                 } else if (draggedTileInfo.source === 'board') {
                     // Move existing pending tile
                     const pendingItem = pendingPlacements.find(p => p.r === draggedTileInfo.r && p.c === draggedTileInfo.c);
@@ -518,7 +702,12 @@ function renderBoard() {
 
             if (committedLetter) {
                 // Not draggable
-                cell.appendChild(createTileElement(committedLetter, false));
+                const t = createTileElement(committedLetter, false);
+                if (gameData.lastPlayTiles && gameData.lastPlayTiles.includes(pos)) {
+                    t.style.boxShadow = '0 0 10px rgba(52, 211, 153, 0.8), inset 0 0 5px rgba(52, 211, 153, 0.5)';
+                    t.style.borderColor = 'var(--success)';
+                }
+                cell.appendChild(t);
             } else if (pendingLetterObj) {
                 // Pending tile
                 const tile = createTileElement(pendingLetterObj.letter, true);
@@ -556,54 +745,93 @@ function toWikiLower(word) {
 }
 
 async function isValidWord(word) {
-    if (!word || word.length < 2) return false;
+    if (!word || word.length < 2) return { valid: false, definition: null };
     let url;
     
     // Custom mapping to prevent JS converting 'İ' to 'i\u0307'
     let lowerWord = toWikiLower(word);
     let capitalizedWord = word.charAt(0) + toWikiLower(word.slice(1));
+    let definition = null;
 
     try {
-        // 1. Check az.wiktionary.org
-        url = `https://az.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&format=json&origin=*`;
+        // Helper to extract definition text from Wiki API response (for Wikipedia)
+        const extractDef = (pages) => {
+            for (let pageId in pages) {
+                const p = pages[pageId];
+                if (!p.hasOwnProperty('missing')) {
+                    if (p.extract) {
+                        let text = p.extract.replace(/\n/g, ' ').trim();
+                        if (text.length > 150) text = text.substring(0, 147) + '...';
+                        return text;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Helper to parse Wiktionary raw wikitext for definitions
+        const parseWikitextDef = (pages) => {
+            for (let pageId in pages) {
+                const p = pages[pageId];
+                if (!p.hasOwnProperty('missing')) {
+                    try {
+                        const wikitext = p.revisions[0].slots.main['*'];
+                        const lines = wikitext.split('\n');
+                        for (let line of lines) {
+                            if (line.trim().startsWith('#') && !line.trim().startsWith('#:')) {
+                                let def = line.trim().substring(1).trim();
+                                def = def.replace(/\[\[([^\]\|]+\|)?([^\]]+)\]\]/g, '$2'); // remove links
+                                def = def.replace(/\{\{[^\}]+\}\}/g, '').trim(); // remove templates
+                                if (def.length > 150) def = def.substring(0, 147) + '...';
+                                return def || true;
+                            }
+                        }
+                    } catch(e) {}
+                    return true; // Word exists but no def parsed
+                }
+            }
+            return false;
+        };
+
+        // 1. Check az.wiktionary.org (with revisions for raw wikitext parsing)
+        url = `https://az.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
         let response = await fetch(url);
         let data = await response.json();
         if (data.query && data.query.pages) {
-            for (let pageId in data.query.pages) {
-                if (!data.query.pages[pageId].hasOwnProperty('missing')) return true;
-            }
+            let res = parseWikitextDef(data.query.pages);
+            if (res !== false) return { valid: true, definition: typeof res === 'string' ? res : null };
         }
 
-        // 2. Check az.wikipedia.org
-        url = `https://az.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&format=json&origin=*`;
+        // 2. Check az.wikipedia.org (with extracts)
+        url = `https://az.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=extracts&exintro=true&explaintext=true&format=json&origin=*`;
         response = await fetch(url);
         data = await response.json();
         if (data.query && data.query.pages) {
-            for (let pageId in data.query.pages) {
-                if (!data.query.pages[pageId].hasOwnProperty('missing')) return true;
-            }
+            let res = extractDef(data.query.pages);
+            if (res !== false) return { valid: true, definition: typeof res === 'string' ? res : null };
         }
 
-        // 3. Check en.wiktionary.org for "Azerbaijani" section (like user provided URL)
+        // 3. Check en.wiktionary.org for "Azerbaijani" section (fallback)
         url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(lowerWord)}&prop=sections&format=json&origin=*`;
         response = await fetch(url);
         data = await response.json();
         if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
-            return true;
+            return { valid: true, definition: "Exists in Azerbaijani dictionary." };
         }
 
         url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalizedWord)}&prop=sections&format=json&origin=*`;
         response = await fetch(url);
         data = await response.json();
         if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
-            return true;
+            return { valid: true, definition: "Exists in Azerbaijani dictionary." };
         }
 
-        return false;
+        return { valid: false, definition: null };
     } catch (e) {
         console.error("API check failed", e);
         // Fallback to true so the game doesn't break if API is blocked by CORS/network
-        return true; 
+        return { valid: true, definition: "Network error, but word was accepted." }; 
     }
 }
 
@@ -622,7 +850,6 @@ async function handlePassTurn() {
         currentTurn: nextTurn
     });
 }
-
 async function handlePlayWord() {
     if (gameData.currentTurn !== playerId) return;
     if (pendingPlacements.length === 0) return alert('Place some tiles first!');
@@ -658,7 +885,6 @@ async function handlePlayWord() {
     if (pendingPlacements.length > 1) {
         mainAxis = isHorizontal ? 'horizontal' : 'vertical';
     } else {
-        // Only 1 tile placed. Determine axis by adjacent existing tiles
         const hasLeft = firstC > 0 && currentBoard[firstR][firstC - 1];
         const hasRight = firstC < 14 && currentBoard[firstR][firstC + 1];
         const hasTop = firstR > 0 && currentBoard[firstR - 1][firstC];
@@ -668,56 +894,128 @@ async function handlePlayWord() {
         else mainAxis = 'horizontal'; 
     }
 
-    // 2. Build temporary board
     const tempBoard = JSON.parse(JSON.stringify(currentBoard));
     for (let p of pendingPlacements) {
         tempBoard[p.r][p.c] = p.letter;
     }
 
+    const formedWords = []; // Array of { word, score, isMain }
+
+    // Helper to extract and score a word given start/end coordinates and axis
+    function extractAndScoreWord(startR, startC, endR, endC, axis, isMain) {
+        let wordStr = '';
+        let wordScore = 0;
+        let wordMultiplier = 1;
+
+        if (axis === 'horizontal') {
+            for (let c = startC; c <= endC; c++) {
+                const cellLetter = tempBoard[startR][c];
+                wordStr += cellLetter.toLocaleUpperCase('az');
+                
+                const isJoker = cellLetter === cellLetter.toLowerCase() && cellLetter !== '*';
+                let letterScore = isJoker ? 0 : (letterData[cellLetter.toLocaleUpperCase('az')]?.points || 0);
+                
+                // Only apply multipliers to newly placed tiles
+                if (pendingPlacements.some(p => p.r === startR && p.c === c)) {
+                    const pos = `${startR},${c}`;
+                    if (TL.includes(pos)) letterScore *= 3;
+                    if (DL.includes(pos)) letterScore *= 2;
+                    if (TW.includes(pos)) wordMultiplier *= 3;
+                    if (DW.includes(pos) || pos === CENTER) wordMultiplier *= 2;
+                }
+                wordScore += letterScore;
+            }
+        } else {
+            for (let r = startR; r <= endR; r++) {
+                const cellLetter = tempBoard[r][startC];
+                wordStr += cellLetter.toLocaleUpperCase('az');
+                
+                const isJoker = cellLetter === cellLetter.toLowerCase() && cellLetter !== '*';
+                let letterScore = isJoker ? 0 : (letterData[cellLetter.toLocaleUpperCase('az')]?.points || 0);
+
+                if (pendingPlacements.some(p => p.r === r && p.c === startC)) {
+                    const pos = `${r},${startC}`;
+                    if (TL.includes(pos)) letterScore *= 3;
+                    if (DL.includes(pos)) letterScore *= 2;
+                    if (TW.includes(pos)) wordMultiplier *= 3;
+                    if (DW.includes(pos) || pos === CENTER) wordMultiplier *= 2;
+                }
+                wordScore += letterScore;
+            }
+        }
+
+        wordScore *= wordMultiplier;
+        return { word: wordStr, score: wordScore, isMain };
+    }
+
     // 3. Extract main word
-    let word = '';
     let startR = firstR, startC = firstC;
     let endR = firstR, endC = firstC;
 
     if (mainAxis === 'horizontal') {
         while (startC > 0 && tempBoard[startR][startC - 1]) startC--;
         while (endC < 14 && tempBoard[endR][endC + 1]) endC++;
-        for (let c = startC; c <= endC; c++) word += tempBoard[startR][c];
     } else {
         while (startR > 0 && tempBoard[startR - 1][startC]) startR--;
         while (endR < 14 && tempBoard[endR + 1][endC]) endR++;
-        for (let r = startR; r <= endR; r++) word += tempBoard[r][startC];
     }
 
-    // 4. Verify gaps and connectivity
+    // Always push the main word if it's > 1 letter, OR if it's the only tile placed on the first turn
+    const mainWordObj = extractAndScoreWord(startR, startC, endR, endC, mainAxis, true);
+    if (mainWordObj.word.length > 1 || (pendingPlacements.length === 1 && currentBoard[7][7] === null)) {
+        formedWords.push(mainWordObj);
+    }
+
+    // 4. Extract cross words for each placed tile
+    for (let p of pendingPlacements) {
+        let crStartR = p.r, crStartC = p.c;
+        let crEndR = p.r, crEndC = p.c;
+
+        if (mainAxis === 'horizontal') {
+            while (crStartR > 0 && tempBoard[crStartR - 1][crStartC]) crStartR--;
+            while (crEndR < 14 && tempBoard[crEndR + 1][crEndC]) crEndR++;
+            if (crEndR > crStartR) {
+                formedWords.push(extractAndScoreWord(crStartR, crStartC, crEndR, crEndC, 'vertical', false));
+            }
+        } else {
+            while (crStartC > 0 && tempBoard[crStartR][crStartC - 1]) crStartC--;
+            while (crEndC < 14 && tempBoard[crEndR][crEndC + 1]) crEndC++;
+            if (crEndC > crStartC) {
+                formedWords.push(extractAndScoreWord(crStartR, crStartC, crEndR, crEndC, 'horizontal', false));
+            }
+        }
+    }
+
+    // Verify connectivity and gaps along the main placement axis
     let isConnected = false;
     let crossesCenter = false;
-    let newTilesInWord = 0;
+
+    // Check bounds of pending placements specifically to detect gaps
+    let minR = 15, maxR = -1, minC = 15, maxC = -1;
+    for (let p of pendingPlacements) {
+        if (p.r < minR) minR = p.r;
+        if (p.r > maxR) maxR = p.r;
+        if (p.c < minC) minC = p.c;
+        if (p.c > maxC) maxC = p.c;
+    }
 
     if (mainAxis === 'horizontal') {
-        for (let c = startC; c <= endC; c++) {
-            if (!tempBoard[startR][c]) return alert('There is a gap in your word!');
-            if (startR === 7 && c === 7) crossesCenter = true;
-            if (pendingPlacements.some(p => p.r === startR && p.c === c)) newTilesInWord++;
-            else isConnected = true; 
-
-            if (startR > 0 && currentBoard[startR - 1] && currentBoard[startR - 1][c]) isConnected = true;
-            if (startR < 14 && currentBoard[startR + 1] && currentBoard[startR + 1][c]) isConnected = true;
+        for (let c = minC; c <= maxC; c++) {
+            if (!tempBoard[firstR][c]) return alert('There is a gap in your word!');
         }
     } else {
-        for (let r = startR; r <= endR; r++) {
-            if (!tempBoard[r][startC]) return alert('There is a gap in your word!');
-            if (r === 7 && startC === 7) crossesCenter = true;
-            if (pendingPlacements.some(p => p.r === r && p.c === startC)) newTilesInWord++;
-            else isConnected = true;
-
-            if (startC > 0 && currentBoard[r][startC - 1]) isConnected = true;
-            if (startC < 14 && currentBoard[r][startC + 1]) isConnected = true;
+        for (let r = minR; r <= maxR; r++) {
+            if (!tempBoard[r][firstC]) return alert('There is a gap in your word!');
         }
     }
 
-    if (newTilesInWord !== pendingPlacements.length) {
-         return alert('All placed tiles must be part of the same contiguous word.');
+    // Check connectivity for all placed tiles
+    for (let p of pendingPlacements) {
+        if (p.r === 7 && p.c === 7) crossesCenter = true;
+        if (p.r > 0 && currentBoard[p.r - 1][p.c]) isConnected = true;
+        if (p.r < 14 && currentBoard[p.r + 1][p.c]) isConnected = true;
+        if (p.c > 0 && currentBoard[p.r][p.c - 1]) isConnected = true;
+        if (p.c < 14 && currentBoard[p.r][p.c + 1]) isConnected = true;
     }
 
     const isFirstTurn = currentBoard[7][7] === null;
@@ -728,53 +1026,40 @@ async function handlePlayWord() {
         return alert('Your word must connect to existing tiles.');
     }
 
-    if (word.length < 2) return alert('Word must be at least 2 letters.');
+    if (formedWords.length === 0) return alert('No valid words formed.');
 
-    // 5. Scoring (Compute before validation so we can store it)
-    let wordScore = 0;
-    let wordMultiplier = 1;
-
-    if (mainAxis === 'horizontal') {
-        for (let c = startC; c <= endC; c++) {
-            let letterScore = letterData[tempBoard[startR][c]]?.points || 0;
-            if (pendingPlacements.some(p => p.r === startR && p.c === c)) {
-                const pos = `${startR},${c}`;
-                if (TL.includes(pos)) letterScore *= 3;
-                if (DL.includes(pos)) letterScore *= 2;
-                if (TW.includes(pos)) wordMultiplier *= 3;
-                if (DW.includes(pos) || pos === CENTER) wordMultiplier *= 2;
-            }
-            wordScore += letterScore;
-        }
-    } else {
-        for (let r = startR; r <= endR; r++) {
-            let letterScore = letterData[tempBoard[r][startC]]?.points || 0;
-            if (pendingPlacements.some(p => p.r === r && p.c === startC)) {
-                const pos = `${r},${startC}`;
-                if (TL.includes(pos)) letterScore *= 3;
-                if (DL.includes(pos)) letterScore *= 2;
-                if (TW.includes(pos)) wordMultiplier *= 3;
-                if (DW.includes(pos) || pos === CENTER) wordMultiplier *= 2;
-            }
-            wordScore += letterScore;
-        }
+    // Calculate total score
+    let totalScore = 0;
+    for (let fw of formedWords) {
+        totalScore += fw.score;
     }
+    if (pendingPlacements.length === 7) totalScore += 50; // Bingo
 
-    wordScore *= wordMultiplier;
-    if (pendingPlacements.length === 7) wordScore += 50;
-
-    pendingCommitData = { word: word, wordScore: wordScore, tempBoard: tempBoard };
-
-    // 6. Validation
+    // 5. Validation of ALL words
     playBtn.disabled = true;
     playBtn.innerText = 'Checking...';
-    
-    const isValid = await isValidWord(word);
-    if (!isValid) {
-        failText.innerText = `The word "${word}" was not found in the dictionary.`;
-        failModal.style.display = 'flex';
-        return;
+
+    let mainDefinition = null;
+    let mainWordString = formedWords.find(fw => fw.isMain)?.word || formedWords[0].word;
+
+    for (let fw of formedWords) {
+        const check = await isValidWord(fw.word);
+        if (!check.valid) {
+            failText.innerText = `The word "${fw.word}" was not found in the dictionary.`;
+            failModal.style.display = 'flex';
+            return; // Stops here, button stays disabled until modal is handled
+        }
+        if (fw.isMain && check.definition) {
+            mainDefinition = check.definition;
+        }
     }
+
+    pendingCommitData = { 
+        word: mainWordString, 
+        wordScore: totalScore, 
+        tempBoard: tempBoard,
+        definition: mainDefinition 
+    };
 
     // If valid, commit directly
     await commitWord();
@@ -806,7 +1091,9 @@ async function commitWord() {
         currentTurn: nextTurn,
         approvalRequest: null,
         [`players/${playerId}/rack`]: originalRack,
-        [`players/${playerId}/score`]: currentScore + wordScore
+        [`players/${playerId}/score`]: currentScore + wordScore,
+        lastPlay: { word: pendingCommitData.word, definition: pendingCommitData.definition || "No definition found." },
+        lastPlayTiles: pendingPlacements.map(p => `${p.r},${p.c}`)
     };
 
     try {
