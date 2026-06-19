@@ -69,6 +69,31 @@ const TL = ['1,5','1,9','5,1','5,5','5,9','5,13','9,1','9,5','9,9','9,13','13,5'
 const DL = ['0,3','0,11','2,6','2,8','3,0','3,7','3,14','6,2','6,6','6,8','6,12','7,3','7,11','8,2','8,6','8,8','8,12','11,0','11,7','11,14','12,6','12,8','14,3','14,11'];
 const CENTER = '7,7';
 
+const commonWords = [
+    // 6 Letters
+    'MƏKTƏB', 'QARDAŞ', 'TƏLƏBƏ', 'YOLDAŞ', 'MƏSƏLƏ', 'TƏBİƏT', 'MƏQSƏD', 'SEVİNC', 'QƏLƏBƏ', 'HADİSƏ',
+    'NƏTİCƏ', 'MƏNTİQ', 'ƏDALƏT', 'DƏRMAN', 'TƏCİLİ', 'YARDIM', 'MƏNƏVİ', 'VƏZİFƏ', 'SAĞLAM', 'DÖVLƏT',
+    'BAYRAQ', 'MİLLƏT', 'FİZİKA', 'MUSİQİ', 'İNCƏSƏ', 'FUTBOL', 'ŞAHMAT', 'JURNAL', 'AKTYOR', 'REJİSS',
+    'KONSAR', 'HEYKƏL', 'RƏSSAM', 'YAZICI', 'ŞAGİRD', 'DƏFTƏR', 'MƏTBƏX', 'DƏHLİZ', 'BOSTAN', 'AVTOBUS',
+    'TƏYYAR', 'SÜRÜCÜ', 'QARANL', 'GÜNDÜZ', 'FIRTIN', 'TORPAQ', 'SƏNƏTÇİ', 'HEYVAN', 'QƏHRƏM', 'ŞƏRTLİ',
+    'SÖZARDI', 'QAÇQIN', 'KÖÇKÜN', 'KÖRPÜS', 'BƏDİBƏ', 'DİNDAR', 'AĞACLA', 'DƏNİZİ', 'SAHİLİ',
+    'SƏHƏRİ', 'GECƏSİ', 'MƏDƏNİ', 'KƏNDLİ', 'QƏSƏBƏ', 'ŞƏHƏRİ', 'PAYTAX', 'SƏNƏDİ', 'BİLETİ', 'SAATLA',
+    'DƏQİQƏ', 'SANİYƏ', 'ZAMANI', 'TARİXİ', 'İNSANI', 'KİŞİLƏ', 'QADINL', 'UŞAQLA', 'MƏNZİL', 'BİNALA',
+    
+    // 7 Letters
+    'TELEFON', 'AZADLIQ', 'MƏLUMAT', 'DÜŞÜNCƏ', 'TƏRBİYƏ', 'CİNAYƏT', 'MÜDAFİƏ', 'MÜƏLLİM', 'PROBLEM', 'HƏQİQƏT',
+    'SƏDAQƏT', 'İSTEDAD', 'TƏCRÜBƏ', 'İRADƏLİ', 'RƏQABƏT', 'İNKİŞAF', 'TƏRƏQQİ', 'ƏNƏNƏVİ', 'MƏHKƏMƏ', 'MÜALİCƏ',
+    'YUMURTA', 'DİLİMİZ', 'QARDAŞI', 'TƏLƏBƏL', 'ÇİÇƏKLƏ', 'İNSANIN', 'ZAMANLA', 'YAZIÇIL', 'HƏYATIN', 'DÜNYADA',
+    'MƏKTƏBİ', 'HƏKİMLƏ', 'İNSANLA', 'MAŞINLA', 'AĞACLAR', 'HEYVANL', 'DƏNİZLƏ', 'KİTABLA', 'DƏFTƏRL', 'QƏLƏMLƏ',
+    'MÜHARİB', 'ORDUNUN', 'ƏSGƏRLƏ', 'HƏKİMLİ', 'DÜZƏLİŞ', 'BİNALAR', 'GƏMİLƏR', 'SƏYYAHİ', 'KƏNDLƏR', 'ŞƏHƏRLƏ',
+    
+    // 8 Letters
+    'CƏMİYYƏT', 'MƏHƏBBƏT', 'QƏHRƏMAN', 'MÜBARİZƏ', 'YARADICI', 'VƏZİYYƏT', 'ƏLAQƏDAR', 'TƏŞKİLAT', 'MÜƏSSİSƏ', 'İSTEHSAL',
+    'MÜŞTƏRİ', 'PƏNCƏRƏL', 'AZƏRBAYC', 'DÖVLƏTİN', 'HÖKUMƏTİ', 'TƏHLÜKƏL', 'TƏBİƏTİN', 'GƏLƏCƏYİ', 'HƏQİQƏTİ',
+    'XƏSTƏLİK', 'XƏSTƏXAN', 'MƏNŞƏYİN', 'KİTABXAN', 'KOMPÜTER', 'İNTERNET', 'MÜSTƏQİL', 'AZADLIĞI', 'BAŞLANĞI', 'GÖZƏLLİK',
+    'XOŞBƏXTL', 'QARDAŞLI', 'QOHUMLUQ', 'DOSTLUĞU', 'MÜVƏFFƏQ', 'MÜKƏMMƏL', 'ƏHƏMİYYƏ', 'BEYNƏLMI', 'DEMOKRAT', 'TEXNOLOG'
+];
+
 // State
 let roomName = '';
 let playerId = '';
@@ -218,7 +243,7 @@ if (confirmSwapBtn) confirmSwapBtn.addEventListener('click', async () => {
     
     // Draw new tiles
     while (rack.length < 7 && bag.length > 0) {
-        const tile = drawBalancedTile(rack, bag);
+        const tile = drawBalancedTile(rack, bag, currentBoard);
         if (tile) rack.push(tile);
     }
     
@@ -452,7 +477,7 @@ function updateLobbyUI() {
         </div>
     `).join('');
 
-    if (pArray.length >= 2) {
+    if (pArray.length >= 1) {
         startBtn.style.display = 'block';
     } else {
         startBtn.style.display = 'none';
@@ -501,8 +526,91 @@ function createBag() {
     return bag;
 }
 
-function drawBalancedTile(rack, bag) {
+function findAssistTile(rack, bag, board) {
     if (bag.length === 0) return null;
+    if (rack.length < 4) return null;
+    
+    // First turn?
+    const isFirstTurn = !board[7][7];
+    const shuffledWords = [...commonWords].sort(() => Math.random() - 0.5).slice(0, 30);
+    
+    for (let word of shuffledWords) {
+        for (let r = 0; r < 15; r++) {
+            for (let c = 0; c < 15; c++) {
+                for (let dir of ['H', 'V']) {
+                    if (dir === 'H' && c + word.length > 15) continue;
+                    if (dir === 'V' && r + word.length > 15) continue;
+                    
+                    let overlaps = false;
+                    let validPlacement = true;
+                    let neededFromRack = [];
+                    let connected = false;
+
+                    for (let i = 0; i < word.length; i++) {
+                        let currR = dir === 'H' ? r : r + i;
+                        let currC = dir === 'H' ? c + i : c;
+                        
+                        if (isFirstTurn && currR === 7 && currC === 7) connected = true;
+
+                        if (board[currR][currC]) {
+                            if (board[currR][currC].letter !== word[i]) {
+                                validPlacement = false;
+                                break;
+                            }
+                            overlaps = true;
+                            connected = true;
+                        } else {
+                            neededFromRack.push(word[i]);
+                            if (!isFirstTurn && !connected) {
+                                if (currR > 0 && board[currR-1][currC]) connected = true;
+                                if (currR < 14 && board[currR+1][currC]) connected = true;
+                                if (currC > 0 && board[currR][currC-1]) connected = true;
+                                if (currC < 14 && board[currR][currC+1]) connected = true;
+                            }
+                        }
+                    }
+
+                    if (!validPlacement || (!overlaps && !connected)) continue;
+                    if (neededFromRack.length === 0 || neededFromRack.length > 7) continue;
+
+                    let tempRack = rack.filter(t => t !== '*');
+                    let missingCount = 0;
+                    let missingChar = null;
+
+                    for (let char of neededFromRack) {
+                        let idx = tempRack.indexOf(char);
+                        if (idx !== -1) {
+                            tempRack.splice(idx, 1);
+                        } else {
+                            missingCount++;
+                            missingChar = char;
+                            if (missingCount > 1) break;
+                        }
+                    }
+
+                    if (missingCount === 1 && missingChar) {
+                        let bagIdx = bag.indexOf(missingChar);
+                        if (bagIdx !== -1) {
+                            return bag.splice(bagIdx, 1)[0];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function drawBalancedTile(rack, bag, board) {
+    if (bag.length === 0) return null;
+
+    // 1. Board-Aware Smart Assist (60% chance if we have a decent sized rack)
+    if (rack.length >= 4 && Math.random() < 0.6) {
+        const assistTile = findAssistTile(rack, bag, board);
+        if (assistTile) return assistTile;
+    }
+
+    // 2. Fallback to Vowel/Consonant Balancer
     const vowels = ['A', 'E', 'Ə', 'İ', 'I', 'O', 'Ö', 'U', 'Ü'];
     let vCount = 0, cCount = 0;
     for (let tile of rack) {
@@ -527,17 +635,17 @@ async function startGame() {
         const pKeys = Object.keys(players);
         const updates = {};
         
+        const board = Array(15).fill().map(() => Array(15).fill(null));
+
         pKeys.forEach(pId => {
             let rack = [];
             for (let i = 0; i < 7; i++) {
-                const tile = drawBalancedTile(rack, bag);
+                const tile = drawBalancedTile(rack, bag, board);
                 if (tile) rack.push(tile);
             }
             updates[`players/${pId}/rack`] = rack;
             updates[`players/${pId}/score`] = 0;
         });
-
-        const board = Array(15).fill().map(() => Array(15).fill(null));
 
         updates.status = 'started';
         updates.board = board;
@@ -795,105 +903,74 @@ function toWikiLower(word) {
 
 async function isValidWord(word) {
     if (!word || word.length < 2) return { valid: false, definition: null };
-    let url;
     
     // Custom mapping to prevent JS converting 'İ' to 'i\u0307'
     let lowerWord = toWikiLower(word);
-    let capitalizedWord = word.charAt(0) + toWikiLower(word.slice(1));
-    let definition = null;
 
     try {
-        // Helper to extract definition text from Wiki API response (for Wikipedia)
-        const extractDef = (pages) => {
-            for (let pageId in pages) {
-                const p = pages[pageId];
-                if (!p.hasOwnProperty('missing')) {
-                    if (p.extract) {
-                        let text = p.extract.replace(/\n/g, ' ').trim();
-                        if (text.length > 150) text = text.substring(0, 147) + '...';
-                        return text;
-                    }
-                    return true;
-                }
+        // Query the search endpoint across all dictionaries to find the word
+        // Note: A CORS proxy is REQUIRED because browsers block direct cross-domain requests
+        // corsproxy.io is extremely fast and handles query parameters properly
+        const targetUrl = `https://azleks.az/dictionary?search=${encodeURIComponent(lowerWord)}&dictionary_id=`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+        
+        const response = await fetch(proxyUrl);
+        
+        if (response.status === 404) {
+            return { valid: false, definition: null };
+        }
+        
+        const html = await response.text();
+        
+        if (!html || html.includes('not found') || html.trim() === '') {
+            return { valid: false, definition: null };
+        }
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        const bashSozList = doc.querySelectorAll('.bash-soz');
+        let foundBashSoz = null;
+        
+        for (let bs of bashSozList) {
+            // Clone to strip out meta tags without mutating the real DOM
+            const clone = bs.cloneNode(true);
+            
+            // Remove superscripts (e.g. bir1 -> bir) and pronunciation/part-of-speech tags
+            const junk = clone.querySelectorAll('sup, .teleffuz, .nitq-hissesi, .etimologiya');
+            junk.forEach(el => el.remove());
+            
+            // Clean invisible characters, nbsp, and formatting spaces
+            let extractedWord = clone.textContent.replace(/\u00A0/g, '').replace(/\s+/g, '').toLowerCase();
+            
+            // Match exactly with our search word
+            if (extractedWord === lowerWord) {
+                foundBashSoz = bs;
+                break;
             }
-            return false;
-        };
-
-        // Helper to parse Wiktionary raw wikitext for definitions
-        const parseWikitextDef = (pages) => {
-            for (let pageId in pages) {
-                const p = pages[pageId];
-                if (!p.hasOwnProperty('missing')) {
-                    try {
-                        const wikitext = p.revisions[0].slots.main['*'];
-                        const lines = wikitext.split('\n');
-                        let inAzSection = false;
-                        for (let line of lines) {
-                            if (line.includes('{{Dil|Azərbaycan dili}}') || line.includes('==Azərbaycan dili==')) {
-                                inAzSection = true;
-                                continue;
-                            }
-                            if (inAzSection && line.match(/^==[^=]/)) {
-                                // Hit another language section
-                                inAzSection = false;
-                            }
-
-                            if (inAzSection && line.trim().startsWith('#') && !line.trim().startsWith('#:')) {
-                                let def = line.trim().substring(1).trim();
-                                def = def.replace(/\[\[([^\]\|]+\|)?([^\]]+)\]\]/g, '$2'); // remove links
-                                def = def.replace(/\{\{[^\}]+\}\}/g, '').trim(); // remove templates
-                                if (def.length > 150) def = def.substring(0, 147) + '...';
-                                return def || true;
-                            }
-                        }
-                        if (wikitext.includes('{{Dil|Azərbaycan dili}}') || wikitext.includes('==Azərbaycan dili==')) {
-                            return true; // Exists in AZ section but couldn't parse definition
-                        }
-                    } catch(e) {}
-                    return false; // Not in AZ dictionary or parse error, let it fall through to Wikipedia check
-                }
-            }
-            return false;
-        };
-
-        // 1. Check az.wiktionary.org (with revisions for raw wikitext parsing)
-        url = `https://az.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=revisions&rvprop=content&rvslots=main&redirects=1&format=json&origin=*`;
-        let response = await fetch(url);
-        let data = await response.json();
-        if (data.query && data.query.pages) {
-            let res = parseWikitextDef(data.query.pages);
-            if (res !== false) return { valid: true, definition: typeof res === 'string' ? res : null };
         }
-
-        // 2. Check az.wikipedia.org (with extracts)
-        url = `https://az.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=extracts&exintro=true&explaintext=true&redirects=1&format=json&origin=*`;
-        response = await fetch(url);
-        data = await response.json();
-        if (data.query && data.query.pages) {
-            let res = extractDef(data.query.pages);
-            if (res !== false) return { valid: true, definition: typeof res === 'string' ? res : null };
+        
+        if (!foundBashSoz) {
+            return { valid: false, definition: null };
         }
-
-        // 3. Check en.wiktionary.org for "Azerbaijani" section (fallback)
-        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(lowerWord)}&prop=sections&redirects=1&format=json&origin=*`;
-        response = await fetch(url);
-        data = await response.json();
-        if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
-            return { valid: true, definition: "Found in English Wiktionary (Azerbaijani section)." };
+        
+        let definitionText = '';
+        let sibling = foundBashSoz.nextElementSibling;
+        while (sibling && sibling.tagName === 'P') {
+            definitionText += sibling.textContent + ' ';
+            sibling = sibling.nextElementSibling;
         }
-
-        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalizedWord)}&prop=sections&redirects=1&format=json&origin=*`;
-        response = await fetch(url);
-        data = await response.json();
-        if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
-            return { valid: true, definition: "Found in English Wiktionary (Azerbaijani section)." };
+        
+        definitionText = definitionText.trim();
+        if (!definitionText) {
+            definitionText = 'Söz lüğətdə tapıldı, lakin ətraflı izahı yoxdur.';
         }
-
-        return { valid: false, definition: null };
+        
+        return { valid: true, definition: definitionText };
+        
     } catch (e) {
-        console.error("API check failed", e);
-        // Fallback to true so the game doesn't break if API is blocked by CORS/network
-        return { valid: true, definition: "Network error, but word was accepted." }; 
+        console.error("Dictionary check failed:", e);
+        return { valid: false, definition: null }; 
     }
 }
 
@@ -1146,7 +1223,7 @@ async function commitWord() {
     
     // 8. Draw new tiles
     while (originalRack.length < 7 && bag.length > 0) {
-        const tile = drawBalancedTile(originalRack, bag);
+        const tile = drawBalancedTile(originalRack, bag, tempBoard);
         if (tile) originalRack.push(tile);
     }
 
