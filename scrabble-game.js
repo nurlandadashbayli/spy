@@ -28,39 +28,39 @@ const database = getDatabase(app);
 
 // Constants
 const letterData = {
-    'A': { count: 8, points: 1 },
-    'E': { count: 8, points: 1 },
-    'Ə': { count: 8, points: 1 },
+    'A': { count: 9, points: 1 },
+    'E': { count: 5, points: 1 },
+    'Ə': { count: 9, points: 1 },
     'İ': { count: 8, points: 1 },
     'I': { count: 5, points: 1 },
-    'N': { count: 6, points: 1 },
+    'N': { count: 7, points: 1 },
     'R': { count: 6, points: 1 },
     'L': { count: 6, points: 1 },
     'T': { count: 5, points: 1 },
     'D': { count: 4, points: 2 },
-    'M': { count: 4, points: 2 },
+    'M': { count: 5, points: 2 },
     'S': { count: 4, points: 2 },
     'O': { count: 4, points: 2 },
-    'Y': { count: 3, points: 2 },
-    'Q': { count: 3, points: 2 },
+    'Y': { count: 4, points: 2 },
+    'Q': { count: 4, points: 2 },
     'Ş': { count: 3, points: 2 },
-    'U': { count: 3, points: 2 },
+    'U': { count: 4, points: 2 },
     'B': { count: 3, points: 3 },
-    'K': { count: 3, points: 3 },
+    'K': { count: 4, points: 3 },
     'C': { count: 2, points: 3 },
     'V': { count: 2, points: 3 },
     'Z': { count: 2, points: 3 },
     'X': { count: 1, points: 4 },
     'P': { count: 1, points: 4 },
-    'Ç': { count: 1, points: 4 },
-    'Ğ': { count: 1, points: 5 },
-    'G': { count: 1, points: 5 },
-    'Ö': { count: 1, points: 5 },
-    'H': { count: 1, points: 5 },
-    'Ü': { count: 1, points: 5 },
+    'Ç': { count: 2, points: 4 },
+    'Ğ': { count: 2, points: 5 },
+    'G': { count: 2, points: 5 },
+    'Ö': { count: 3, points: 5 },
+    'H': { count: 2, points: 5 },
+    'Ü': { count: 3, points: 5 },
     'F': { count: 1, points: 8 },
     'J': { count: 1, points: 10 },
-    '*': { count: 2, points: 0 }
+    '*': { count: 5, points: 0 }
 };
 
 const TW = ['0,0','0,7','0,14','7,0','7,14','14,0','14,7','14,14'];
@@ -218,7 +218,8 @@ if (confirmSwapBtn) confirmSwapBtn.addEventListener('click', async () => {
     
     // Draw new tiles
     while (rack.length < 7 && bag.length > 0) {
-        rack.push(bag.pop());
+        const tile = drawBalancedTile(rack, bag);
+        if (tile) rack.push(tile);
     }
     
     const turnOrder = gameData.turnOrder;
@@ -237,6 +238,51 @@ if (confirmSwapBtn) confirmSwapBtn.addEventListener('click', async () => {
     swapUi.style.display = 'none';
 });
 
+// Bag Modal Logic
+const bagInfoBtn = document.getElementById('scrabble-bag-info-btn');
+const bagModal = document.getElementById('scrabble-bag-modal');
+const bagCloseBtn = document.getElementById('scrabble-bag-close-btn');
+const bagGrid = document.getElementById('scrabble-bag-grid');
+
+if (bagInfoBtn) bagInfoBtn.addEventListener('click', () => {
+    if (!gameData || !gameData.bag) return;
+    
+    let counts = {};
+    for (let letter of gameData.bag) {
+        counts[letter] = (counts[letter] || 0) + 1;
+    }
+    
+    bagGrid.innerHTML = Object.keys(letterData).map(letter => {
+        // letterData keys are uppercase, gameData.bag also uses uppercase!
+        const searchKey = letter;
+        const count = counts[searchKey] || 0;
+        const displayLetter = letter === '*' ? '' : letter;
+        const points = letter === '*' ? 0 : letterData[letter].points;
+        
+        return `
+            <div style="display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 8px; opacity: ${count === 0 ? '0.5' : '1'};">
+                <div class="scrabble-tile" style="position: relative; cursor: default; margin-bottom: 0.25rem;">
+                    ${displayLetter}
+                    <span class="points">${points}</span>
+                </div>
+                <span style="font-size: 0.9rem; font-weight: bold;">x${count}</span>
+            </div>
+        `;
+    }).join('');
+    
+    bagModal.style.display = 'flex';
+});
+
+if (bagCloseBtn) bagCloseBtn.addEventListener('click', () => bagModal.style.display = 'none');
+
+// How To Play Modal
+const htpBtn = document.getElementById('scrabble-how-to-play-btn');
+const htpModal = document.getElementById('scrabble-how-to-play-modal');
+const htpCloseBtn = document.getElementById('scrabble-htp-close-btn');
+
+if (htpBtn) htpBtn.addEventListener('click', () => htpModal.style.display = 'flex');
+if (htpCloseBtn) htpCloseBtn.addEventListener('click', () => htpModal.style.display = 'none');
+
 // Modal Event Listeners
 if (failCancelBtn) failCancelBtn.addEventListener('click', () => {
     failModal.style.display = 'none';
@@ -251,7 +297,7 @@ if (failRequestBtn) failRequestBtn.addEventListener('click', async () => {
         await update(ref(database, `game/scrabble/rooms/${roomName}`), {
             approvalRequest: {
                 status: 'pending',
-                word: pendingCommitData.word,
+                word: pendingCommitData.mainWord,
                 from: playerId
             }
         });
@@ -455,41 +501,37 @@ function createBag() {
     return bag;
 }
 
+function drawBalancedTile(rack, bag) {
+    if (bag.length === 0) return null;
+    const vowels = ['A', 'E', 'Ə', 'İ', 'I', 'O', 'Ö', 'U', 'Ü'];
+    let vCount = 0, cCount = 0;
+    for (let tile of rack) {
+        if (tile === '*') continue;
+        if (vowels.includes(tile)) vCount++;
+        else cCount++;
+    }
+    if (vCount >= 3) {
+        const idx = bag.findLastIndex(t => t !== '*' && !vowels.includes(t));
+        if (idx !== -1) return bag.splice(idx, 1)[0];
+    }
+    if (cCount >= 4) {
+        const idx = bag.findLastIndex(t => vowels.includes(t));
+        if (idx !== -1) return bag.splice(idx, 1)[0];
+    }
+    return bag.pop();
+}
+
 async function startGame() {
     try {
         let bag = createBag();
         const pKeys = Object.keys(players);
         const updates = {};
         
-        function isVowel(letter) {
-            return ['A', 'E', 'Ə', 'İ', 'I', 'O', 'Ö', 'U', 'Ü'].includes(letter);
-        }
-        
         pKeys.forEach(pId => {
             let rack = [];
-            let valid = false;
-            for (let attempts = 0; attempts < 10; attempts++) {
-                rack = [];
-                for (let i=0; i<7; i++) {
-                    if (bag.length > 0) rack.push(bag.pop());
-                }
-                if (rack.filter(isVowel).length >= 2) {
-                    valid = true;
-                    break;
-                }
-                // Return to bag and shuffle
-                bag.push(...rack);
-                for (let i = bag.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [bag[i], bag[j]] = [bag[j], bag[i]];
-                }
-            }
-            // Fallback
-            if (!valid) {
-                 rack = [];
-                 for (let i=0; i<7; i++) {
-                    if (bag.length > 0) rack.push(bag.pop());
-                 }
+            for (let i = 0; i < 7; i++) {
+                const tile = drawBalancedTile(rack, bag);
+                if (tile) rack.push(tile);
             }
             updates[`players/${pId}/rack`] = rack;
             updates[`players/${pId}/score`] = 0;
@@ -535,13 +577,25 @@ function renderGame() {
     }
 
     const lastWordCard = document.getElementById('scrabble-last-word-card');
-    const lastWordTitle = document.getElementById('scrabble-last-word-title');
-    const lastWordDef = document.getElementById('scrabble-last-word-def');
+    const lastWordContent = document.getElementById('scrabble-last-word-content');
 
     if (gameData.lastPlay) {
         lastWordCard.style.display = 'block';
-        lastWordTitle.innerText = gameData.lastPlay.word;
-        lastWordDef.innerText = gameData.lastPlay.definition || 'No definition found.';
+        if (gameData.lastPlay.allWords) {
+            lastWordContent.innerHTML = gameData.lastPlay.allWords.map(w => `
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary-light);">${w.word}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">${w.definition || 'No definition found.'}</div>
+                </div>
+            `).join('');
+        } else {
+            // Backwards compatibility for games started before this update
+            lastWordContent.innerHTML = `
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary-light);">${gameData.lastPlay.word}</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">${gameData.lastPlay.definition || 'No definition found.'}</div>
+                </div>`;
+        }
     } else {
         lastWordCard.style.display = 'none';
     }
@@ -569,11 +623,6 @@ function createTileElement(letter, isPending) {
     const isJoker = letter === letter.toLowerCase() && letter !== '*';
     const displayLetter = letter.toLocaleUpperCase('az');
     const points = isJoker ? 0 : (letterData[displayLetter]?.points || 0);
-
-    if (isJoker) {
-        tile.style.color = '#ef4444'; // Red text for Joker
-        tile.style.backgroundColor = '#fee2e2';
-    }
 
     tile.innerHTML = `
         ${displayLetter}
@@ -778,8 +827,18 @@ async function isValidWord(word) {
                     try {
                         const wikitext = p.revisions[0].slots.main['*'];
                         const lines = wikitext.split('\n');
+                        let inAzSection = false;
                         for (let line of lines) {
-                            if (line.trim().startsWith('#') && !line.trim().startsWith('#:')) {
+                            if (line.includes('{{Dil|Azərbaycan dili}}') || line.includes('==Azərbaycan dili==')) {
+                                inAzSection = true;
+                                continue;
+                            }
+                            if (inAzSection && line.match(/^==[^=]/)) {
+                                // Hit another language section
+                                inAzSection = false;
+                            }
+
+                            if (inAzSection && line.trim().startsWith('#') && !line.trim().startsWith('#:')) {
                                 let def = line.trim().substring(1).trim();
                                 def = def.replace(/\[\[([^\]\|]+\|)?([^\]]+)\]\]/g, '$2'); // remove links
                                 def = def.replace(/\{\{[^\}]+\}\}/g, '').trim(); // remove templates
@@ -787,15 +846,18 @@ async function isValidWord(word) {
                                 return def || true;
                             }
                         }
+                        if (wikitext.includes('{{Dil|Azərbaycan dili}}') || wikitext.includes('==Azərbaycan dili==')) {
+                            return true; // Exists in AZ section but couldn't parse definition
+                        }
                     } catch(e) {}
-                    return true; // Word exists but no def parsed
+                    return false; // Not in AZ dictionary or parse error, let it fall through to Wikipedia check
                 }
             }
             return false;
         };
 
         // 1. Check az.wiktionary.org (with revisions for raw wikitext parsing)
-        url = `https://az.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
+        url = `https://az.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=revisions&rvprop=content&rvslots=main&redirects=1&format=json&origin=*`;
         let response = await fetch(url);
         let data = await response.json();
         if (data.query && data.query.pages) {
@@ -804,7 +866,7 @@ async function isValidWord(word) {
         }
 
         // 2. Check az.wikipedia.org (with extracts)
-        url = `https://az.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=extracts&exintro=true&explaintext=true&format=json&origin=*`;
+        url = `https://az.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(lowerWord)}|${encodeURIComponent(capitalizedWord)}&prop=extracts&exintro=true&explaintext=true&redirects=1&format=json&origin=*`;
         response = await fetch(url);
         data = await response.json();
         if (data.query && data.query.pages) {
@@ -813,18 +875,18 @@ async function isValidWord(word) {
         }
 
         // 3. Check en.wiktionary.org for "Azerbaijani" section (fallback)
-        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(lowerWord)}&prop=sections&format=json&origin=*`;
+        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(lowerWord)}&prop=sections&redirects=1&format=json&origin=*`;
         response = await fetch(url);
         data = await response.json();
         if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
-            return { valid: true, definition: "Exists in Azerbaijani dictionary." };
+            return { valid: true, definition: "Found in English Wiktionary (Azerbaijani section)." };
         }
 
-        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalizedWord)}&prop=sections&format=json&origin=*`;
+        url = `https://en.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(capitalizedWord)}&prop=sections&redirects=1&format=json&origin=*`;
         response = await fetch(url);
         data = await response.json();
         if (data.parse && data.parse.sections && data.parse.sections.some(sec => sec.line.includes('Azerbaijani'))) {
-            return { valid: true, definition: "Exists in Azerbaijani dictionary." };
+            return { valid: true, definition: "Found in English Wiktionary (Azerbaijani section)." };
         }
 
         return { valid: false, definition: null };
@@ -1039,26 +1101,32 @@ async function handlePlayWord() {
     playBtn.disabled = true;
     playBtn.innerText = 'Checking...';
 
-    let mainDefinition = null;
-    let mainWordString = formedWords.find(fw => fw.isMain)?.word || formedWords[0].word;
-
+    let allPlayedWords = [];
     for (let fw of formedWords) {
         const check = await isValidWord(fw.word);
         if (!check.valid) {
             failText.innerText = `The word "${fw.word}" was not found in the dictionary.`;
+            // Set pendingCommitData so failRequestBtn has access to the failed play data
+            pendingCommitData = {
+                wordScore: totalScore,
+                tempBoard: tempBoard,
+                allWords: formedWords.map(f => ({ word: f.word, definition: "Pending approval" })),
+                mainWord: fw.word
+            };
             failModal.style.display = 'flex';
             return; // Stops here, button stays disabled until modal is handled
         }
-        if (fw.isMain && check.definition) {
-            mainDefinition = check.definition;
-        }
+        allPlayedWords.push({
+            word: fw.word,
+            definition: check.definition || "No definition found."
+        });
     }
 
     pendingCommitData = { 
-        word: mainWordString, 
         wordScore: totalScore, 
         tempBoard: tempBoard,
-        definition: mainDefinition 
+        allWords: allPlayedWords,
+        mainWord: allPlayedWords.length > 0 ? allPlayedWords[0].word : ''
     };
 
     // If valid, commit directly
@@ -1075,9 +1143,11 @@ async function commitWord() {
     
     const playedIndices = pendingPlacements.map(p => p.rackIdx).sort((a,b)=>b-a);
     playedIndices.forEach(idx => originalRack.splice(idx, 1));
-
+    
+    // 8. Draw new tiles
     while (originalRack.length < 7 && bag.length > 0) {
-        originalRack.push(bag.pop());
+        const tile = drawBalancedTile(originalRack, bag);
+        if (tile) originalRack.push(tile);
     }
 
     const currentScore = gameData.players[playerId].score || 0;
@@ -1092,7 +1162,7 @@ async function commitWord() {
         approvalRequest: null,
         [`players/${playerId}/rack`]: originalRack,
         [`players/${playerId}/score`]: currentScore + wordScore,
-        lastPlay: { word: pendingCommitData.word, definition: pendingCommitData.definition || "No definition found." },
+        lastPlay: { allWords: pendingCommitData.allWords },
         lastPlayTiles: pendingPlacements.map(p => `${p.r},${p.c}`)
     };
 

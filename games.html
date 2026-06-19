@@ -575,7 +575,10 @@
                     <h2 style="color: var(--primary-light); margin: 0; font-size: 1.2rem;">Scrabble</h2>
                     <div id="scrabble-turn-indicator" style="font-weight: bold; margin-top: 0.25rem;">Waiting...</div>
                 </div>
-                <button id="scrabble-quit-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">Quit</button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="scrabble-how-to-play-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1rem;">How to Play</button>
+                    <button id="scrabble-quit-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">Quit</button>
+                </div>
             </div>
 
             <div class="scrabble-layout" style="display: grid; grid-template-columns: 1fr 250px; gap: 1rem; align-items: start;">
@@ -590,13 +593,13 @@
                             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Drag tiles from your rack to the board. Click "Play Word" when ready.</p>
                             
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button id="scrabble-play-btn" class="btn btn-primary" style="flex: 2;">Play Word</button>
-                                <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1;">Recall</button>
-                                <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1;">Pass</button>
+                                <button id="scrabble-play-btn" class="btn btn-primary" style="flex: 2;" title="Play the tiles currently placed on the board">Play Word</button>
+                                <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1;" title="Return all placed tiles back to your rack">Recall</button>
+                                <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1;" title="Skip your turn">Pass</button>
                             </div>
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button id="scrabble-shuffle-btn" class="btn btn-secondary" style="flex: 1;">🔀 Shuffle</button>
-                                <button id="scrabble-swap-btn" class="btn btn-secondary" style="flex: 1;">🔄 Swap</button>
+                                <button id="scrabble-shuffle-btn" class="btn btn-secondary" style="flex: 1;" title="Shuffle the tiles in your rack (Does not skip your turn, once per turn)">🔀 Shuffle</button>
+                                <button id="scrabble-swap-btn" class="btn btn-secondary" style="flex: 1;" title="Exchange selected tiles with the bag (Skips your turn)">🔄 Swap</button>
                             </div>
 
                             <!-- Swap Mode UI (Hidden by default) -->
@@ -618,15 +621,14 @@
                         <div id="scrabble-scores-list" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
                     </div>
                     <div class="card" style="margin-bottom: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="scrabble-bag-info-btn" title="Click to view remaining tiles">
                             <span style="font-weight: bold;">Tiles in Bag:</span>
                             <span id="scrabble-bag-count" class="badge">--</span>
                         </div>
                     </div>
                     <div class="card" id="scrabble-last-word-card" style="display: none;">
-                        <h3 style="margin-bottom: 0.5rem; color: var(--primary-light);">Last Played Word</h3>
-                        <div id="scrabble-last-word-title" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.25rem;"></div>
-                        <div id="scrabble-last-word-def" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;"></div>
+                        <h3 style="margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Last Played Words</h3>
+                        <div id="scrabble-last-word-content"></div>
                     </div>
                 </div>
             </div>
@@ -666,13 +668,57 @@
             <div class="scrabble-modal-card card" style="text-align: center;">
                 <h3 style="color: var(--primary-light); margin-bottom: 0.5rem;">Blank Tile</h3>
                 <p style="margin-bottom: 1rem;">Enter a letter for the blank tile:</p>
-                <input type="text" id="scrabble-joker-input" maxlength="1" style="width: 3rem; text-align: center; font-size: 1.5rem; text-transform: uppercase;" />
+                <input type="text" id="scrabble-joker-input" maxlength="1" style="width: 3rem; text-align: center; font-size: 1.5rem; text-transform: uppercase; color: #111827; background: #f3f4f6; border: 1px solid #ccc; border-radius: 4px;" autocomplete="off" />
                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                     <button id="scrabble-joker-cancel-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
                     <button id="scrabble-joker-ok-btn" class="btn btn-primary" style="flex: 1;">Confirm</button>
                 </div>
             </div>
+            </div>
         </div>
+
+        <div id="scrabble-bag-modal" class="scrabble-modal-overlay" style="display: none;">
+            <div class="scrabble-modal-card card" style="max-width: 400px; max-height: 80vh; overflow-y: auto;">
+                <h3 style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Remaining Tiles</h3>
+                <div id="scrabble-bag-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">
+                    <!-- Filled by JS -->
+                </div>
+                <button id="scrabble-bag-close-btn" class="btn btn-secondary" style="width: 100%;">Close</button>
+            </div>
+        </div>
+
+        <div id="scrabble-how-to-play-modal" class="scrabble-modal-overlay" style="display: none; align-items: flex-end;">
+            <div class="card" style="width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; border-radius: 16px 16px 0 0; margin: 0 auto; animation: slideUp 0.3s ease-out;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                    <h3 style="color: var(--primary-light); margin: 0;">How to Play Scrabble</h3>
+                    <button id="scrabble-htp-close-btn" class="btn btn-secondary" style="padding: 0.25rem 0.75rem;">✕</button>
+                </div>
+                <div style="line-height: 1.5; color: var(--text-light); font-size: 0.95rem;">
+                    <p><strong>Objective:</strong> Score the most points by forming valid Azerbaijani words horizontally or vertically on the board.</p>
+                    <p><strong>First Turn:</strong> The first word played must cover the center star tile.</p>
+                    <p><strong>Connecting Words:</strong> All subsequent words must connect to at least one existing tile on the board.</p>
+                    <p><strong>Scoring:</strong> Each letter has a point value. The total score for a turn is the sum of the letters in all new words formed. Premium squares multiply the letter or word score:</p>
+                    <ul style="margin-top: 0.25rem; margin-bottom: 1rem; padding-left: 1.5rem;">
+                        <li><strong style="color: #60a5fa;">2x Letter (L2)</strong> / <strong style="color: #3b82f6;">3x Letter (L3)</strong></li>
+                        <li><strong style="color: #f87171;">2x Word (W2)</strong> / <strong style="color: #ef4444;">3x Word (W3)</strong></li>
+                    </ul>
+                    <p><strong>Bingo:</strong> If you play all 7 tiles from your rack in one turn, you receive a 50-point bonus!</p>
+                    <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-light);">Special Tiles & Mechanics:</h4>
+                    <ul style="margin-bottom: 1rem; padding-left: 1.5rem;">
+                        <li><strong>Blank Tile (*):</strong> Worth 0 points, but can represent any letter. You will be prompted to choose its letter when placed.</li>
+                        <li><strong>🔄 Swap:</strong> Skip your turn to exchange any number of your tiles with the bag.</li>
+                        <li><strong>🔀 Shuffle:</strong> Reorganize your rack (once per turn) to help spot words. This does NOT skip your turn.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes slideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+        </style>
         <!-- End Scrabble Modals -->
 
         <!-- Crossword Game Screen -->
@@ -681,10 +727,10 @@
                 <button id="crossword-back-btn" class="back-btn" style="margin-bottom: 0;">← Back</button>
                 <h1 class="game-title" style="margin-bottom: 0; font-size: 1.6rem; margin-right: auto; margin-left: 1.5rem;">📝 Crossword</h1>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button id="crossword-reveal-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;">
+                    <button id="crossword-reveal-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;" title="Reveal the answers">
                         👁 Reveal
                     </button>
-                    <button id="crossword-refresh-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                    <button id="crossword-refresh-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;" title="Generate a new crossword">
                         🔄 Refresh
                     </button>
                 </div>
