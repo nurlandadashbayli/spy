@@ -1,5 +1,5 @@
 // Import Firebase SDK (ES modules require imports at the top)
-import { animalNames, cities, countries, adjectives } from './constants.js';
+import { animalNames, cities, countries, adjectives } from '../../core/constants.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import {
     getDatabase,

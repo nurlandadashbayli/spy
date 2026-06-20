@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Multiplayer Spy Game - Find the spy among your friends!">
     <title>Spy Game - Who's the Spy?</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -549,6 +549,12 @@
 
             <!-- Join Game Section -->
             <div id="scrabble-join-section" class="card">
+                <button id="scrabble-single-btn" class="btn btn-primary" style="margin-bottom: 1.5rem; background: var(--success); width: 100%;">👤 Quick Single Player</button>
+                
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; position: relative;">
+                    <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--bg-surface); padding: 0 10px; font-size: 0.8rem; color: var(--text-muted);">OR MULTIPLAYER</span>
+                </div>
+
                 <div class="input-group">
                     <label for="scrabble-room-name">Enter Room Name</label>
                     <input type="text" id="scrabble-room-name" placeholder="e.g. soz123" maxlength="15" autocomplete="off">
@@ -570,52 +576,38 @@
 
         <!-- Scrabble Game Screen -->
         <div id="scrabble-game-screen" class="screen">
-            <div class="game-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <div style="flex: 1;">
-                    <h2 style="color: var(--primary-light); margin: 0; font-size: 1.2rem;">Scrabble</h2>
-                    <div id="scrabble-turn-indicator" style="font-weight: bold; margin-top: 0.25rem;">Waiting...</div>
-                </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button id="scrabble-how-to-play-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1rem;">How to Play</button>
-                    <button id="scrabble-quit-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem;">Quit</button>
-                </div>
-            </div>
-
             <div class="scrabble-layout" style="display: grid; grid-template-columns: 1fr 250px; gap: 1rem; align-items: start;">
                 <!-- Main Game Area -->
                 <div class="scrabble-main-area">
                     <div id="scrabble-board" class="scrabble-board"></div>
                     
-                    <div class="card" style="margin-top: 1rem;">
-                        <div id="scrabble-rack" class="scrabble-rack"></div>
-                        
-                        <div class="scrabble-controls" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Drag tiles from your rack to the board. Click "Play Word" when ready.</p>
-                            
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button id="scrabble-play-btn" class="btn btn-primary" style="flex: 2;" title="Play the tiles currently placed on the board">Play Word</button>
-                                <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1;" title="Return all placed tiles back to your rack">Recall</button>
-                                <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1;" title="Skip your turn">Pass</button>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button id="scrabble-shuffle-btn" class="btn btn-secondary" style="flex: 1;" title="Shuffle the tiles in your rack (Does not skip your turn, once per turn)">🔀 Shuffle</button>
-                                <button id="scrabble-swap-btn" class="btn btn-secondary" style="flex: 1;" title="Exchange selected tiles with the bag (Skips your turn)">🔄 Swap</button>
-                            </div>
+                    <!-- Rack (No card wrapper to save space) -->
+                    <div id="scrabble-rack" class="scrabble-rack" style="margin-top: 1rem;"></div>
 
-                            <!-- Swap Mode UI (Hidden by default) -->
-                            <div id="scrabble-swap-ui" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                                <p style="font-size: 0.85rem; color: var(--warning); margin: 0;">Select tiles to swap:</p>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button id="scrabble-confirm-swap-btn" class="btn btn-primary" style="flex: 1;">Confirm</button>
-                                    <button id="scrabble-cancel-swap-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
-                                </div>
-                            </div>
+                    <!-- Controls Row beneath Rack -->
+                    <div class="scrabble-controls" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem;">
+                        <button id="scrabble-play-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Play the tiles currently placed on the board">✅ Play</button>
+                        <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Return all placed tiles back to your rack">↩️ Recall</button>
+                        <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Skip your turn">⏭️ Pass</button>
+                        <button id="scrabble-shuffle-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Shuffle the tiles in your rack">🔀 Shuffle</button>
+                        <button id="scrabble-swap-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Exchange selected tiles with the bag">🔄 Swap</button>
+                        <button id="scrabble-how-to-play-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;">❓ How to Play</button>
+                        <button id="scrabble-quit-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; background: var(--danger); color: white; border-color: var(--danger);">🚪 Quit</button>
+                    </div>
+
+                    <!-- Swap Mode UI (Hidden by default) -->
+                    <div id="scrabble-swap-ui" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <p style="font-size: 0.85rem; color: var(--warning); margin: 0; text-align: center;">Select tiles to swap:</p>
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <button id="scrabble-confirm-swap-btn" class="btn btn-primary" style="flex: 1; max-width: 200px; padding: 0.5rem;">Confirm Swap</button>
+                            <button id="scrabble-cancel-swap-btn" class="btn btn-secondary" style="flex: 1; max-width: 200px; padding: 0.5rem;">Cancel</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Sidebar Area -->
                 <div class="scrabble-sidebar-area">
+                    <!-- Scores Card -->
                     <div class="card" style="margin-bottom: 1rem;">
                         <h3>Scores</h3>
                         <div id="scrabble-scores-list" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
@@ -769,15 +761,15 @@
             </div>
         </div>
 
-        <!-- Firebase SDK -->
-        <script type="module" src="game.js?v=1.4"></script>
-        <script type="module" src="scrabble-game.js?v=1.0"></script>
-        <script type="module" src="wordle.js?v=1.0"></script>
-        <script type="module" src="scribble.js?v=1.0"></script>
-        <script type="module" src="password.js?v=1.0"></script>
-        <script type="module" src="storyboard.js?v=1.0"></script>
-        <script type="module" src="crossword-generator.js?v=1.0"></script>
-        <script type="module" src="crossword.js?v=1.0"></script>
+        <!-- Game Scripts -->
+        <script type="module" src="src/games/spy/game.js?v=1.4"></script>
+        <script type="module" src="src/games/scrabble/scrabble-game.js?v=1.0"></script>
+        <script type="module" src="src/games/wordle/wordle.js?v=1.0"></script>
+        <script type="module" src="src/games/scribble/scribble.js?v=1.0"></script>
+        <script type="module" src="src/games/password/password.js?v=1.0"></script>
+        <script type="module" src="src/games/storyboard/storyboard.js?v=1.0"></script>
+        <script type="module" src="src/games/crossword/crossword-generator.js?v=1.0"></script>
+        <script type="module" src="src/games/crossword/crossword.js?v=1.0"></script>
 
         <script>
             const originalTitle = document.title;

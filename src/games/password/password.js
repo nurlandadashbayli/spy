@@ -10,7 +10,7 @@ import {
     get,
     onDisconnect
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-import { adjectives as defaultAdjectives, animalNames } from './constants.js';
+import { adjectives as defaultAdjectives, animalNames } from '../../core/constants.js';
 
 // Firebase Configuration
 const firebaseConfig = {

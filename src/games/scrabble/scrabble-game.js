@@ -28,36 +28,36 @@ const database = getDatabase(app);
 
 // Constants
 const letterData = {
-    'A': { count: 9, points: 1 },
-    'E': { count: 5, points: 1 },
-    'Ə': { count: 9, points: 1 },
-    'İ': { count: 8, points: 1 },
-    'I': { count: 5, points: 1 },
-    'N': { count: 7, points: 1 },
-    'R': { count: 6, points: 1 },
-    'L': { count: 6, points: 1 },
-    'T': { count: 5, points: 1 },
-    'D': { count: 4, points: 2 },
+    'A': { count: 7, points: 1 },
+    'Ə': { count: 6, points: 1 },
+    'İ': { count: 5, points: 1 },
     'M': { count: 5, points: 2 },
-    'S': { count: 4, points: 2 },
-    'O': { count: 4, points: 2 },
-    'Y': { count: 4, points: 2 },
-    'Q': { count: 4, points: 2 },
-    'Ş': { count: 3, points: 2 },
-    'U': { count: 4, points: 2 },
-    'B': { count: 3, points: 3 },
-    'K': { count: 4, points: 3 },
+    'N': { count: 5, points: 1 },
+    'R': { count: 5, points: 1 },
+    'L': { count: 6, points: 1 },
+    'D': { count: 4, points: 2 },
+    'T': { count: 4, points: 1 },
+    'I': { count: 4, points: 1 },
+    'E': { count: 4, points: 1 },
+    'S': { count: 3, points: 2 },
+    'O': { count: 3, points: 2 },
+    'Y': { count: 3, points: 2 },
+    'Q': { count: 3, points: 2 },
+    'U': { count: 3, points: 2 },
+    'K': { count: 3, points: 3 },
+    'Ş': { count: 2, points: 2 },
+    'B': { count: 2, points: 3 },
     'C': { count: 2, points: 3 },
-    'V': { count: 2, points: 3 },
     'Z': { count: 2, points: 3 },
-    'X': { count: 1, points: 4 },
-    'P': { count: 1, points: 4 },
     'Ç': { count: 2, points: 4 },
-    'Ğ': { count: 2, points: 5 },
-    'G': { count: 2, points: 5 },
-    'Ö': { count: 3, points: 5 },
-    'H': { count: 2, points: 5 },
-    'Ü': { count: 3, points: 5 },
+    'Ö': { count: 2, points: 5 },
+    'Ü': { count: 2, points: 5 },
+    'V': { count: 1, points: 3 },
+    'Ğ': { count: 1, points: 5 },
+    'G': { count: 1, points: 5 },
+    'H': { count: 1, points: 5 },
+    'P': { count: 1, points: 4 },
+    'X': { count: 1, points: 4 },
     'F': { count: 1, points: 8 },
     'J': { count: 1, points: 10 },
     '*': { count: 5, points: 0 }
@@ -68,31 +68,6 @@ const DW = ['1,1','2,2','3,3','4,4','10,10','11,11','12,12','13,13','1,13','2,12
 const TL = ['1,5','1,9','5,1','5,5','5,9','5,13','9,1','9,5','9,9','9,13','13,5','13,9'];
 const DL = ['0,3','0,11','2,6','2,8','3,0','3,7','3,14','6,2','6,6','6,8','6,12','7,3','7,11','8,2','8,6','8,8','8,12','11,0','11,7','11,14','12,6','12,8','14,3','14,11'];
 const CENTER = '7,7';
-
-const commonWords = [
-    // 6 Letters
-    'MƏKTƏB', 'QARDAŞ', 'TƏLƏBƏ', 'YOLDAŞ', 'MƏSƏLƏ', 'TƏBİƏT', 'MƏQSƏD', 'SEVİNC', 'QƏLƏBƏ', 'HADİSƏ',
-    'NƏTİCƏ', 'MƏNTİQ', 'ƏDALƏT', 'DƏRMAN', 'TƏCİLİ', 'YARDIM', 'MƏNƏVİ', 'VƏZİFƏ', 'SAĞLAM', 'DÖVLƏT',
-    'BAYRAQ', 'MİLLƏT', 'FİZİKA', 'MUSİQİ', 'İNCƏSƏ', 'FUTBOL', 'ŞAHMAT', 'JURNAL', 'AKTYOR', 'REJİSS',
-    'KONSAR', 'HEYKƏL', 'RƏSSAM', 'YAZICI', 'ŞAGİRD', 'DƏFTƏR', 'MƏTBƏX', 'DƏHLİZ', 'BOSTAN', 'AVTOBUS',
-    'TƏYYAR', 'SÜRÜCÜ', 'QARANL', 'GÜNDÜZ', 'FIRTIN', 'TORPAQ', 'SƏNƏTÇİ', 'HEYVAN', 'QƏHRƏM', 'ŞƏRTLİ',
-    'SÖZARDI', 'QAÇQIN', 'KÖÇKÜN', 'KÖRPÜS', 'BƏDİBƏ', 'DİNDAR', 'AĞACLA', 'DƏNİZİ', 'SAHİLİ',
-    'SƏHƏRİ', 'GECƏSİ', 'MƏDƏNİ', 'KƏNDLİ', 'QƏSƏBƏ', 'ŞƏHƏRİ', 'PAYTAX', 'SƏNƏDİ', 'BİLETİ', 'SAATLA',
-    'DƏQİQƏ', 'SANİYƏ', 'ZAMANI', 'TARİXİ', 'İNSANI', 'KİŞİLƏ', 'QADINL', 'UŞAQLA', 'MƏNZİL', 'BİNALA',
-    
-    // 7 Letters
-    'TELEFON', 'AZADLIQ', 'MƏLUMAT', 'DÜŞÜNCƏ', 'TƏRBİYƏ', 'CİNAYƏT', 'MÜDAFİƏ', 'MÜƏLLİM', 'PROBLEM', 'HƏQİQƏT',
-    'SƏDAQƏT', 'İSTEDAD', 'TƏCRÜBƏ', 'İRADƏLİ', 'RƏQABƏT', 'İNKİŞAF', 'TƏRƏQQİ', 'ƏNƏNƏVİ', 'MƏHKƏMƏ', 'MÜALİCƏ',
-    'YUMURTA', 'DİLİMİZ', 'QARDAŞI', 'TƏLƏBƏL', 'ÇİÇƏKLƏ', 'İNSANIN', 'ZAMANLA', 'YAZIÇIL', 'HƏYATIN', 'DÜNYADA',
-    'MƏKTƏBİ', 'HƏKİMLƏ', 'İNSANLA', 'MAŞINLA', 'AĞACLAR', 'HEYVANL', 'DƏNİZLƏ', 'KİTABLA', 'DƏFTƏRL', 'QƏLƏMLƏ',
-    'MÜHARİB', 'ORDUNUN', 'ƏSGƏRLƏ', 'HƏKİMLİ', 'DÜZƏLİŞ', 'BİNALAR', 'GƏMİLƏR', 'SƏYYAHİ', 'KƏNDLƏR', 'ŞƏHƏRLƏ',
-    
-    // 8 Letters
-    'CƏMİYYƏT', 'MƏHƏBBƏT', 'QƏHRƏMAN', 'MÜBARİZƏ', 'YARADICI', 'VƏZİYYƏT', 'ƏLAQƏDAR', 'TƏŞKİLAT', 'MÜƏSSİSƏ', 'İSTEHSAL',
-    'MÜŞTƏRİ', 'PƏNCƏRƏL', 'AZƏRBAYC', 'DÖVLƏTİN', 'HÖKUMƏTİ', 'TƏHLÜKƏL', 'TƏBİƏTİN', 'GƏLƏCƏYİ', 'HƏQİQƏTİ',
-    'XƏSTƏLİK', 'XƏSTƏXAN', 'MƏNŞƏYİN', 'KİTABXAN', 'KOMPÜTER', 'İNTERNET', 'MÜSTƏQİL', 'AZADLIĞI', 'BAŞLANĞI', 'GÖZƏLLİK',
-    'XOŞBƏXTL', 'QARDAŞLI', 'QOHUMLUQ', 'DOSTLUĞU', 'MÜVƏFFƏQ', 'MÜKƏMMƏL', 'ƏHƏMİYYƏ', 'BEYNƏLMI', 'DEMOKRAT', 'TEXNOLOG'
-];
 
 // State
 let roomName = '';
@@ -116,6 +91,7 @@ const joinSection = document.getElementById('scrabble-join-section');
 const lobbySection = document.getElementById('scrabble-lobby-section');
 const backBtn = document.getElementById('scrabble-back-btn');
 const quitBtn = document.getElementById('scrabble-quit-btn');
+const singleBtn = document.getElementById('scrabble-single-btn');
 const joinBtn = document.getElementById('scrabble-join-btn');
 const startBtn = document.getElementById('scrabble-start-btn');
 const leaveBtn = document.getElementById('scrabble-leave-btn');
@@ -173,6 +149,7 @@ if (selectScrabble) {
 if (backBtn) backBtn.addEventListener('click', leaveRoom);
 if (leaveBtn) leaveBtn.addEventListener('click', leaveRoom);
 if (quitBtn) quitBtn.addEventListener('click', leaveRoom);
+if (singleBtn) singleBtn.addEventListener('click', startSinglePlayer);
 if (joinBtn) joinBtn.addEventListener('click', joinRoom);
 if (startBtn) startBtn.addEventListener('click', startGame);
 
@@ -351,7 +328,7 @@ if (jokerCancelBtn) jokerCancelBtn.addEventListener('click', () => {
 });
 
 if (jokerOkBtn) jokerOkBtn.addEventListener('click', () => {
-    let val = jokerInput.value.toLocaleUpperCase('az');
+    let val = toWikiUpper(jokerInput.value);
     if (!val || !letterData[val]) return alert('Please enter a valid letter.');
     
     jokerModal.style.display = 'none';
@@ -359,7 +336,7 @@ if (jokerOkBtn) jokerOkBtn.addEventListener('click', () => {
         pendingPlacements.push({
             r: pendingJokerDrop.r,
             c: pendingJokerDrop.c,
-            letter: val.toLowerCase(), // store as lowercase to indicate joker
+            letter: toWikiLower(val), // store as lowercase to indicate joker
             rackIdx: pendingJokerDrop.rackIdx
         });
         pendingJokerDrop = null;
@@ -526,107 +503,88 @@ function createBag() {
     return bag;
 }
 
-function findAssistTile(rack, bag, board) {
-    if (bag.length === 0) return null;
-    if (rack.length < 4) return null;
-    
-    // First turn?
-    const isFirstTurn = !board[7][7];
-    const shuffledWords = [...commonWords].sort(() => Math.random() - 0.5).slice(0, 30);
-    
-    for (let word of shuffledWords) {
-        for (let r = 0; r < 15; r++) {
-            for (let c = 0; c < 15; c++) {
-                for (let dir of ['H', 'V']) {
-                    if (dir === 'H' && c + word.length > 15) continue;
-                    if (dir === 'V' && r + word.length > 15) continue;
-                    
-                    let overlaps = false;
-                    let validPlacement = true;
-                    let neededFromRack = [];
-                    let connected = false;
-
-                    for (let i = 0; i < word.length; i++) {
-                        let currR = dir === 'H' ? r : r + i;
-                        let currC = dir === 'H' ? c + i : c;
-                        
-                        if (isFirstTurn && currR === 7 && currC === 7) connected = true;
-
-                        if (board[currR][currC]) {
-                            if (board[currR][currC].letter !== word[i]) {
-                                validPlacement = false;
-                                break;
-                            }
-                            overlaps = true;
-                            connected = true;
-                        } else {
-                            neededFromRack.push(word[i]);
-                            if (!isFirstTurn && !connected) {
-                                if (currR > 0 && board[currR-1][currC]) connected = true;
-                                if (currR < 14 && board[currR+1][currC]) connected = true;
-                                if (currC > 0 && board[currR][currC-1]) connected = true;
-                                if (currC < 14 && board[currR][currC+1]) connected = true;
-                            }
-                        }
-                    }
-
-                    if (!validPlacement || (!overlaps && !connected)) continue;
-                    if (neededFromRack.length === 0 || neededFromRack.length > 7) continue;
-
-                    let tempRack = rack.filter(t => t !== '*');
-                    let missingCount = 0;
-                    let missingChar = null;
-
-                    for (let char of neededFromRack) {
-                        let idx = tempRack.indexOf(char);
-                        if (idx !== -1) {
-                            tempRack.splice(idx, 1);
-                        } else {
-                            missingCount++;
-                            missingChar = char;
-                            if (missingCount > 1) break;
-                        }
-                    }
-
-                    if (missingCount === 1 && missingChar) {
-                        let bagIdx = bag.indexOf(missingChar);
-                        if (bagIdx !== -1) {
-                            return bag.splice(bagIdx, 1)[0];
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return null;
-}
 
 function drawBalancedTile(rack, bag, board) {
     if (bag.length === 0) return null;
 
-    // 1. Board-Aware Smart Assist (60% chance if we have a decent sized rack)
-    if (rack.length >= 4 && Math.random() < 0.6) {
-        const assistTile = findAssistTile(rack, bag, board);
-        if (assistTile) return assistTile;
-    }
-
-    // 2. Fallback to Vowel/Consonant Balancer
+    // Vowel/Consonant Balancer
     const vowels = ['A', 'E', 'Ə', 'İ', 'I', 'O', 'Ö', 'U', 'Ü'];
+    const hfConsonants = ['M', 'N', 'L', 'R', 'D', 'Y', 'T'];
     let vCount = 0, cCount = 0;
+    
     for (let tile of rack) {
         if (tile === '*') continue;
         if (vowels.includes(tile)) vCount++;
         else cCount++;
     }
+    
+    // Rule: Try to keep 3 Vowels / 4 Consonants
     if (vCount >= 3) {
+        // High-Frequency Bias (70% chance to pull a highly useful consonant like M, N, L)
+        if (Math.random() < 0.7) {
+            const hfIdx = bag.findLastIndex(t => hfConsonants.includes(t));
+            if (hfIdx !== -1) return bag.splice(hfIdx, 1)[0];
+        }
+        
+        // Fallback: any consonant
         const idx = bag.findLastIndex(t => t !== '*' && !vowels.includes(t));
         if (idx !== -1) return bag.splice(idx, 1)[0];
     }
+    
     if (cCount >= 4) {
         const idx = bag.findLastIndex(t => vowels.includes(t));
         if (idx !== -1) return bag.splice(idx, 1)[0];
     }
+    
     return bag.pop();
+}
+
+async function startSinglePlayer() {
+    roomName = `single_${Math.random().toString(36).substr(2, 6)}`;
+    const name = 'Player';
+    
+    joinSection.style.display = 'none';
+    lobbySection.style.display = 'none';
+    
+    try {
+        const dbRef = ref(database, `game/scrabble/rooms/${roomName}/players`);
+        const newPlayerRef = push(dbRef);
+        playerId = newPlayerRef.key;
+        
+        await set(newPlayerRef, {
+            name: name,
+            score: 0,
+            rack: []
+        });
+
+        onDisconnect(newPlayerRef).remove();
+        
+        setupRealtimeListeners();
+        
+        let bag = createBag();
+        const board = Array(15).fill().map(() => Array(15).fill(null));
+        let rack = [];
+        for (let i = 0; i < 7; i++) {
+            const tile = drawBalancedTile(rack, bag, board);
+            if (tile) rack.push(tile);
+        }
+        
+        const updates = {
+            status: 'started',
+            board: board,
+            bag: bag,
+            currentTurn: playerId,
+            turnOrder: [playerId],
+            [`players/${playerId}/rack`]: rack,
+            [`players/${playerId}/score`]: 0
+        };
+        
+        await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
+    } catch (e) {
+        console.error(e);
+        alert('Failed to start single player game.');
+        resetToSelection();
+    }
 }
 
 async function startGame() {
@@ -663,23 +621,23 @@ function renderGame() {
     if (!gameData) return;
     
     // Scores
-    scoresList.innerHTML = Object.entries(gameData.players || {}).map(([id, p]) => `
-        <div style="display: flex; justify-content: space-between; align-items: center; ${id === gameData.currentTurn ? 'font-weight: bold; color: var(--primary-light);' : ''}">
-            <span>${id === gameData.currentTurn ? '▶ ' : ''}${escapeHtml(p.name)} ${id === playerId ? '(You)' : ''}</span>
-            <span class="badge">${p.score} pts</span>
+    scoresList.innerHTML = Object.entries(gameData.players || {}).map(([id, p]) => {
+        const isActive = id === gameData.currentTurn;
+        return `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-radius: 8px; ${isActive ? 'background: rgba(100, 200, 255, 0.1); border: 1px solid var(--primary);' : ''}">
+            <span style="${isActive ? 'font-weight: bold; color: var(--primary-light);' : ''}">${isActive ? '▶ ' : ''}${escapeHtml(p.name)} ${id === playerId ? '(You)' : ''}</span>
+            <span class="badge" style="${isActive ? 'background: var(--primary); color: #fff;' : ''}">${p.score} pts</span>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     bagCount.innerText = gameData.bag ? gameData.bag.length : 0;
 
     const isMyTurn = gameData.currentTurn === playerId;
     if (isMyTurn) {
-        turnIndicator.innerHTML = '<span style="color: var(--success);">Your Turn!</span>';
         playBtn.disabled = false;
         passBtn.disabled = false;
     } else {
-        const currPName = gameData.players[gameData.currentTurn]?.name || 'Opponent';
-        turnIndicator.innerHTML = `<span style="color: var(--warning);">${escapeHtml(currPName)}'s Turn</span>`;
         playBtn.disabled = true;
         passBtn.disabled = true;
     }
@@ -728,8 +686,8 @@ function createTileElement(letter, isPending) {
     }
 
     // Handle Joker styling
-    const isJoker = letter === letter.toLowerCase() && letter !== '*';
-    const displayLetter = letter.toLocaleUpperCase('az');
+    const isJoker = letter === toWikiLower(letter) && letter !== '*';
+    const displayLetter = toWikiUpper(letter);
     const points = isJoker ? 0 : (letterData[displayLetter]?.points || 0);
 
     tile.innerHTML = `
@@ -894,11 +852,21 @@ function renderBoard() {
 // --- Validation ---
 
 function toWikiLower(word) {
+    if (!word) return word;
     const map = {
         'I': 'ı', 'İ': 'i', 'Ə': 'ə', 'Ö': 'ö', 
         'Ü': 'ü', 'Ğ': 'ğ', 'Ç': 'ç', 'Ş': 'ş'
     };
     return word.replace(/[IİƏÖÜĞÇŞ]/g, m => map[m]).toLowerCase();
+}
+
+function toWikiUpper(word) {
+    if (!word) return word;
+    const map = {
+        'ı': 'I', 'i': 'İ', 'ə': 'Ə', 'ö': 'Ö', 
+        'ü': 'Ü', 'ğ': 'Ğ', 'ç': 'Ç', 'ş': 'Ş'
+    };
+    return word.replace(/[ıiəöüğçş]/g, m => map[m]).toUpperCase();
 }
 
 async function isValidWord(word) {
@@ -941,7 +909,7 @@ async function isValidWord(word) {
             junk.forEach(el => el.remove());
             
             // Clean invisible characters, nbsp, and formatting spaces
-            let extractedWord = clone.textContent.replace(/\u00A0/g, '').replace(/\s+/g, '').toLowerCase();
+            let extractedWord = toWikiLower(clone.textContent.replace(/\u00A0/g, '').replace(/\s+/g, ''));
             
             // Match exactly with our search word
             if (extractedWord === lowerWord) {
@@ -1049,10 +1017,9 @@ async function handlePlayWord() {
         if (axis === 'horizontal') {
             for (let c = startC; c <= endC; c++) {
                 const cellLetter = tempBoard[startR][c];
-                wordStr += cellLetter.toLocaleUpperCase('az');
-                
-                const isJoker = cellLetter === cellLetter.toLowerCase() && cellLetter !== '*';
-                let letterScore = isJoker ? 0 : (letterData[cellLetter.toLocaleUpperCase('az')]?.points || 0);
+                wordStr += toWikiUpper(cellLetter);
+                const isJoker = cellLetter === toWikiLower(cellLetter) && cellLetter !== '*';
+                let letterScore = isJoker ? 0 : (letterData[toWikiUpper(cellLetter)]?.points || 0);
                 
                 // Only apply multipliers to newly placed tiles
                 if (pendingPlacements.some(p => p.r === startR && p.c === c)) {
@@ -1067,10 +1034,9 @@ async function handlePlayWord() {
         } else {
             for (let r = startR; r <= endR; r++) {
                 const cellLetter = tempBoard[r][startC];
-                wordStr += cellLetter.toLocaleUpperCase('az');
-                
-                const isJoker = cellLetter === cellLetter.toLowerCase() && cellLetter !== '*';
-                let letterScore = isJoker ? 0 : (letterData[cellLetter.toLocaleUpperCase('az')]?.points || 0);
+                wordStr += toWikiUpper(cellLetter);
+                const isJoker = cellLetter === toWikiLower(cellLetter) && cellLetter !== '*';
+                let letterScore = isJoker ? 0 : (letterData[toWikiUpper(cellLetter)]?.points || 0);
 
                 if (pendingPlacements.some(p => p.r === r && p.c === startC)) {
                     const pos = `${r},${startC}`;

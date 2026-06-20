@@ -1222,7 +1222,7 @@ input[type="text"].cw-input:focus {
     padding: 4px;
     border-radius: 8px;
     aspect-ratio: 1;
-    max-height: 600px;
+    max-height: 80vh;
     margin: 0 auto;
 }
 
