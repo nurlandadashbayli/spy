@@ -585,14 +585,12 @@
                     <div id="scrabble-rack" class="scrabble-rack" style="margin-top: 1rem;"></div>
 
                     <!-- Controls Row beneath Rack -->
-                    <div class="scrabble-controls" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem;">
-                        <button id="scrabble-play-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Play the tiles currently placed on the board">✅ Play</button>
-                        <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Return all placed tiles back to your rack">↩️ Recall</button>
-                        <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Skip your turn">⏭️ Pass</button>
-                        <button id="scrabble-shuffle-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Shuffle the tiles in your rack">🔀 Shuffle</button>
-                        <button id="scrabble-swap-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;" title="Exchange selected tiles with the bag">🔄 Swap</button>
-                        <button id="scrabble-how-to-play-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem;">❓ How to Play</button>
-                        <button id="scrabble-quit-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; background: var(--danger); color: white; border-color: var(--danger);">🚪 Quit</button>
+                    <div class="scrabble-controls" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; margin-top: 1rem; background-color: #1e272e; padding: 10px; border-radius: 8px;">
+                        <button id="scrabble-play-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; border-radius: 4px;" title="Play the tiles currently placed on the board">✅ Play</button>
+                        <button id="scrabble-recall-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; border-radius: 4px;" title="Return all placed tiles back to your rack">↩️ Recall</button>
+                        <button id="scrabble-pass-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; border-radius: 4px;" title="Skip your turn">⏭️ Pass</button>
+                        <button id="scrabble-shuffle-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; border-radius: 4px;" title="Shuffle the tiles in your rack">🔀 Shuffle</button>
+                        <button id="scrabble-swap-btn" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; border-radius: 4px;" title="Exchange selected tiles with the bag">🔄 Swap</button>
                     </div>
 
                     <!-- Swap Mode UI (Hidden by default) -->
@@ -623,6 +621,12 @@
                         <div id="scrabble-last-word-content"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Bottom Corner Icons -->
+            <div style="position: fixed; bottom: 1.5rem; right: 1.5rem; display: flex; gap: 0.75rem; z-index: 100;">
+                <button id="scrabble-how-to-play-btn" class="btn btn-secondary" style="width: 45px; height: 45px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" title="How to Play">❓</button>
+                <button id="scrabble-quit-btn" class="btn btn-secondary" style="width: 45px; height: 45px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 4px 10px rgba(0,0,0,0.3);" title="Quit">🚪</button>
             </div>
         </div>
 
