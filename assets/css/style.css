@@ -1330,3 +1330,289 @@ input[type="text"].cw-input:focus {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* ==========================================================================
+   Azul Game Styles
+   ========================================================================== */
+.azul-game-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.azul-main-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .azul-main-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Azul Tiles */
+.azul-tile {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 2px 2px rgba(255, 255, 255, 0.2);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.azul-tile::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    pointer-events: none;
+}
+
+.azul-tile.blue {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #38bdf8;
+    border: 1px solid #1d4ed8;
+}
+.azul-tile.yellow {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fef08a;
+    border: 1px solid #b45309;
+}
+.azul-tile.red {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fecaca;
+    border: 1px solid #b91c1c;
+}
+.azul-tile.black {
+    background: linear-gradient(135deg, #374151 0%, #111827 100%);
+    color: #9ca3af;
+    border: 1px solid #1f2937;
+}
+.azul-tile.cyan {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #ecfeff;
+    border: 1px solid #0e7490;
+}
+.azul-tile.first {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+    color: #ffffff;
+    border: 2px solid #facc15;
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+    font-size: 1.3rem;
+}
+
+.azul-tile:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 2px 2px rgba(255, 255, 255, 0.4);
+}
+
+.azul-tile.selected {
+    transform: scale(1.1) translateY(-4px);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 8px 16px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+.azul-tile.ghost {
+    opacity: 0.25;
+    cursor: default;
+    box-shadow: none;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.azul-tile.ghost::after {
+    display: none;
+}
+
+/* Factories */
+.azul-factory-plate {
+    background: radial-gradient(circle, var(--bg-elevated) 40%, var(--bg-card) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    aspect-ratio: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    padding: 14px;
+    align-items: center;
+    justify-items: center;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.azul-factory-plate:hover {
+    transform: rotate(5deg) scale(1.03);
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+.azul-factory-plate.empty {
+    opacity: 0.4;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    background: rgba(0,0,0,0.2);
+    cursor: default;
+}
+
+.azul-factory-plate.empty:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Player Boards Grid & Wall */
+.azul-pattern-line-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+}
+
+.azul-space-slot {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+/* Pulsing borders for valid moves */
+.azul-pattern-line-row.valid-move {
+    background: rgba(147, 51, 234, 0.15);
+    border-radius: 12px;
+    outline: 2px dashed var(--primary-light);
+    cursor: pointer;
+    animation: azulPulse 1.5s infinite;
+}
+
+.azul-pattern-line-row.valid-move:hover {
+    background: rgba(147, 51, 234, 0.25);
+}
+
+.azul-floor-line-section.valid-move {
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 12px;
+    outline: 2px dashed var(--danger);
+    padding: 0.5rem;
+    animation: azulDangerPulse 1.5s infinite;
+    cursor: pointer;
+}
+
+.azul-floor-line-section.valid-move:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+@keyframes azulPulse {
+    0% { outline-color: rgba(147, 51, 234, 0.4); }
+    50% { outline-color: rgba(147, 51, 234, 1); }
+    100% { outline-color: rgba(147, 51, 234, 0.4); }
+}
+
+@keyframes azulDangerPulse {
+    0% { outline-color: rgba(239, 68, 68, 0.4); }
+    50% { outline-color: rgba(239, 68, 68, 1); }
+    100% { outline-color: rgba(239, 68, 68, 0.4); }
+}
+
+/* Wall grid colors styling */
+.azul-wall-cell {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+/* Floor slot penalty labels */
+.azul-floor-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.azul-floor-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.azul-penalty-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Tabs */
+.azul-tab-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.azul-tab-btn:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+.azul-tab-btn.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #ffffff;
+    border-color: var(--primary-light);
+    box-shadow: var(--glow-primary);
+}
+
+.azul-tab-btn.is-turn {
+    border-color: var(--success);
+    position: relative;
+}
+
+.azul-tab-btn.is-turn::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--success);
+    box-shadow: 0 0 6px var(--success);
+}
