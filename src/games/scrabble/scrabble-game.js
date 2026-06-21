@@ -289,7 +289,7 @@ if (htpCloseBtn) htpCloseBtn.addEventListener('click', () => htpModal.style.disp
 if (failCancelBtn) failCancelBtn.addEventListener('click', () => {
     failModal.style.display = 'none';
     playBtn.disabled = false;
-    playBtn.innerText = '✅ Play';
+    playBtn.innerText = 'Play';
 });
 
 if (failRequestBtn) failRequestBtn.addEventListener('click', async () => {
@@ -308,7 +308,7 @@ if (failRequestBtn) failRequestBtn.addEventListener('click', async () => {
         console.error(e);
         alert('Failed to send request.');
         playBtn.disabled = false;
-        playBtn.innerText = '✅ Play';
+        playBtn.innerText = 'Play';
     }
 });
 
@@ -1142,7 +1142,7 @@ async function handlePlayWord() {
 
     // 5. Validation of ALL words
     playBtn.disabled = true;
-    playBtn.innerText = '⏳ Checking...';
+    playBtn.innerText = 'Checking...';
 
     let allPlayedWords = [];
     for (let fw of formedWords) {
@@ -1212,12 +1212,12 @@ async function commitWord() {
     try {
         await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
         pendingPlacements = [];
-        playBtn.innerText = '✅ Play';
+        playBtn.innerText = 'Play';
         pendingCommitData = null;
     } catch (e) {
         console.error(e);
         playBtn.disabled = false;
-        playBtn.innerText = '✅ Play';
+        playBtn.innerText = 'Play';
     }
 }
 
@@ -1244,7 +1244,7 @@ function handleApprovalRequest(req) {
         if (req.from === playerId) {
             alert('Your opponent rejected the word.');
             playBtn.disabled = false;
-            playBtn.innerText = '✅ Play';
+            playBtn.innerText = 'Play';
             pendingCommitData = null;
             // Clear request
             update(ref(database, `game/scrabble/rooms/${roomName}`), { approvalRequest: null });
