@@ -141,11 +141,11 @@ async function joinRoom() {
     }
 
     localStorage.setItem('azul_playerName', playerName);
-    playerId = localStorage.getItem('azul_playerId');
-    if (!playerId) {
-        playerId = generatePlayerId();
-        localStorage.setItem('azul_playerId', playerId);
-    }
+    
+    // Use push() to generate a unique player ID per tab/session
+    const playersRef = ref(database, `game/azul/rooms/${roomName}/players`);
+    const newPlayerRef = push(playersRef);
+    playerId = newPlayerRef.key;
 
     joinSection.style.display = 'none';
     lobbySection.style.display = 'block';
@@ -273,14 +273,12 @@ function renderLobby() {
         item.style.justifyContent = 'space-between';
         item.style.alignItems = 'center';
         
-        const hostBadge = idx === 0 ? '<span style="font-size: 0.8rem; padding: 2px 6px; background: var(--primary); border-radius: 4px; font-weight: bold; margin-left: 0.5rem;">HOST</span>' : '';
-        item.innerHTML = `<span>👤 <strong>${escapeHtml(p.name)}</strong>${hostBadge}</span>`;
+        item.innerHTML = `<span>👤 <strong>${escapeHtml(p.name)}</strong></span>`;
         playersList.appendChild(item);
     });
 
-    // Check if host and show start button
-    const isHost = sortedPlayers[0] && sortedPlayers[0].id === playerId;
-    if (isHost && sortedPlayers.length >= 2 && sortedPlayers.length <= 4) {
+    // Show start button to anyone if player count is between 2 and 4
+    if (sortedPlayers.length >= 2 && sortedPlayers.length <= 4) {
         startBtn.style.display = 'block';
         startBtn.onclick = startGame;
     } else {
