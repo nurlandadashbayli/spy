@@ -220,7 +220,7 @@ if (confirmSwapBtn) confirmSwapBtn.addEventListener('click', async () => {
     
     // Draw new tiles
     while (rack.length < 7 && bag.length > 0) {
-        const tile = drawBalancedTile(rack, bag, currentBoard);
+        const tile = drawBalancedTile(rack, bag, gameData.board);
         if (tile) rack.push(tile);
     }
     
