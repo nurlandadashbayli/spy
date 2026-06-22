@@ -93,6 +93,15 @@
                         <span class="badge">New</span>
                     </div>
                 </div>
+
+                <div class="game-card" id="select-durak">
+                    <div class="game-card-icon">🃏</div>
+                    <div class="game-card-content">
+                        <h3>Durak</h3>
+                        <p>Multiplayer Russian Card Game. Defend, attack and avoid being the fool!</p>
+                        <span class="badge" style="background: var(--primary);">New</span>
+                    </div>
+                </div>
             </div>
         </div> <!-- Selection Screen -->
 
@@ -742,6 +751,157 @@
         </style>
         <!-- End Scrabble Modals -->
 
+        <!-- Durak Lobby Screen -->
+        <div id="durak-lobby-screen" class="screen">
+            <div class="game-header">
+                <button id="durak-back-btn" class="back-btn">← Back to Hub</button>
+                <h1 class="game-title">🃏 Durak</h1>
+                <p class="game-subtitle">Multiplayer Russian Card Game.</p>
+            </div>
+
+            <!-- Join Game Section -->
+            <div id="durak-join-section" class="card">
+                <button id="durak-single-btn" class="btn btn-primary" style="margin-bottom: 1.5rem; background: var(--success); width: 100%;">👤 Quick Single Player (vs Bot)</button>
+                
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; position: relative;">
+                    <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--bg-surface); padding: 0 10px; font-size: 0.8rem; color: var(--text-muted);">OR MULTIPLAYER</span>
+                </div>
+
+                <div class="input-group">
+                    <label for="durak-room-name">Enter Room Name</label>
+                    <input type="text" id="durak-room-name" placeholder="e.g. durak123" maxlength="15" autocomplete="off">
+                </div>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label for="durak-player-name">Enter Your Name</label>
+                    <input type="text" id="durak-player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
+                </div>
+                <button id="durak-join-btn" class="btn btn-primary" style="margin-top: 1rem;">Join Room</button>
+            </div>
+
+            <div id="durak-lobby-section" class="card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">Players in Room:</h3>
+                </div>
+                <div id="durak-players-list" style="margin: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                <button id="durak-start-btn" class="btn btn-primary" style="display: none; margin-bottom: 1rem;">Start Game</button>
+                <button id="durak-leave-btn" class="btn btn-secondary">Leave Room</button>
+            </div>
+        </div>
+
+        <!-- Durak Game Screen -->
+        <div id="durak-game-screen" class="screen">
+            <div class="durak-layout">
+                <!-- Main Game Area: Green Felt Table -->
+                <div class="durak-main-area">
+                    <!-- Top Area: Opponents hands -->
+                    <div id="durak-opponents-hands" class="durak-opponents-container"></div>
+                    
+                    <!-- Table Center: Attacks and Defenses -->
+                    <div class="durak-table-felt">
+                        <!-- Trump card and Deck stack -->
+                        <div class="durak-deck-area">
+                            <div id="durak-deck-stack" class="durak-deck-stack">
+                                <!-- Bottom trump card (horizontal) and Face down remaining deck -->
+                                <div id="durak-trump-card-placeholder"></div>
+                                <div id="durak-deck-top" class="durak-card card-back durak-deck-top-card"></div>
+                            </div>
+                            <div class="durak-deck-info">
+                                <div id="durak-deck-count" class="badge">Deck: 36</div>
+                                <div id="durak-trump-suit-indicator" style="font-size: 1.5rem; margin-top: 0.5rem; text-align: center;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card playing area -->
+                        <div id="durak-table-cards" class="durak-table-cards"></div>
+
+                        <!-- Trash pile / Discarded count -->
+                        <div id="durak-discard-pile" class="durak-discard-pile" style="display: none;">
+                            <div class="durak-card card-back" style="transform: rotate(-15deg); margin-left: 10px;"></div>
+                            <div class="durak-card card-back" style="transform: rotate(5deg); position: absolute; top:0; left:0;"></div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; text-align: center;">Discards</div>
+                        </div>
+                    </div>
+
+                    <!-- Player Area: Player's hand and status -->
+                    <div class="durak-player-area">
+                        <!-- Turn message -->
+                        <div id="durak-turn-message" class="durak-turn-message">Your turn!</div>
+                        
+                        <!-- Player cards hand -->
+                        <div id="durak-player-hand" class="durak-player-hand"></div>
+                    </div>
+
+                    <!-- Controls Row beneath Hand -->
+                    <div class="durak-controls">
+                        <button id="durak-action-btn" class="btn btn-primary" style="background: var(--success); min-width: 120px;">Pass / Done</button>
+                        <button id="durak-sort-btn" class="btn btn-secondary">Sort Cards</button>
+                    </div>
+                </div>
+
+                <!-- Sidebar Area -->
+                <div class="durak-sidebar-area">
+                    <!-- Status Card -->
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <h3>Players Status</h3>
+                        <div id="durak-scores-list" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                    </div>
+                    <!-- Game Info Card -->
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <h3>Game Info</h3>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                            <div>Trump Suit: <span id="durak-info-trump" style="font-weight: bold;">--</span></div>
+                            <div>Attacker: <span id="durak-info-attacker" style="color: var(--warning);">--</span></div>
+                            <div>Defender: <span id="durak-info-defender" style="color: var(--accent);">--</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Corner Icons -->
+            <div style="position: fixed; bottom: 1.5rem; right: 1.5rem; display: flex; gap: 0.75rem; z-index: 100;">
+                <button id="durak-how-to-play-btn" class="btn btn-secondary" style="width: 45px; height: 45px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" title="How to Play">❓</button>
+                <button id="durak-quit-btn" class="btn btn-secondary" style="width: 45px; height: 45px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 4px 10px rgba(0,0,0,0.3);" title="Quit">🚪</button>
+            </div>
+        </div>
+
+        <!-- Durak How to Play Modal -->
+        <div id="durak-htp-modal" class="scrabble-modal-overlay" style="display: none; z-index: 200;">
+            <div class="scrabble-modal-card card" style="max-width: 500px;">
+                <h3 style="color: var(--primary-light); margin-bottom: 0.5rem;">How to Play Durak</h3>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; max-height: 350px; overflow-y: auto; padding-right: 0.5rem;">
+                    <p><strong>Objective:</strong> Get rid of all your cards. The last player with cards in hand loses and is the <em>Durak</em> (fool)!</p>
+                    <br>
+                    <p><strong>Setup:</strong>
+                        <ul>
+                            <li>A deck of 36 cards is used (ranks 6 through Ace).</li>
+                            <li>Each player is dealt 6 cards.</li>
+                            <li>One card is placed face-up under the deck. Its suit is the <strong>Trump suit</strong>. Trump cards beat any card of other suits.</li>
+                        </ul>
+                    </p>
+                    <br>
+                    <p><strong>Attacking and Defending:</strong>
+                        <ul>
+                            <li>The player with the lowest trump card starts as the attacker.</li>
+                            <li>The attacker plays a card face-up to attack the defender (the player on their left).</li>
+                            <li>The defender must beat it by playing a higher card of the same suit, or a trump card. If the attack card is a trump, the defense card must be a higher trump.</li>
+                            <li>Once an attack is beaten, the attacker (and other players in multiplayer) can play additional cards. However, any new attack card must match the rank of at least one card already on the table.</li>
+                            <li>The attack limit is 6 cards or the defender's starting hand size.</li>
+                        </ul>
+                    </p>
+                    <br>
+                    <p><strong>Round End:</strong>
+                        <ul>
+                            <li><strong>Successful Defense:</strong> If the defender beats all cards and players pass, the cards are discarded. The defender becomes the next attacker.</li>
+                            <li><strong>Taking Cards:</strong> If the defender cannot or will not beat all cards, they click <strong>Take Cards</strong> to take everything into their hand. Their attack turn is skipped. The next player to the defender's left attacks.</li>
+                        </ul>
+                    </p>
+                    <br>
+                    <p><strong>Replenishment:</strong> After the round ends, players refill their hands to 6 cards from the deck (attacker first, then other players, defender last).</p>
+                </div>
+                <button id="durak-htp-close-btn" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Close</button>
+            </div>
+        </div>
+
         <!-- Azul Lobby Screen -->
         <div id="azul-lobby-screen" class="screen">
             <div class="game-header">
@@ -976,6 +1136,7 @@
         <script type="module" src="src/games/crossword/crossword-generator.js?v=1.0"></script>
         <script type="module" src="src/games/crossword/crossword.js?v=1.0"></script>
         <script type="module" src="src/games/azul/azul.js?v=1.0"></script>
+        <script type="module" src="src/games/durak/durak.js?v=1.0"></script>
 
         <script>
             const originalTitle = document.title;
