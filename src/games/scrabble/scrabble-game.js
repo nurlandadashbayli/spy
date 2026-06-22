@@ -27,7 +27,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // Constants
-const letterData = {
+const AZ_LETTER_DATA = {
     'A': { count: 7, points: 1 },
     'Ə': { count: 6, points: 1 },
     'İ': { count: 5, points: 1 },
@@ -62,6 +62,58 @@ const letterData = {
     'J': { count: 1, points: 10 },
     '*': { count: 5, points: 0 }
 };
+
+const TR_LETTER_DATA = {
+    'A': { count: 12, points: 1 },
+    'E': { count: 8, points: 1 },
+    'İ': { count: 7, points: 1 },
+    'K': { count: 7, points: 1 },
+    'L': { count: 7, points: 1 },
+    'R': { count: 6, points: 1 },
+    'N': { count: 5, points: 1 },
+    'T': { count: 5, points: 1 },
+    'I': { count: 4, points: 2 },
+    'M': { count: 4, points: 2 },
+    'S': { count: 3, points: 2 },
+    'O': { count: 3, points: 2 },
+    'U': { count: 3, points: 2 },
+    'B': { count: 2, points: 3 },
+    'D': { count: 2, points: 3 },
+    'Ü': { count: 2, points: 3 },
+    'Y': { count: 2, points: 3 },
+    'C': { count: 2, points: 4 },
+    'Ç': { count: 2, points: 4 },
+    'Ş': { count: 2, points: 4 },
+    'Z': { count: 2, points: 4 },
+    'G': { count: 1, points: 5 },
+    'H': { count: 1, points: 5 },
+    'P': { count: 1, points: 5 },
+    'F': { count: 1, points: 7 },
+    'Ö': { count: 1, points: 7 },
+    'V': { count: 1, points: 7 },
+    'Ğ': { count: 1, points: 8 },
+    'J': { count: 1, points: 10 },
+    '*': { count: 2, points: 0 } // blank
+};
+
+function getLetterData(lang) {
+    if (lang === 'tr') {
+        return TR_LETTER_DATA;
+    }
+    return AZ_LETTER_DATA;
+}
+
+function getVowels(lang) {
+    if (lang === 'tr') {
+        return ['A', 'E', 'I', 'İ', 'O', 'Ö', 'U', 'Ü'];
+    }
+    return ['A', 'E', 'Ə', 'İ', 'I', 'O', 'Ö', 'U', 'Ü'];
+}
+
+function currentLetterData() {
+    const lang = gameData?.language || 'az';
+    return getLetterData(lang);
+}
 
 const TW = ['0,0','0,7','0,14','7,0','7,14','14,0','14,7','14,14'];
 const DW = ['1,1','2,2','3,3','4,4','10,10','11,11','12,12','13,13','1,13','2,12','3,11','4,10','13,1','12,2','11,3','10,4'];
@@ -220,7 +272,8 @@ if (confirmSwapBtn) confirmSwapBtn.addEventListener('click', async () => {
     
     // Draw new tiles
     while (rack.length < 7 && bag.length > 0) {
-        const tile = drawBalancedTile(rack, bag, gameData.board);
+        const lang = gameData?.language || 'az';
+        const tile = drawBalancedTile(rack, bag, gameData.board, lang);
         if (tile) rack.push(tile);
     }
     
@@ -254,12 +307,14 @@ if (bagInfoBtn) bagInfoBtn.addEventListener('click', () => {
         counts[letter] = (counts[letter] || 0) + 1;
     }
     
-    bagGrid.innerHTML = Object.keys(letterData).map(letter => {
-        // letterData keys are uppercase, gameData.bag also uses uppercase!
+    const lang = gameData?.language || 'az';
+    const currentLetterDataMap = getLetterData(lang);
+    bagGrid.innerHTML = Object.keys(currentLetterDataMap).map(letter => {
+        // letter keys are uppercase, gameData.bag also uses uppercase!
         const searchKey = letter;
         const count = counts[searchKey] || 0;
         const displayLetter = letter === '*' ? '' : letter;
-        const points = letter === '*' ? 0 : letterData[letter].points;
+        const points = letter === '*' ? 0 : currentLetterDataMap[letter].points;
         
         return `
             <div style="display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 8px; opacity: ${count === 0 ? '0.5' : '1'};">
@@ -329,7 +384,8 @@ if (jokerCancelBtn) jokerCancelBtn.addEventListener('click', () => {
 
 if (jokerOkBtn) jokerOkBtn.addEventListener('click', () => {
     let val = toWikiUpper(jokerInput.value);
-    if (!val || !letterData[val]) return alert('Please enter a valid letter.');
+    const lang = gameData?.language || 'az';
+    if (!val || !getLetterData(lang)[val]) return alert('Please enter a valid letter.');
     
     jokerModal.style.display = 'none';
     if (pendingJokerDrop) {
@@ -384,7 +440,11 @@ async function joinRoom() {
         });
 
         if (!data.status) {
-            await update(roomRef, { status: 'lobby' });
+            const selectedLang = document.getElementById('scrabble-lang-select')?.value || 'az';
+            await update(roomRef, { 
+                status: 'lobby',
+                language: selectedLang
+            });
         }
 
         onDisconnect(newPlayerRef).remove();
@@ -416,6 +476,30 @@ function setupRealtimeListeners() {
 
     unsubscribeRoom = onValue(roomRef, (snap) => {
         gameData = snap.val() || {};
+        
+        // Update UI based on language
+        const lang = gameData.language || 'az';
+        const lobbySubtitle = document.getElementById('scrabble-lobby-subtitle');
+        const lobbyLangBadge = document.getElementById('scrabble-lobby-lang');
+        const gameLangBadge = document.getElementById('scrabble-game-lang');
+        const htpObjective = document.getElementById('scrabble-htp-objective');
+        
+        const langName = lang === 'tr' ? 'Turkish 🇹🇷' : 'Azerbaijani 🇦🇿';
+        
+        if (lobbySubtitle) {
+            lobbySubtitle.innerText = `Multiplayer ${langName} Scrabble.`;
+        }
+        if (lobbyLangBadge) {
+            lobbyLangBadge.innerText = `Language: ${langName}`;
+        }
+        if (gameLangBadge) {
+            gameLangBadge.innerText = langName;
+        }
+        if (htpObjective) {
+            const wordType = lang === 'tr' ? 'Turkish' : 'Azerbaijani';
+            htpObjective.innerHTML = `<strong>Objective:</strong> Score the most points by forming valid ${wordType} words horizontally or vertically on the board.`;
+        }
+
         if (gameData.status === 'started') {
             lobbyScreen.classList.remove('active');
             gameScreen.classList.add('active');
@@ -489,9 +573,10 @@ function resetToSelection() {
 }
 
 // Game Logic
-function createBag() {
+function createBag(lang = 'az') {
     const bag = [];
-    for (const [letter, data] of Object.entries(letterData)) {
+    const currentLetterDataMap = getLetterData(lang);
+    for (const [letter, data] of Object.entries(currentLetterDataMap)) {
         for (let i = 0; i < data.count; i++) {
             bag.push(letter);
         }
@@ -504,12 +589,12 @@ function createBag() {
 }
 
 
-function drawBalancedTile(rack, bag, board) {
+function drawBalancedTile(rack, bag, board, lang = 'az') {
     if (bag.length === 0) return null;
 
     // Vowel/Consonant Balancer
-    const vowels = ['A', 'E', 'Ə', 'İ', 'I', 'O', 'Ö', 'U', 'Ü'];
-    const hfConsonants = ['M', 'N', 'L', 'R', 'D', 'Y', 'T'];
+    const vowels = getVowels(lang);
+    const hfConsonants = lang === 'tr' ? ['M', 'N', 'L', 'R', 'D', 'Y', 'T', 'S'] : ['M', 'N', 'L', 'R', 'D', 'Y', 'T'];
     let vCount = 0, cCount = 0;
     
     for (let tile of rack) {
@@ -540,6 +625,7 @@ function drawBalancedTile(rack, bag, board) {
 }
 
 async function startSinglePlayer() {
+    const selectedLang = document.getElementById('scrabble-lang-select')?.value || 'az';
     roomName = `single_${Math.random().toString(36).substr(2, 6)}`;
     const name = 'Player';
     
@@ -561,16 +647,17 @@ async function startSinglePlayer() {
         
         setupRealtimeListeners();
         
-        let bag = createBag();
+        let bag = createBag(selectedLang);
         const board = Array(15).fill().map(() => Array(15).fill(null));
         let rack = [];
         for (let i = 0; i < 7; i++) {
-            const tile = drawBalancedTile(rack, bag, board);
+            const tile = drawBalancedTile(rack, bag, board, selectedLang);
             if (tile) rack.push(tile);
         }
         
         const updates = {
             status: 'started',
+            language: selectedLang,
             board: board,
             bag: bag,
             currentTurn: playerId,
@@ -589,7 +676,8 @@ async function startSinglePlayer() {
 
 async function startGame() {
     try {
-        let bag = createBag();
+        const lang = gameData?.language || 'az';
+        let bag = createBag(lang);
         const pKeys = Object.keys(players);
         const updates = {};
         
@@ -598,7 +686,7 @@ async function startGame() {
         pKeys.forEach(pId => {
             let rack = [];
             for (let i = 0; i < 7; i++) {
-                const tile = drawBalancedTile(rack, bag, board);
+                const tile = drawBalancedTile(rack, bag, board, lang);
                 if (tile) rack.push(tile);
             }
             updates[`players/${pId}/rack`] = rack;
@@ -688,7 +776,8 @@ function createTileElement(letter, isPending) {
     // Handle Joker styling
     const isJoker = letter === toWikiLower(letter) && letter !== '*';
     const displayLetter = toWikiUpper(letter);
-    const points = isJoker ? 0 : (letterData[displayLetter]?.points || 0);
+    const lang = gameData?.language || 'az';
+    const points = isJoker ? 0 : (getLetterData(lang)[displayLetter]?.points || 0);
 
     tile.innerHTML = `
         ${displayLetter}
@@ -869,73 +958,105 @@ function toWikiUpper(word) {
     return word.replace(/[ıiəöüğçş]/g, m => map[m]).toUpperCase();
 }
 
-async function isValidWord(word) {
+async function isValidWord(word, lang = 'az') {
     if (!word || word.length < 2) return { valid: false, definition: null };
     
     // Custom mapping to prevent JS converting 'İ' to 'i\u0307'
     let lowerWord = toWikiLower(word);
 
     try {
-        // Query the search endpoint across all dictionaries to find the word
-        // Note: A CORS proxy is REQUIRED because browsers block direct cross-domain requests
-        // corsproxy.io is extremely fast and handles query parameters properly
-        const targetUrl = `https://azleks.az/dictionary?search=${encodeURIComponent(lowerWord)}&dictionary_id=`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-        
-        const response = await fetch(proxyUrl);
-        
-        if (response.status === 404) {
-            return { valid: false, definition: null };
-        }
-        
-        const html = await response.text();
-        
-        if (!html || html.includes('not found') || html.trim() === '') {
-            return { valid: false, definition: null };
-        }
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        const bashSozList = doc.querySelectorAll('.bash-soz');
-        let foundBashSoz = null;
-        
-        for (let bs of bashSozList) {
-            // Clone to strip out meta tags without mutating the real DOM
-            const clone = bs.cloneNode(true);
+        if (lang === 'tr') {
+            // Check Turkish word using sozluk.gov.tr GTS API
+            const targetUrl = `https://sozluk.gov.tr/gts?ara=${encodeURIComponent(lowerWord)}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
             
-            // Remove superscripts (e.g. bir1 -> bir) and pronunciation/part-of-speech tags
-            const junk = clone.querySelectorAll('sup, .teleffuz, .nitq-hissesi, .etimologiya');
-            junk.forEach(el => el.remove());
-            
-            // Clean invisible characters, nbsp, and formatting spaces
-            let extractedWord = toWikiLower(clone.textContent.replace(/\u00A0/g, '').replace(/\s+/g, ''));
-            
-            // Match exactly with our search word
-            if (extractedWord === lowerWord) {
-                foundBashSoz = bs;
-                break;
+            const response = await fetch(proxyUrl);
+            if (response.status === 404) {
+                return { valid: false, definition: null };
             }
+            
+            const data = await response.json();
+            if (data.error || !Array.isArray(data) || data.length === 0) {
+                return { valid: false, definition: null };
+            }
+            
+            let definitionText = '';
+            const anlamList = data[0].anlamlarListe;
+            if (anlamList && anlamList.length > 0) {
+                definitionText = anlamList.map((item, idx) => {
+                    let typeStr = '';
+                    if (item.ozelliklerListe && item.ozelliklerListe.length > 0) {
+                        typeStr = `(${item.ozelliklerListe.map(o => o.tam_adi).join(', ')}) `;
+                    }
+                    return `${idx + 1}. ${typeStr}${item.anlam}`;
+                }).join(' ');
+            }
+            
+            definitionText = definitionText.trim();
+            if (!definitionText) {
+                definitionText = 'Kelime sözlükte bulundu, fakat açıklaması yok.';
+            }
+            
+            return { valid: true, definition: definitionText };
+        } else {
+            // Azerbaijani dictionary checking (existing code)
+            const targetUrl = `https://azleks.az/dictionary?search=${encodeURIComponent(lowerWord)}&dictionary_id=`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+            
+            const response = await fetch(proxyUrl);
+            
+            if (response.status === 404) {
+                return { valid: false, definition: null };
+            }
+            
+            const html = await response.text();
+            
+            if (!html || html.includes('not found') || html.trim() === '') {
+                return { valid: false, definition: null };
+            }
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const bashSozList = doc.querySelectorAll('.bash-soz');
+            let foundBashSoz = null;
+            
+            for (let bs of bashSozList) {
+                // Clone to strip out meta tags without mutating the real DOM
+                const clone = bs.cloneNode(true);
+                
+                // Remove superscripts (e.g. bir1 -> bir) and pronunciation/part-of-speech tags
+                const junk = clone.querySelectorAll('sup, .teleffuz, .nitq-hissesi, .etimologiya');
+                junk.forEach(el => el.remove());
+                
+                // Clean invisible characters, nbsp, and formatting spaces
+                let extractedWord = toWikiLower(clone.textContent.replace(/\u00A0/g, '').replace(/\s+/g, ''));
+                
+                // Match exactly with our search word
+                if (extractedWord === lowerWord) {
+                    foundBashSoz = bs;
+                    break;
+                }
+            }
+            
+            if (!foundBashSoz) {
+                return { valid: false, definition: null };
+            }
+            
+            let definitionText = '';
+            let sibling = foundBashSoz.nextElementSibling;
+            while (sibling && sibling.tagName === 'P') {
+                definitionText += sibling.textContent + ' ';
+                sibling = sibling.nextElementSibling;
+            }
+            
+            definitionText = definitionText.trim();
+            if (!definitionText) {
+                definitionText = 'Söz lüğətdə tapıldı, lakin ətraflı izahı yoxdur.';
+            }
+            
+            return { valid: true, definition: definitionText };
         }
-        
-        if (!foundBashSoz) {
-            return { valid: false, definition: null };
-        }
-        
-        let definitionText = '';
-        let sibling = foundBashSoz.nextElementSibling;
-        while (sibling && sibling.tagName === 'P') {
-            definitionText += sibling.textContent + ' ';
-            sibling = sibling.nextElementSibling;
-        }
-        
-        definitionText = definitionText.trim();
-        if (!definitionText) {
-            definitionText = 'Söz lüğətdə tapıldı, lakin ətraflı izahı yoxdur.';
-        }
-        
-        return { valid: true, definition: definitionText };
-        
     } catch (e) {
         console.error("Dictionary check failed:", e);
         return { valid: false, definition: null }; 
@@ -1013,13 +1134,14 @@ async function handlePlayWord() {
         let wordStr = '';
         let wordScore = 0;
         let wordMultiplier = 1;
+        const currentLetterDataMap = currentLetterData();
 
         if (axis === 'horizontal') {
             for (let c = startC; c <= endC; c++) {
                 const cellLetter = tempBoard[startR][c];
                 wordStr += toWikiUpper(cellLetter);
                 const isJoker = cellLetter === toWikiLower(cellLetter) && cellLetter !== '*';
-                let letterScore = isJoker ? 0 : (letterData[toWikiUpper(cellLetter)]?.points || 0);
+                let letterScore = isJoker ? 0 : (currentLetterDataMap[toWikiUpper(cellLetter)]?.points || 0);
                 
                 // Only apply multipliers to newly placed tiles
                 if (pendingPlacements.some(p => p.r === startR && p.c === c)) {
@@ -1036,7 +1158,7 @@ async function handlePlayWord() {
                 const cellLetter = tempBoard[r][startC];
                 wordStr += toWikiUpper(cellLetter);
                 const isJoker = cellLetter === toWikiLower(cellLetter) && cellLetter !== '*';
-                let letterScore = isJoker ? 0 : (letterData[toWikiUpper(cellLetter)]?.points || 0);
+                let letterScore = isJoker ? 0 : (currentLetterDataMap[toWikiUpper(cellLetter)]?.points || 0);
 
                 if (pendingPlacements.some(p => p.r === r && p.c === startC)) {
                     const pos = `${r},${startC}`;
@@ -1145,10 +1267,15 @@ async function handlePlayWord() {
     playBtn.innerText = 'Checking...';
 
     let allPlayedWords = [];
+    const lang = gameData?.language || 'az';
     for (let fw of formedWords) {
-        const check = await isValidWord(fw.word);
+        const check = await isValidWord(fw.word, lang);
         if (!check.valid) {
-            failText.innerText = `The word "${fw.word}" was not found in the dictionary.`;
+            if (lang === 'tr') {
+                failText.innerText = `The word "${fw.word}" was not found in the Turkish dictionary.`;
+            } else {
+                failText.innerText = `The word "${fw.word}" was not found in the Azerbaijani dictionary.`;
+            }
             // Set pendingCommitData so failRequestBtn has access to the failed play data
             pendingCommitData = {
                 wordScore: totalScore,

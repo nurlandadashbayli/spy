@@ -80,7 +80,7 @@
                     <div class="game-card-icon">🔠</div>
                     <div class="game-card-content">
                         <h3>Scrabble</h3>
-                        <p>Multiplayer Azerbaijani Scrabble.</p>
+                        <p>Multiplayer Azerbaijani & Turkish Scrabble.</p>
                         <span class="badge">New</span>
                     </div>
                 </div>
@@ -553,11 +553,19 @@
             <div class="game-header">
                 <button id="scrabble-back-btn" class="back-btn">← Back to Hub</button>
                 <h1 class="game-title">🔠 Scrabble</h1>
-                <p class="game-subtitle">Multiplayer Azerbaijani Scrabble.</p>
+                <p class="game-subtitle" id="scrabble-lobby-subtitle">Multiplayer Azerbaijani & Turkish Scrabble.</p>
             </div>
 
             <!-- Join Game Section -->
             <div id="scrabble-join-section" class="card">
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label for="scrabble-lang-select" style="font-weight: 600; font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">Game Language</label>
+                    <select id="scrabble-lang-select" class="form-control" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.1); outline: none; font-size: 1rem; cursor: pointer; transition: border-color 0.2s;">
+                        <option value="az">🇦🇿 Azerbaijani (azleks.az)</option>
+                        <option value="tr">🇹🇷 Turkish (sozluk.gov.tr)</option>
+                    </select>
+                </div>
+
                 <button id="scrabble-single-btn" class="btn btn-primary" style="margin-bottom: 1.5rem; background: var(--success); width: 100%;">👤 Quick Single Player</button>
                 
                 <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; position: relative;">
@@ -576,7 +584,10 @@
             </div>
 
             <div id="scrabble-lobby-section" class="card" style="display: none;">
-                <h3>Players in Room:</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">Players in Room:</h3>
+                    <span id="scrabble-lobby-lang" class="badge" style="background: var(--primary); font-size: 0.85rem; padding: 0.4rem 0.8rem;">Language: Azerbaijani 🇦🇿</span>
+                </div>
                 <div id="scrabble-players-list" style="margin: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;"></div>
                 <button id="scrabble-start-btn" class="btn btn-primary" style="display: none; margin-bottom: 1rem;">Start Game</button>
                 <button id="scrabble-leave-btn" class="btn btn-secondary">Leave Room</button>
@@ -614,6 +625,11 @@
 
                 <!-- Sidebar Area -->
                 <div class="scrabble-sidebar-area">
+                    <!-- Language Card -->
+                    <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; flex-direction: row;">
+                        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);">Language:</span>
+                        <span id="scrabble-game-lang" class="badge" style="background: var(--primary); font-weight: bold; font-size: 0.85rem;">Azerbaijani 🇦🇿</span>
+                    </div>
                     <!-- Scores Card -->
                     <div class="card" style="margin-bottom: 1rem;">
                         <h3>Scores</h3>
@@ -699,7 +715,7 @@
                     <button id="scrabble-htp-close-btn" class="btn btn-secondary" style="padding: 0.25rem 0.75rem;">✕</button>
                 </div>
                 <div style="line-height: 1.5; color: var(--text-light); font-size: 0.95rem;">
-                    <p><strong>Objective:</strong> Score the most points by forming valid Azerbaijani words horizontally or vertically on the board.</p>
+                    <p id="scrabble-htp-objective"><strong>Objective:</strong> Score the most points by forming valid Azerbaijani words horizontally or vertically on the board.</p>
                     <p><strong>First Turn:</strong> The first word played must cover the center star tile.</p>
                     <p><strong>Connecting Words:</strong> All subsequent words must connect to at least one existing tile on the board.</p>
                     <p><strong>Scoring:</strong> Each letter has a point value. The total score for a turn is the sum of the letters in all new words formed. Premium squares multiply the letter or word score:</p>
