@@ -12,6 +12,8 @@ import {
     onDisconnect
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
+import { AzulUI } from './azul-ui.js';
+
 // Firebase Configuration (Reused from existing workspace games)
 const firebaseConfig = {
     apiKey: "AIzaSyBT0StKCiled3K5uAi3lcrJlFALXI5KgvE",
@@ -27,22 +29,22 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // Constants
-const COLORS = ['blue', 'yellow', 'red', 'black', 'cyan'];
+const COLORS = ['blue', 'yellow', 'red', 'green', 'white'];
 const COLOR_EMOJIS = {
     blue: '🔵',
     yellow: '🟡',
     red: '🔴',
-    black: '⚫',
-    cyan: '⚪',
+    green: '🟩',
+    white: '⚪',
     first: '🪙'
 };
 
 const WALL_COLORS = [
-    ['blue', 'yellow', 'red', 'black', 'cyan'],
-    ['cyan', 'blue', 'yellow', 'red', 'black'],
-    ['black', 'cyan', 'blue', 'yellow', 'red'],
-    ['red', 'black', 'cyan', 'blue', 'yellow'],
-    ['yellow', 'red', 'black', 'cyan', 'blue']
+    ['blue', 'yellow', 'red', 'green', 'white'],
+    ['white', 'blue', 'yellow', 'red', 'green'],
+    ['green', 'white', 'blue', 'yellow', 'red'],
+    ['red', 'green', 'white', 'blue', 'yellow'],
+    ['yellow', 'red', 'green', 'white', 'blue']
 ];
 
 const FLOOR_PENALTIES = [-1, -1, -2, -2, -2, -3, -3];
@@ -59,7 +61,9 @@ let unsubscribePlayers = null;
 // Local interactive state
 let selectedFactoryIdx = null; // null, -1 (center), or index 0..N
 let selectedColor = null; // null or color name
-let activeTabPlayerId = null; // playerId of board currently being viewed
+
+// Azul UI Instance
+let azulUI = null;
 
 // DOM Elements
 const selectAzul = document.getElementById('select-azul');
@@ -77,23 +81,8 @@ const playersList = document.getElementById('azul-players-list');
 const startBtn = document.getElementById('azul-start-btn');
 
 // In-Game UI DOM Elements
-const roundIndicator = document.getElementById('azul-round-indicator');
-const statusText = document.getElementById('azul-status-text');
 const rulesBtn = document.getElementById('azul-rules-btn');
 const quitGameBtn = document.getElementById('azul-quit-game-btn');
-const bagLidStatus = document.getElementById('azul-bag-lid-status');
-const factoriesGrid = document.getElementById('azul-factories-grid');
-const centerPile = document.getElementById('azul-center-pile');
-const selectionPanel = document.getElementById('azul-selection-panel');
-const selectedTilesPreview = document.getElementById('azul-selected-tiles-preview');
-const cancelSelectionBtn = document.getElementById('azul-cancel-selection-btn');
-const boardTabs = document.getElementById('azul-board-tabs');
-const boardOwnerName = document.getElementById('azul-board-owner-name');
-const boardScore = document.getElementById('azul-board-score');
-const patternLinesContainer = document.querySelector('.azul-pattern-lines-container');
-const wallGrid = document.getElementById('azul-wall-grid');
-const floorLineRow = document.getElementById('azul-floor-line-row');
-const floorLineSection = document.getElementById('azul-floor-line-section');
 const rulesModal = document.getElementById('azul-rules-modal');
 const rulesCloseBtn = document.getElementById('azul-rules-close-btn');
 
@@ -117,11 +106,10 @@ if (quitGameBtn) quitGameBtn.addEventListener('click', leaveRoom);
 if (joinBtn) joinBtn.addEventListener('click', joinRoom);
 if (rulesBtn) rulesBtn.addEventListener('click', () => rulesModal.style.display = 'flex');
 if (rulesCloseBtn) rulesCloseBtn.addEventListener('click', () => rulesModal.style.display = 'none');
-if (cancelSelectionBtn) cancelSelectionBtn.addEventListener('click', clearSelection);
 
 // Helper functions for setup
 function getNumFactories(numPlayers) {
-    if (numPlayers === 2) return 5;
+    if (numPlayers <= 2) return 5;
     if (numPlayers === 3) return 7;
     return 9; // 4 players
 }
@@ -180,6 +168,17 @@ async function joinRoom() {
 
     // Remove player on disconnect
     onDisconnect(playerRoomRef).remove();
+
+    // If this player is the first/only player in the room, reset any stale game state
+    // This prevents jumping straight to a game screen from a previous session
+    const currentPlayersSnap = await get(ref(database, `game/azul/rooms/${roomName}/players`));
+    const currentPlayerCount = currentPlayersSnap.exists() ? Object.keys(currentPlayersSnap.val()).length : 0;
+    if (currentPlayerCount <= 1) {
+        await update(ref(database, `game/azul/rooms/${roomName}`), {
+            status: 'waiting',
+            state: null
+        });
+    }
 
     // Start listening to the room
     subscribeToRoom();
@@ -240,18 +239,95 @@ function subscribeToRoom() {
         players = val.players || {};
         gameData = val.state || null;
 
-        // Auto transition screen
-        if (val.status === 'playing' || val.status === 'gameover') {
+        if (gameData) {
+            // Sanitize factories: replace null/undefined with [] to prevent Firebase update failures due to "undefined" values
+            if (gameData.factories) {
+                const numPlayers = Object.keys(players).length;
+                const numFactories = getNumFactories(numPlayers);
+                const safeFactories = [];
+                for (let i = 0; i < numFactories; i++) {
+                    safeFactories[i] = gameData.factories[i] || [];
+                }
+                gameData.factories = safeFactories;
+            } else {
+                gameData.factories = [];
+            }
+            if (!gameData.center) {
+                gameData.center = [];
+            } else if (!Array.isArray(gameData.center)) {
+                gameData.center = Object.values(gameData.center);
+            }
+            if (!gameData.lid) {
+                gameData.lid = [];
+            } else if (!Array.isArray(gameData.lid)) {
+                gameData.lid = Object.values(gameData.lid);
+            }
+            
+            // Sanitize player structures
+            if (gameData.players) {
+                Object.values(gameData.players).forEach(player => {
+                    if (!player.patternLines) {
+                        player.patternLines = [[], [], [], [], []];
+                    } else {
+                        // Ensure it's an array of length 5
+                        const safeLines = [];
+                        for (let i = 0; i < 5; i++) {
+                            const line = player.patternLines[i] || [];
+                            safeLines[i] = Array.isArray(line) ? line : Object.values(line);
+                        }
+                        player.patternLines = safeLines;
+                    }
+                    
+                    if (!player.floorLine) {
+                        player.floorLine = [];
+                    } else if (!Array.isArray(player.floorLine)) {
+                        player.floorLine = Object.values(player.floorLine);
+                    }
+                    
+                    if (!player.wall) {
+                        player.wall = [
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null]
+                        ];
+                    } else {
+                        const safeWall = [];
+                        for (let i = 0; i < 5; i++) {
+                            const row = player.wall[i] || [null, null, null, null, null];
+                            safeWall[i] = Array.isArray(row) ? row : Object.values(row);
+                        }
+                        player.wall = safeWall;
+                    }
+                });
+            }
+        }
+
+        // Auto transition screen — only go to game if status is playing AND state data exists
+        if ((val.status === 'playing' || val.status === 'gameover') && gameData) {
             lobbyScreen.classList.remove('active');
             gameScreen.classList.add('active');
             
-            // Default active board view tab to current player if not set
-            if (!activeTabPlayerId || !players[activeTabPlayerId]) {
-                activeTabPlayerId = playerId;
+            if (!azulUI) {
+                const uiRoot = document.getElementById('azul-ui-root');
+                azulUI = new AzulUI(uiRoot, {
+                    onFactoryTileClick: (factoryIdx, color) => {
+                        selectTiles(factoryIdx, color);
+                    },
+                    onPatternLineClick: (lineIdx) => {
+                        placeTilesOnPatternLine(lineIdx);
+                    },
+                    onFloorLineClick: () => {
+                        placeTilesOnFloorLine();
+                    }
+                });
             }
             
-            renderGameBoard();
+            azulUI.updateState(gameData, players, playerId);
         } else {
+            // Back in lobby (or waiting for game to start)
+            azulUI = null; // Reset UI so it reinitialises fresh on next game start
             lobbyScreen.classList.add('active');
             gameScreen.classList.remove('active');
             renderLobby();
@@ -277,8 +353,8 @@ function renderLobby() {
         playersList.appendChild(item);
     });
 
-    // Show start button to anyone if player count is between 2 and 4
-    if (sortedPlayers.length >= 2 && sortedPlayers.length <= 4) {
+    // Show start button to anyone if player count is between 1 and 4
+    if (sortedPlayers.length >= 1 && sortedPlayers.length <= 4) {
         startBtn.style.display = 'block';
         startBtn.onclick = startGame;
     } else {
@@ -357,274 +433,33 @@ async function startGame() {
     await update(ref(database, `game/azul/rooms/${roomName}`), roomUpdate);
 }
 
-// Render Board & In-game HUD
-function renderGameBoard() {
-    if (!gameData) return;
 
-    // 1. HUD & Info Status
-    roundIndicator.textContent = `Round ${gameData.round}`;
-    
-    // Status text
-    const activePlayer = players[gameData.turn];
-    const isMyTurn = gameData.turn === playerId;
-    
-    if (gameData.phase === 'game_over') {
-        const winnerName = gameData.winner ? players[gameData.winner]?.name || 'Unknown' : 'Draw';
-        statusText.textContent = `🏆 Game Over! Winner: ${winnerName}`;
-        statusText.style.color = 'var(--warning)';
-    } else {
-        if (isMyTurn) {
-            statusText.textContent = `👉 Your Turn! Draft tiles.`;
-            statusText.style.color = 'var(--success)';
-        } else {
-            statusText.textContent = `⏳ Waiting for ${activePlayer ? activePlayer.name : 'opponent'}...`;
-            statusText.style.color = 'var(--text-secondary)';
-        }
-    }
-
-    // Bag & Lid status
-    bagLidStatus.textContent = `Bag: ${gameData.bag ? gameData.bag.length : 0} | Discard Lid: ${gameData.lid ? gameData.lid.length : 0}`;
-
-    // 2. Factories Grid
-    factoriesGrid.innerHTML = '';
-    if (gameData.factories) {
-        gameData.factories.forEach((factoryTiles, idx) => {
-            const plate = document.createElement('div');
-            plate.className = `azul-factory-plate ${(!factoryTiles || factoryTiles.length === 0) ? 'empty' : ''}`;
-            
-            if (factoryTiles && factoryTiles.length > 0) {
-                factoryTiles.forEach(tileColor => {
-                    const tile = document.createElement('div');
-                    tile.className = `azul-tile ${tileColor}`;
-                    tile.textContent = COLOR_EMOJIS[tileColor] || '';
-                    tile.dataset.factoryIdx = idx;
-                    tile.dataset.color = tileColor;
-                    
-                    // Click listener for drafting selection
-                    if (isMyTurn && gameData.phase === 'drafting') {
-                        tile.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            selectTiles(idx, tileColor);
-                        });
-                    }
-                    plate.appendChild(tile);
-                });
-            } else {
-                plate.innerHTML = `<span style="grid-column: span 2; grid-row: span 2; font-size: 0.8rem; color: var(--text-muted);">Empty</span>`;
-            }
-            factoriesGrid.appendChild(plate);
-        });
-    }
-
-    // 3. Center Pile
-    centerPile.innerHTML = '';
-    if (gameData.center && gameData.center.length > 0) {
-        gameData.center.forEach(tileColor => {
-            const tile = document.createElement('div');
-            tile.className = `azul-tile ${tileColor}`;
-            tile.textContent = COLOR_EMOJIS[tileColor] || '';
-            tile.dataset.factoryIdx = -1;
-            tile.dataset.color = tileColor;
-
-            if (isMyTurn && gameData.phase === 'drafting' && tileColor !== 'first') {
-                tile.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    selectTiles(-1, tileColor);
-                });
-            }
-            centerPile.appendChild(tile);
-        });
-    } else {
-        centerPile.innerHTML = `<span style="font-size: 0.9rem; color: var(--text-muted); font-style: italic;">No tiles in center</span>`;
-    }
-
-    // Highlight selected tiles locally
-    if (selectedFactoryIdx !== null && selectedColor) {
-        const allMatchingDomTiles = document.querySelectorAll(`.azul-tile[data-color="${selectedColor}"][data-factory-idx="${selectedFactoryIdx}"]`);
-        allMatchingDomTiles.forEach(t => t.classList.add('selected'));
-        
-        // Show selection panel
-        selectionPanel.style.display = 'flex';
-        selectedTilesPreview.innerHTML = '';
-        
-        // Calculate how many matching tiles there are
-        const count = getSelectedTilesCount();
-        for (let i = 0; i < count; i++) {
-            const tNode = document.createElement('div');
-            tNode.className = `azul-tile ${selectedColor}`;
-            tNode.style.width = '30px';
-            tNode.style.height = '30px';
-            tNode.style.fontSize = '0.8rem';
-            tNode.textContent = COLOR_EMOJIS[selectedColor];
-            selectedTilesPreview.appendChild(tNode);
-        }
-    } else {
-        selectionPanel.style.display = 'none';
-    }
-
-    // 4. Tab Switcher
-    boardTabs.innerHTML = '';
-    const sortedPlayers = Object.values(players).sort((a, b) => a.joinedAt - b.joinedAt);
-    sortedPlayers.forEach(p => {
-        const tab = document.createElement('button');
-        tab.className = `azul-tab-btn ${p.id === activeTabPlayerId ? 'active' : ''} ${p.id === gameData.turn ? 'is-turn' : ''}`;
-        tab.innerHTML = `👤 ${escapeHtml(p.name)} <span style="font-size: 0.8rem; opacity: 0.8;">(${p.board?.score || 0})</span>`;
-        tab.addEventListener('click', () => {
-            activeTabPlayerId = p.id;
-            renderGameBoard();
-        });
-        boardTabs.appendChild(tab);
-    });
-
-    // 5. Active Player Board Card Rendering
-    const viewedPlayer = players[activeTabPlayerId];
-    if (viewedPlayer && viewedPlayer.board) {
-        const board = viewedPlayer.board;
-        boardOwnerName.textContent = viewedPlayer.id === playerId ? 'Your Player Board' : `${viewedPlayer.name}'s Board`;
-        boardScore.textContent = board.score || 0;
-
-        // Render Pattern Lines
-        patternLinesContainer.innerHTML = '';
-        const isSelfBoard = viewedPlayer.id === playerId;
-        const validPlacement = isSelfBoard && isMyTurn && selectedColor !== null;
-
-        for (let r = 0; r < 5; r++) {
-            const line = board.patternLines[r];
-            const size = r + 1;
-
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'azul-pattern-line-row';
-            
-            // Check if placing is valid in this pattern line
-            let isValidForPlacement = false;
-            if (validPlacement) {
-                // Rules:
-                // 1. Color must not exist in this row of the wall
-                const wallColorsInRow = WALL_COLORS[r];
-                const colIdx = wallColorsInRow.indexOf(selectedColor);
-                const hasTileOnWall = board.wall && board.wall[r] && board.wall[r][colIdx] === true;
-
-                // 2. Line must be empty or match color and not be full
-                const emptyOrMatches = line.count === 0 || line.color === selectedColor;
-                const isNotFull = line.count < size;
-
-                if (!hasTileOnWall && emptyOrMatches && isNotFull) {
-                    isValidForPlacement = true;
-                }
-            }
-
-            if (isValidForPlacement) {
-                rowDiv.classList.add('valid-move');
-                rowDiv.addEventListener('click', () => {
-                    placeTilesOnPatternLine(r);
-                });
-            }
-
-            // Render slots
-            for (let s = size - 1; s >= 0; s--) {
-                const slot = document.createElement('div');
-                slot.className = 'azul-space-slot';
-                
-                if (s < line.count) {
-                    // Fill slot with tile
-                    const tile = document.createElement('div');
-                    tile.className = `azul-tile ${line.color}`;
-                    tile.textContent = COLOR_EMOJIS[line.color] || '';
-                    slot.appendChild(tile);
-                } else {
-                    slot.innerHTML = `<span style="font-size: 0.7rem; color: rgba(255,255,255,0.15);">●</span>`;
-                }
-                rowDiv.appendChild(slot);
-            }
-            patternLinesContainer.appendChild(rowDiv);
-        }
-
-        // Render Wall Grid
-        wallGrid.innerHTML = '';
-        for (let r = 0; r < 5; r++) {
-            for (let c = 0; c < 5; c++) {
-                const isFilled = board.wall && board.wall[r] && board.wall[r][c] === true;
-                const cellColor = WALL_COLORS[r][c];
-                
-                const cell = document.createElement('div');
-                cell.className = 'azul-wall-cell';
-                
-                if (isFilled) {
-                    const tile = document.createElement('div');
-                    tile.className = `azul-tile ${cellColor}`;
-                    tile.textContent = COLOR_EMOJIS[cellColor] || '';
-                    cell.appendChild(tile);
-                } else {
-                    // Render Ghost tile
-                    const tile = document.createElement('div');
-                    tile.className = `azul-tile ${cellColor} ghost`;
-                    tile.textContent = COLOR_EMOJIS[cellColor] || '';
-                    cell.appendChild(tile);
-                }
-                wallGrid.appendChild(cell);
-            }
-        }
-
-        // Render Floor Line
-        floorLineRow.innerHTML = '';
-        for (let f = 0; f < 7; f++) {
-            const slot = document.createElement('div');
-            slot.className = 'azul-floor-slot';
-            
-            const circle = document.createElement('div');
-            circle.className = 'azul-floor-circle';
-            
-            const floorTileColor = board.floor ? board.floor[f] : null;
-            if (floorTileColor) {
-                const tile = document.createElement('div');
-                tile.className = `azul-tile ${floorTileColor}`;
-                tile.textContent = COLOR_EMOJIS[floorTileColor] || '';
-                circle.appendChild(tile);
-            } else {
-                circle.innerHTML = `<span style="font-size: 0.75rem; color: rgba(255,255,255,0.15);">●</span>`;
-            }
-            
-            const penaltyLabel = document.createElement('span');
-            penaltyLabel.className = 'azul-penalty-label';
-            penaltyLabel.textContent = `${FLOOR_PENALTIES[f]}`;
-            
-            slot.appendChild(circle);
-            slot.appendChild(penaltyLabel);
-            floorLineRow.appendChild(slot);
-        }
-
-        // Handle Floor Line as a placement target
-        if (validPlacement) {
-            floorLineSection.classList.add('valid-move');
-            floorLineSection.onclick = () => {
-                placeTilesOnFloorLine();
-            };
-        } else {
-            floorLineSection.classList.remove('valid-move');
-            floorLineSection.onclick = null;
-        }
-    }
-}
 
 // Drafting Selection Logics
 function selectTiles(factoryIdx, color) {
-    if (gameData.phase !== 'drafting' || gameData.turn !== playerId) return;
+    console.log('[Azul Debug] selectTiles called - factoryIdx:', factoryIdx, 'color:', color);
+    if (gameData.phase !== 'drafting' || gameData.turn !== playerId) {
+        console.warn('[Azul Debug] selectTiles early return. phase:', gameData.phase, 'turn:', gameData.turn, 'playerId:', playerId);
+        return;
+    }
 
     if (selectedFactoryIdx === factoryIdx && selectedColor === color) {
-        // Deselect
+        console.log('[Azul Debug] Deselecting tiles');
         clearSelection();
     } else {
         selectedFactoryIdx = factoryIdx;
         selectedColor = color;
+        console.log('[Azul Debug] Tiles selected. Globals set:', selectedFactoryIdx, selectedColor);
     }
-    renderGameBoard();
+    if (azulUI) azulUI.setSelection(selectedFactoryIdx, selectedColor);
 }
 
 function clearSelection() {
+    console.log('[Azul Debug] clearSelection called');
     selectedFactoryIdx = null;
     selectedColor = null;
-    if (gameScreen.classList.contains('active')) {
-        renderGameBoard();
+    if (azulUI && gameScreen.classList.contains('active')) {
+        azulUI.setSelection(null, null);
     }
 }
 
@@ -643,9 +478,16 @@ function getSelectedTilesCount() {
 
 // Place Drafted Tiles Action
 async function placeTilesOnPatternLine(lineIdx) {
-    if (selectedFactoryIdx === null || !selectedColor) return;
+    console.log('[Azul Debug] placeTilesOnPatternLine called for line:', lineIdx);
+    console.log('[Azul Debug] Globals - selectedFactoryIdx:', selectedFactoryIdx, 'selectedColor:', selectedColor);
+
+    if (selectedFactoryIdx === null || !selectedColor) {
+        console.warn('[Azul Debug] Aborting: No factory/color selected');
+        return;
+    }
 
     const countToPlace = getSelectedTilesCount();
+    console.log('[Azul Debug] countToPlace:', countToPlace);
     let containsFirst = false;
 
     // 1. Take tiles from gameData
@@ -669,7 +511,6 @@ async function placeTilesOnPatternLine(lineIdx) {
         newFactories[selectedFactoryIdx] = [];
     }
 
-    // 2. Update current player board
     const myBoard = { ...players[playerId].board };
     const myPatternLines = [...myBoard.patternLines];
     const myFloor = myBoard.floor ? [...myBoard.floor] : [];
@@ -677,6 +518,20 @@ async function placeTilesOnPatternLine(lineIdx) {
     const line = { ...myPatternLines[lineIdx] };
     const capacity = lineIdx + 1;
     const currentCount = line.count;
+
+    // VALIDATION (Server side equivalent check)
+    const wallColorsInRow = WALL_COLORS[lineIdx];
+    const colIdx = wallColorsInRow.indexOf(selectedColor);
+    const hasTileOnWall = myBoard.wall && myBoard.wall[lineIdx] && myBoard.wall[lineIdx][colIdx] === true;
+    const emptyOrMatches = line.count === 0 || line.color === selectedColor;
+    const isNotFull = line.count < capacity;
+
+    console.log('[Azul Debug] Validation - hasTileOnWall:', hasTileOnWall, 'emptyOrMatches:', emptyOrMatches, 'isNotFull:', isNotFull);
+
+    if (hasTileOnWall || !emptyOrMatches || !isNotFull) {
+        console.warn('[Azul Debug] Aborting: Validation failed');
+        return;
+    }
 
     let placedCount = 0;
     let overflowCount = 0;
@@ -744,14 +599,27 @@ async function placeTilesOnPatternLine(lineIdx) {
         [`players/${playerId}/board`]: myBoard
     };
 
-    await update(ref(database, `game/azul/rooms/${roomName}`), stateUpdate);
+    console.log('[Azul Debug] Updating Firebase with stateUpdate:', stateUpdate);
+    try {
+        await update(ref(database, `game/azul/rooms/${roomName}`), stateUpdate);
+        console.log('[Azul Debug] Firebase update success');
+    } catch (err) {
+        console.error('[Azul Debug] Firebase update error:', err);
+    }
     clearSelection();
 }
 
 async function placeTilesOnFloorLine() {
-    if (selectedFactoryIdx === null || !selectedColor) return;
+    console.log('[Azul Debug] placeTilesOnFloorLine called');
+    console.log('[Azul Debug] Globals - selectedFactoryIdx:', selectedFactoryIdx, 'selectedColor:', selectedColor);
+
+    if (selectedFactoryIdx === null || !selectedColor) {
+        console.warn('[Azul Debug] Aborting: No factory/color selected');
+        return;
+    }
 
     const countToPlace = getSelectedTilesCount();
+    console.log('[Azul Debug] countToPlace:', countToPlace);
     let containsFirst = false;
 
     // Take tiles from gameData
@@ -805,7 +673,7 @@ async function placeTilesOnFloorLine() {
     const centerHasColors = newCenter.some(t => t !== 'first');
 
     if (!anyFactoryHasTiles && !centerHasColors) {
-        // Drafting finished! Run wall tiling
+        console.log('[Azul Debug] Drafting ends, starting executeWallTiling');
         executeWallTiling(myBoard, newFactories, newCenter, newLid);
         return;
     }
@@ -819,7 +687,13 @@ async function placeTilesOnFloorLine() {
         [`players/${playerId}/board`]: myBoard
     };
 
-    await update(ref(database, `game/azul/rooms/${roomName}`), stateUpdate);
+    console.log('[Azul Debug] Updating Firebase with stateUpdate (floor):', stateUpdate);
+    try {
+        await update(ref(database, `game/azul/rooms/${roomName}`), stateUpdate);
+        console.log('[Azul Debug] Firebase update success (floor)');
+    } catch (err) {
+        console.error('[Azul Debug] Firebase update error (floor):', err);
+    }
     clearSelection();
 }
 

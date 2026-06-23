@@ -1428,10 +1428,10 @@ input[type="text"].cw-input:focus {
     color: #9ca3af;
     border: 1px solid #1f2937;
 }
-.azul-tile.cyan {
-    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-    color: #ecfeff;
-    border: 1px solid #0e7490;
+.azul-tile.white {
+    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+    color: #1e293b;
+    border: 1px solid #94a3b8;
 }
 .azul-tile.first {
     background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
@@ -1978,3 +1978,275 @@ input[type="text"].cw-input:focus {
 .durak-player-row.is-defender {
     border-left: 4px solid var(--accent);
 }
+/* ==========================================================================
+   Azul UI Redesign
+   ========================================================================== */
+
+.azul-ui-root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.azul-opponent-area, .azul-player-area {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.azul-center-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.azul-factories-circle-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.azul-factory-circle, .azul-center-pile {
+    background: #1e293b;
+    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px;
+    box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.azul-center-pile {
+    width: auto;
+    min-width: 150px;
+    border-radius: 20px;
+    height: auto;
+    min-height: 60px;
+    padding: 15px;
+}
+
+.azul-board-container {
+    background: #2b394a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    position: relative;
+    border: 2px solid transparent;
+    transition: transform 0.3s, border-color 0.3s;
+}
+
+.azul-board-container.is-turn {
+    border-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.azul-board-container.opponent {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin-bottom: -20px;
+}
+
+.azul-board-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+.azul-avatar {
+    width: 32px;
+    height: 32px;
+    background: #111827;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.azul-name-score {
+    display: flex;
+    flex-direction: column;
+}
+
+.azul-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.azul-score-label {
+    font-size: 1.1rem;
+    color: #cbd5e1;
+    margin-top: 4px;
+}
+
+.azul-score {
+    color: #4ade80;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.azul-stats {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    letter-spacing: 2px;
+}
+
+.azul-board-main {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+}
+
+.azul-pattern-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+}
+
+.azul-pattern-line-row {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.azul-pattern-line-row.highlight-target {
+    background-color: rgba(255, 255, 255, 0.15);
+    outline: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+}
+
+.azul-pattern-cell, .azul-wall-cell {
+    width: 30px;
+    height: 30px;
+    background: #1e293b;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.azul-wall-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 30px);
+    grid-template-rows: repeat(5, 30px);
+    gap: 4px;
+}
+
+.azul-wall-cell {
+    position: relative;
+    opacity: 0.8;
+}
+
+.azul-wall-cell.empty::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    opacity: 0.3;
+}
+
+.azul-wall-cell.empty.color-blue::after { background-color: #3b82f6; }
+.azul-wall-cell.empty.color-yellow::after { background-color: #eab308; }
+.azul-wall-cell.empty.color-red::after { background-color: #ef4444; }
+.azul-wall-cell.empty.color-black::after { background-color: #1f2937; }
+.azul-wall-cell.empty.color-white::after { background-color: #f8fafc; }
+
+.azul-wall-cell.filled {
+    opacity: 1;
+    background: transparent;
+    box-shadow: none;
+}
+
+.azul-floor-line {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.azul-floor-line.highlight-target {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+.azul-floor-cell {
+    width: 30px;
+    height: 30px;
+    background: #1e293b;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.azul-floor-cell .penalty-num {
+    position: absolute;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    top: -15px;
+    font-weight: bold;
+}
+
+/* Tile Styling */
+.azul-tile {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 2px 2px rgba(255,255,255,0.2);
+    position: relative;
+    z-index: 2;
+    transition: transform 0.2s, opacity 0.2s;
+    user-select: none;
+    cursor: pointer;
+}
+
+.azul-tile.blue { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+.azul-tile.yellow { background: linear-gradient(135deg, #fde047, #eab308); }
+.azul-tile.red { background: linear-gradient(135deg, #f87171, #ef4444); }
+.azul-tile.black { background: linear-gradient(135deg, #374151, #111827); }
+.azul-tile.white { background: linear-gradient(135deg, #ffffff, #e2e8f0); color: black; }
+.azul-tile.first { background: #14b8a6; color: white; font-weight: bold; }
+
+.azul-tile.selected {
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.4), inset 0 2px 2px rgba(255,255,255,0.4), 0 0 10px rgba(255, 255, 255, 0.5);
+    z-index: 10;
+}
+
+.flying-tile {
+    pointer-events: none;
+    z-index: 9999 !important;
+}
+
