@@ -491,8 +491,8 @@ async function placeTilesOnPatternLine(lineIdx) {
     let containsFirst = false;
 
     // 1. Take tiles from gameData
-    const newFactories = [...gameData.factories];
-    let newCenter = [...gameData.center];
+    const newFactories = [...(gameData.factories || [])];
+    let newCenter = [...(gameData.center || [])];
     
     if (selectedFactoryIdx === -1) {
         // Take from Center
@@ -623,8 +623,8 @@ async function placeTilesOnFloorLine() {
     let containsFirst = false;
 
     // Take tiles from gameData
-    const newFactories = [...gameData.factories];
-    let newCenter = [...gameData.center];
+    const newFactories = [...(gameData.factories || [])];
+    let newCenter = [...(gameData.center || [])];
     
     if (selectedFactoryIdx === -1) {
         newCenter = newCenter.filter(t => t !== selectedColor);
@@ -791,7 +791,7 @@ async function executeWallTiling(myCurrentBoard, finalFactories, finalCenter, fi
     let currentPhase = 'drafting';
     let status = 'playing';
     let winner = null;
-    let nextBag = [...gameData.bag];
+    let nextBag = [...(gameData.bag || [])];
     let nextFactories = [];
     let nextCenter = ['first'];
     let nextRound = gameData.round + 1;

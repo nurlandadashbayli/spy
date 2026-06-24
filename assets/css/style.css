@@ -1423,10 +1423,10 @@ input[type="text"].cw-input:focus {
     color: #fecaca;
     border: 1px solid #b91c1c;
 }
-.azul-tile.black {
-    background: linear-gradient(135deg, #374151 0%, #111827 100%);
-    color: #9ca3af;
-    border: 1px solid #1f2937;
+.azul-tile.green {
+    background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+    color: #bbf7d0;
+    border: 1px solid #166534;
 }
 .azul-tile.white {
     background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
@@ -1506,8 +1506,7 @@ input[type="text"].cw-input:focus {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 8px;
-    height: var(--azul-tile-size);
+    gap: 4px;
 }
 
 .azul-space-slot {
@@ -2128,7 +2127,7 @@ input[type="text"].cw-input:focus {
 .azul-pattern-line-row {
     display: flex;
     gap: 4px;
-    padding: 4px;
+    padding: 0;
     border-radius: 4px;
     transition: background-color 0.2s;
 }
@@ -2136,6 +2135,7 @@ input[type="text"].cw-input:focus {
 .azul-pattern-line-row.highlight-target {
     background-color: rgba(255, 255, 255, 0.15);
     outline: 2px solid rgba(255, 255, 255, 0.4);
+    outline-offset: 4px;
     border-radius: 4px;
 }
 
@@ -2174,7 +2174,7 @@ input[type="text"].cw-input:focus {
 .azul-wall-cell.empty.color-blue::after { background-color: #3b82f6; }
 .azul-wall-cell.empty.color-yellow::after { background-color: #eab308; }
 .azul-wall-cell.empty.color-red::after { background-color: #ef4444; }
-.azul-wall-cell.empty.color-black::after { background-color: #1f2937; }
+.azul-wall-cell.empty.color-green::after { background-color: #22c55e; }
 .azul-wall-cell.empty.color-white::after { background-color: #f8fafc; }
 
 .azul-wall-cell.filled {

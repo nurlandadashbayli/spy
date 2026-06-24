@@ -183,6 +183,51 @@ export class AzulUI {
         const pName = this.players[playerId]?.name || 'Unknown';
         const pScore = boardData.score || 0;
         
+        // Calculate Horizontal, Vertical, Color bonuses for display
+        let hCount = 0;
+        let vCount = 0;
+        let cCount = 0;
+        
+        if (boardData.wall) {
+            // Horizontal
+            for (let r = 0; r < 5; r++) {
+                if (boardData.wall[r] && boardData.wall[r].every(x => x === true)) hCount++;
+            }
+            
+            // Vertical
+            for (let c = 0; c < 5; c++) {
+                let isComplete = true;
+                for (let r = 0; r < 5; r++) {
+                    if (!boardData.wall[r] || boardData.wall[r][c] !== true) {
+                        isComplete = false;
+                        break;
+                    }
+                }
+                if (isComplete) vCount++;
+            }
+            
+            // Colors
+            const WALL_COLORS = [
+                ['blue', 'yellow', 'red', 'green', 'white'],
+                ['white', 'blue', 'yellow', 'red', 'green'],
+                ['green', 'white', 'blue', 'yellow', 'red'],
+                ['red', 'green', 'white', 'blue', 'yellow'],
+                ['yellow', 'red', 'green', 'white', 'blue']
+            ];
+            const COLORS = ['blue', 'yellow', 'red', 'green', 'white'];
+            COLORS.forEach(color => {
+                let isComplete = true;
+                for (let r = 0; r < 5; r++) {
+                    const colIdx = WALL_COLORS[r].indexOf(color);
+                    if (!boardData.wall[r] || boardData.wall[r][colIdx] !== true) {
+                        isComplete = false;
+                        break;
+                    }
+                }
+                if (isComplete) cCount++;
+            });
+        }
+
         header.innerHTML = `
             <div class="azul-avatar"></div>
             <div class="azul-name-score">
@@ -190,10 +235,9 @@ export class AzulUI {
                 <div class="azul-score-label">Score: <span class="azul-score">${pScore}</span></div>
             </div>
             <div class="azul-stats">
-                H 0 V 0 C 0
+                H ${hCount} V ${vCount} C ${cCount}
             </div>
         `;
-        // TODO: Calculate Horizontal, Vertical, Color bonuses for display.
 
         // Board Main Grid (Pattern Lines + Wall)
         const boardMain = document.createElement('div');

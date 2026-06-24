@@ -223,10 +223,10 @@ function sortHand() {
     currentHand.sort((a, b) => {
         const aIsTrump = a.suit === trumpSuit;
         const bIsTrump = b.suit === trumpSuit;
-        if (aIsTrump && !bIsTrump) return 1;
-        if (!aIsTrump && bIsTrump) return -1;
+        if (aIsTrump && !bIsTrump) return -1;
+        if (!aIsTrump && bIsTrump) return 1;
         if (a.suit !== b.suit) return a.suit.localeCompare(b.suit);
-        return a.value - b.value;
+        return b.value - a.value;
     });
 
     selectedCardIndex = null;
@@ -500,6 +500,7 @@ function renderGame() {
         `;
         deckTopCard.style.display = 'block';
         deckCountBadge.innerText = `Deck: ${state.deck.length + 1}`;
+        deckTopCard.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100%; color:rgba(255,255,255,0.8); font-size:1.5rem; font-weight:bold;">${state.deck.length + 1}</div>`;
     } else {
         // Deck empty, show horizontal trump suit indicators
         trumpCardPlaceholder.innerHTML = `
@@ -618,10 +619,20 @@ function renderGame() {
                     });
                     isPlayable = tableRanks.includes(card.rank);
                 }
-            } else if (state.defenderId === playerId && selectedUnbeatenTableIndex !== null) {
-                // Defender validation against selected attack card
-                const attCard = state.table[selectedUnbeatenTableIndex].attack;
-                isPlayable = canBeat(card, attCard, trumpSuit);
+            } else if (state.defenderId === playerId) {
+                if (selectedUnbeatenTableIndex !== null) {
+                    // Defender validation against selected attack card
+                    const attCard = state.table[selectedUnbeatenTableIndex].attack;
+                    isPlayable = canBeat(card, attCard, trumpSuit);
+                } else {
+                    // See if it can beat ANY unbeaten table card
+                    for (let p of state.table) {
+                        if (!p.defense && canBeat(card, p.attack, trumpSuit)) {
+                            isPlayable = true;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -772,14 +783,26 @@ function handleHandCardClick(index) {
         }
     } else if (isDefender) {
         // PLAY DEFENSE
-        if (selectedUnbeatenTableIndex === null) {
-            alert('Please select an attack card on the table first!');
+        let targetIndex = selectedUnbeatenTableIndex;
+
+        if (targetIndex === null) {
+            // Find an unbeaten card that we can beat with this card
+            for (let i = 0; i < state.table.length; i++) {
+                if (!state.table[i].defense && canBeat(card, state.table[i].attack, trumpSuit)) {
+                    targetIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (targetIndex === null) {
+            alert('Please select a valid attack card to defend against, or play a card that can beat an unbeaten card on the table.');
             return;
         }
 
-        const targetAttackCard = state.table[selectedUnbeatenTableIndex].attack;
+        const targetAttackCard = state.table[targetIndex].attack;
         if (canBeat(card, targetAttackCard, trumpSuit)) {
-            playDefenseCard(index, selectedUnbeatenTableIndex);
+            playDefenseCard(index, targetIndex);
         } else {
             alert('This card cannot beat the selected attack card!');
         }
