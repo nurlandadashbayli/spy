@@ -26,6 +26,12 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+// Synchronize server time offset
+let serverTimeOffset = 0;
+onValue(ref(database, ".info/serverTimeOffset"), (snap) => {
+    serverTimeOffset = snap.val() || 0;
+});
+
 // Constants
 const AZ_LETTER_DATA = {
     'A': { count: 7, points: 1 },
@@ -129,6 +135,10 @@ let players = {};
 let gameData = null;
 let unsubscribeRoom = null;
 let unsubscribePlayers = null;
+
+// Turn Timer State
+let turnTimerInterval = null;
+let isPassingTurnLocally = false;
 
 // Local State for Drag & Drop
 let pendingPlacements = []; // Array of {r, c, letter, rackIdx}
@@ -285,7 +295,8 @@ if (confirmSwapBtn) confirmSwapBtn.addEventListener('click', async () => {
     await update(ref(database, `game/scrabble/rooms/${roomName}`), {
         bag: bag,
         [`players/${playerId}/rack`]: rack,
-        currentTurn: nextTurn
+        currentTurn: nextTurn,
+        turnStartTime: { ".sv": "timestamp" }
     });
     
     isSwapMode = false;
@@ -413,6 +424,133 @@ rackDiv.addEventListener('drop', (e) => {
     renderGame();
 });
 
+// --- Turn Timer Logic ---
+function startTurnTimer() {
+    if (turnTimerInterval) clearInterval(turnTimerInterval);
+    updateTimerDisplay(); // Initial draw
+    turnTimerInterval = setInterval(() => {
+        updateTimerDisplay();
+    }, 500);
+}
+
+function stopTurnTimer() {
+    if (turnTimerInterval) {
+        clearInterval(turnTimerInterval);
+        turnTimerInterval = null;
+    }
+}
+
+async function forcePassTurn(expiredPlayerId) {
+    if (!gameData || gameData.status !== 'started' || gameData.currentTurn !== expiredPlayerId) return;
+    
+    const turnOrder = gameData.turnOrder;
+    if (!turnOrder || turnOrder.length === 0) return;
+    
+    const currIdx = turnOrder.indexOf(expiredPlayerId);
+    if (currIdx === -1) return;
+    const nextTurn = turnOrder[(currIdx + 1) % turnOrder.length];
+    
+    if (expiredPlayerId === playerId) {
+        pendingPlacements = [];
+    }
+    
+    await update(ref(database, `game/scrabble/rooms/${roomName}`), {
+        currentTurn: nextTurn,
+        approvalRequest: null,
+        turnStartTime: { ".sv": "timestamp" }
+    });
+}
+
+async function handleTurnTimeout() {
+    if (isPassingTurnLocally) return;
+    
+    const isMyTurn = gameData.currentTurn === playerId;
+    const now = Date.now() + serverTimeOffset;
+    const elapsed = now - gameData.turnStartTime;
+    
+    if (isMyTurn) {
+        isPassingTurnLocally = true;
+        try {
+            alert("Your 2 minutes are up! Turn passes to the next player.");
+            await forcePassTurn(playerId);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            isPassingTurnLocally = false;
+        }
+    } else {
+        if (elapsed >= 123000) {
+            isPassingTurnLocally = true;
+            try {
+                await forcePassTurn(gameData.currentTurn);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                isPassingTurnLocally = false;
+            }
+        }
+    }
+}
+
+function updateTimerDisplay() {
+    const timerCard = document.getElementById('scrabble-timer-card');
+    const timerVal = document.getElementById('scrabble-timer-val');
+    
+    if (!timerCard || !timerVal) return;
+    
+    if (!gameData || gameData.status !== 'started') {
+        timerCard.style.display = 'none';
+        return;
+    }
+    
+    if (!gameData.turnStartTime) {
+        // Fallback: If turnStartTime is missing, initialize it
+        if (gameData.currentTurn === playerId) {
+            update(ref(database, `game/scrabble/rooms/${roomName}`), {
+                turnStartTime: { ".sv": "timestamp" }
+            });
+        }
+        timerCard.style.display = 'none';
+        return;
+    }
+    
+    timerCard.style.display = 'flex';
+    
+    // Freeze timer display if a word is pending approval
+    if (gameData.approvalRequest && gameData.approvalRequest.status === 'pending') {
+        timerVal.innerText = "Awaiting Approval...";
+        timerVal.className = "";
+        timerVal.style.color = "var(--warning)";
+        timerCard.classList.remove('danger');
+        return;
+    }
+    
+    const totalDuration = 120000; // 2 minutes
+    const now = Date.now() + serverTimeOffset;
+    const elapsed = now - gameData.turnStartTime;
+    const timeLeft = Math.max(0, totalDuration - elapsed);
+    
+    const minutes = Math.floor(timeLeft / 60000);
+    const seconds = Math.floor((timeLeft % 60000) / 1000);
+    timerVal.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    if (timeLeft <= 15000) {
+        timerVal.className = "danger";
+        timerCard.classList.add('danger');
+    } else if (timeLeft <= 30000) {
+        timerVal.className = "warning";
+        timerCard.classList.remove('danger');
+    } else {
+        timerVal.className = "";
+        timerVal.style.color = "var(--success)";
+        timerCard.classList.remove('danger');
+    }
+    
+    if (timeLeft === 0) {
+        handleTurnTimeout();
+    }
+}
+
 // Lobby Logic
 async function joinRoom() {
     roomName = roomInput.value.trim().toLowerCase();
@@ -512,6 +650,11 @@ function setupRealtimeListeners() {
                 if (swapUi) swapUi.style.display = 'none';
             }
 
+            // Start turn timer
+            if (!turnTimerInterval) {
+                startTurnTimer();
+            }
+
             // If turn changes or board updates from another player, clear pending to prevent conflicts
             if (!gameData.currentTurn || gameData.currentTurn !== playerId) {
                 pendingPlacements = [];
@@ -526,6 +669,7 @@ function setupRealtimeListeners() {
         } else {
             gameScreen.classList.remove('active');
             lobbyScreen.classList.add('active');
+            stopTurnTimer();
         }
     });
 }
@@ -559,6 +703,7 @@ async function leaveRoom() {
 function resetToSelection() {
     if (unsubscribePlayers) unsubscribePlayers();
     if (unsubscribeRoom) unsubscribeRoom();
+    stopTurnTimer();
     playerId = '';
     roomName = '';
     players = {};
@@ -663,7 +808,8 @@ async function startSinglePlayer() {
             currentTurn: playerId,
             turnOrder: [playerId],
             [`players/${playerId}/rack`]: rack,
-            [`players/${playerId}/score`]: 0
+            [`players/${playerId}/score`]: 0,
+            turnStartTime: { ".sv": "timestamp" }
         };
         
         await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
@@ -698,6 +844,7 @@ async function startGame() {
         updates.bag = bag;
         updates.currentTurn = pKeys[0];
         updates.turnOrder = pKeys;
+        updates.turnStartTime = { ".sv": "timestamp" };
 
         await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
     } catch(e) {
@@ -1075,7 +1222,8 @@ async function handlePassTurn() {
     const nextTurn = turnOrder[(currIdx + 1) % turnOrder.length];
     
     await update(ref(database, `game/scrabble/rooms/${roomName}`), {
-        currentTurn: nextTurn
+        currentTurn: nextTurn,
+        turnStartTime: { ".sv": "timestamp" }
     });
 }
 async function handlePlayWord() {
@@ -1333,7 +1481,8 @@ async function commitWord() {
         [`players/${playerId}/rack`]: originalRack,
         [`players/${playerId}/score`]: currentScore + wordScore,
         lastPlay: { allWords: pendingCommitData.allWords },
-        lastPlayTiles: pendingPlacements.map(p => `${p.r},${p.c}`)
+        lastPlayTiles: pendingPlacements.map(p => `${p.r},${p.c}`),
+        turnStartTime: { ".sv": "timestamp" }
     };
 
     try {
@@ -1374,7 +1523,10 @@ function handleApprovalRequest(req) {
             playBtn.innerText = 'Play';
             pendingCommitData = null;
             // Clear request
-            update(ref(database, `game/scrabble/rooms/${roomName}`), { approvalRequest: null });
+            update(ref(database, `game/scrabble/rooms/${roomName}`), {
+                approvalRequest: null,
+                turnStartTime: { ".sv": "timestamp" }
+            });
         }
     }
 }

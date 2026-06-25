@@ -1331,6 +1331,35 @@ input[type="text"].cw-input:focus {
     to { opacity: 1; transform: scale(1); }
 }
 
+/* Scrabble Timer Styles */
+#scrabble-timer-card {
+    transition: all 0.3s ease;
+}
+
+#scrabble-timer-card.danger {
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2) !important;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.8)) !important;
+}
+
+#scrabble-timer-val.warning {
+    color: #e67e22 !important;
+}
+
+#scrabble-timer-val.danger {
+    color: #e74c3c !important;
+    animation: scrabblePulseRed 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes scrabblePulseRed {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.15);
+    }
+}
+
 /* ==========================================================================
    Azul Game Styles
    ========================================================================== */
