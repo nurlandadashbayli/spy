@@ -168,6 +168,7 @@ const recallBtn = document.getElementById('scrabble-recall-btn');
 const scoresList = document.getElementById('scrabble-scores-list');
 const bagCount = document.getElementById('scrabble-bag-count');
 const turnIndicator = document.getElementById('scrabble-turn-indicator');
+const timerToggle = document.getElementById('scrabble-timer-toggle');
 
 // Modal DOM
 const failModal = document.getElementById('scrabble-fail-modal');
@@ -214,6 +215,19 @@ if (quitBtn) quitBtn.addEventListener('click', leaveRoom);
 if (singleBtn) singleBtn.addEventListener('click', startSinglePlayer);
 if (joinBtn) joinBtn.addEventListener('click', joinRoom);
 if (startBtn) startBtn.addEventListener('click', startGame);
+
+if (timerToggle) {
+    timerToggle.addEventListener('change', async () => {
+        if (!roomName) return;
+        try {
+            await update(ref(database, `game/scrabble/rooms/${roomName}`), {
+                timerEnabled: timerToggle.checked
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    });
+}
 
 if (playBtn) playBtn.addEventListener('click', handlePlayWord);
 if (passBtn) passBtn.addEventListener('click', handlePassTurn);
@@ -427,6 +441,11 @@ rackDiv.addEventListener('drop', (e) => {
 // --- Turn Timer Logic ---
 function startTurnTimer() {
     if (turnTimerInterval) clearInterval(turnTimerInterval);
+    if (!gameData || gameData.timerEnabled === false) {
+        const timerCard = document.getElementById('scrabble-timer-card');
+        if (timerCard) timerCard.style.display = 'none';
+        return;
+    }
     updateTimerDisplay(); // Initial draw
     turnTimerInterval = setInterval(() => {
         updateTimerDisplay();
@@ -462,6 +481,7 @@ async function forcePassTurn(expiredPlayerId) {
 }
 
 async function handleTurnTimeout() {
+    if (gameData?.timerEnabled === false) return;
     if (isPassingTurnLocally) return;
     
     const isMyTurn = gameData.currentTurn === playerId;
@@ -499,6 +519,11 @@ function updateTimerDisplay() {
     if (!timerCard || !timerVal) return;
     
     if (!gameData || gameData.status !== 'started') {
+        timerCard.style.display = 'none';
+        return;
+    }
+    
+    if (gameData.timerEnabled === false) {
         timerCard.style.display = 'none';
         return;
     }
@@ -581,7 +606,8 @@ async function joinRoom() {
             const selectedLang = document.getElementById('scrabble-lang-select')?.value || 'az';
             await update(roomRef, { 
                 status: 'lobby',
-                language: selectedLang
+                language: selectedLang,
+                timerEnabled: true
             });
         }
 
@@ -650,9 +676,15 @@ function setupRealtimeListeners() {
                 if (swapUi) swapUi.style.display = 'none';
             }
 
-            // Start turn timer
-            if (!turnTimerInterval) {
-                startTurnTimer();
+            // Start turn timer if enabled, stop if disabled
+            if (gameData.timerEnabled !== false) {
+                if (!turnTimerInterval) {
+                    startTurnTimer();
+                }
+            } else {
+                stopTurnTimer();
+                const timerCard = document.getElementById('scrabble-timer-card');
+                if (timerCard) timerCard.style.display = 'none';
             }
 
             // If turn changes or board updates from another player, clear pending to prevent conflicts
@@ -670,6 +702,10 @@ function setupRealtimeListeners() {
             gameScreen.classList.remove('active');
             lobbyScreen.classList.add('active');
             stopTurnTimer();
+            // Sync checkbox with database state
+            if (timerToggle) {
+                timerToggle.checked = gameData.timerEnabled !== false;
+            }
         }
     });
 }
@@ -809,7 +845,8 @@ async function startSinglePlayer() {
             turnOrder: [playerId],
             [`players/${playerId}/rack`]: rack,
             [`players/${playerId}/score`]: 0,
-            turnStartTime: { ".sv": "timestamp" }
+            turnStartTime: { ".sv": "timestamp" },
+            timerEnabled: false
         };
         
         await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);

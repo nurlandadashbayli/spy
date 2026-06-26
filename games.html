@@ -598,6 +598,18 @@
                     <span id="scrabble-lobby-lang" class="badge" style="background: var(--primary); font-size: 0.85rem; padding: 0.4rem 0.8rem;">Language: Azerbaijani 🇦🇿</span>
                 </div>
                 <div id="scrabble-players-list" style="margin: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                
+                <!-- Toggle Turn Timer -->
+                <div style="margin: 1.25rem 0; padding: 1rem; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                        ⏱️ <span>2-Minute Turn Timer</span>
+                    </span>
+                    <label class="scrabble-switch">
+                        <input type="checkbox" id="scrabble-timer-toggle" checked>
+                        <span class="scrabble-slider"></span>
+                    </label>
+                </div>
+
                 <button id="scrabble-start-btn" class="btn btn-primary" style="display: none; margin-bottom: 1rem;">Start Game</button>
                 <button id="scrabble-leave-btn" class="btn btn-secondary">Leave Room</button>
             </div>
