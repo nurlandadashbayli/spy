@@ -600,14 +600,27 @@
                 <div id="scrabble-players-list" style="margin: 1rem 0; display: flex; flex-direction: column; gap: 0.5rem;"></div>
                 
                 <!-- Toggle Turn Timer -->
-                <div style="margin: 1.25rem 0; padding: 1rem; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
-                        ⏱️ <span>2-Minute Turn Timer</span>
-                    </span>
-                    <label class="scrabble-switch">
-                        <input type="checkbox" id="scrabble-timer-toggle" checked>
-                        <span class="scrabble-slider"></span>
-                    </label>
+                <div style="margin: 1.25rem 0; padding: 1rem; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                            ⏱️ <span>Turn Timer</span>
+                        </span>
+                        <label class="scrabble-switch">
+                            <input type="checkbox" id="scrabble-timer-toggle" checked>
+                            <span class="scrabble-slider"></span>
+                        </label>
+                    </div>
+                    <div id="scrabble-timer-limit-wrapper" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; margin-top: 0.25rem;">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Time Limit:</span>
+                        <select id="scrabble-timer-limit-select" style="padding: 0.4rem 0.6rem; border-radius: 6px; background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.1); outline: none; font-size: 0.9rem; cursor: pointer;">
+                            <option value="1">1 Minute</option>
+                            <option value="2" selected>2 Minutes</option>
+                            <option value="3">3 Minutes</option>
+                            <option value="4">4 Minutes</option>
+                            <option value="5">5 Minutes</option>
+                            <option value="10">10 Minutes</option>
+                        </select>
+                    </div>
                 </div>
 
                 <button id="scrabble-start-btn" class="btn btn-primary" style="display: none; margin-bottom: 1rem;">Start Game</button>
@@ -721,6 +734,18 @@
                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                     <button id="scrabble-joker-cancel-btn" class="btn btn-secondary" style="flex: 1;">Cancel</button>
                     <button id="scrabble-joker-ok-btn" class="btn btn-primary" style="flex: 1;">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="scrabble-deny-vote-modal" class="scrabble-modal-overlay" style="display: none;">
+            <div class="scrabble-modal-card card" style="text-align: center;">
+                <h3 style="color: var(--danger); margin-bottom: 0.5rem;">Deny Word Request</h3>
+                <p id="scrabble-deny-vote-text" style="margin-bottom: 1rem; line-height: 1.4;"></p>
+                <div id="scrabble-deny-vote-stats" style="margin-bottom: 1rem; font-weight: 600; font-size: 0.95rem; color: var(--text-secondary);"></div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;" id="scrabble-deny-vote-buttons">
+                    <button id="scrabble-deny-vote-no-btn" class="btn btn-secondary" style="flex: 1;">Keep Word (No)</button>
+                    <button id="scrabble-deny-vote-yes-btn" class="btn btn-danger" style="flex: 1;">Deny Word (Yes)</button>
                 </div>
             </div>
         </div>

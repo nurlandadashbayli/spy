@@ -169,6 +169,8 @@ const scoresList = document.getElementById('scrabble-scores-list');
 const bagCount = document.getElementById('scrabble-bag-count');
 const turnIndicator = document.getElementById('scrabble-turn-indicator');
 const timerToggle = document.getElementById('scrabble-timer-toggle');
+const timerLimitSelect = document.getElementById('scrabble-timer-limit-select');
+const timerLimitWrapper = document.getElementById('scrabble-timer-limit-wrapper');
 
 // Modal DOM
 const failModal = document.getElementById('scrabble-fail-modal');
@@ -187,6 +189,13 @@ const jokerModal = document.getElementById('scrabble-joker-modal');
 const jokerInput = document.getElementById('scrabble-joker-input');
 const jokerCancelBtn = document.getElementById('scrabble-joker-cancel-btn');
 const jokerOkBtn = document.getElementById('scrabble-joker-ok-btn');
+
+const denyVoteModal = document.getElementById('scrabble-deny-vote-modal');
+const denyVoteText = document.getElementById('scrabble-deny-vote-text');
+const denyVoteStats = document.getElementById('scrabble-deny-vote-stats');
+const denyVoteButtons = document.getElementById('scrabble-deny-vote-buttons');
+const denyVoteYesBtn = document.getElementById('scrabble-deny-vote-yes-btn');
+const denyVoteNoBtn = document.getElementById('scrabble-deny-vote-no-btn');
 
 let pendingJokerDrop = null; // {r, c, rackIdx}
 let pendingCommitData = null; // {word, wordScore, tempBoard}
@@ -222,6 +231,19 @@ if (timerToggle) {
         try {
             await update(ref(database, `game/scrabble/rooms/${roomName}`), {
                 timerEnabled: timerToggle.checked
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    });
+}
+
+if (timerLimitSelect) {
+    timerLimitSelect.addEventListener('change', async () => {
+        if (!roomName) return;
+        try {
+            await update(ref(database, `game/scrabble/rooms/${roomName}`), {
+                timerLimit: parseInt(timerLimitSelect.value)
             });
         } catch (e) {
             console.error(e);
@@ -365,6 +387,9 @@ const htpCloseBtn = document.getElementById('scrabble-htp-close-btn');
 if (htpBtn) htpBtn.addEventListener('click', () => htpModal.style.display = 'flex');
 if (htpCloseBtn) htpCloseBtn.addEventListener('click', () => htpModal.style.display = 'none');
 
+if (denyVoteYesBtn) denyVoteYesBtn.addEventListener('click', () => castDenyVote(true));
+if (denyVoteNoBtn) denyVoteNoBtn.addEventListener('click', () => castDenyVote(false));
+
 // Modal Event Listeners
 if (failCancelBtn) failCancelBtn.addEventListener('click', () => {
     failModal.style.display = 'none';
@@ -488,10 +513,13 @@ async function handleTurnTimeout() {
     const now = Date.now() + serverTimeOffset;
     const elapsed = now - gameData.turnStartTime;
     
+    const limitMinutes = gameData?.timerLimit || 2;
+    const totalDuration = limitMinutes * 60000;
+    
     if (isMyTurn) {
         isPassingTurnLocally = true;
         try {
-            alert("Your 2 minutes are up! Turn passes to the next player.");
+            alert(`Your ${limitMinutes} minutes are up! Turn passes to the next player.`);
             await forcePassTurn(playerId);
         } catch (e) {
             console.error(e);
@@ -499,7 +527,8 @@ async function handleTurnTimeout() {
             isPassingTurnLocally = false;
         }
     } else {
-        if (elapsed >= 123000) {
+        const graceThreshold = totalDuration + 3000;
+        if (elapsed >= graceThreshold) {
             isPassingTurnLocally = true;
             try {
                 await forcePassTurn(gameData.currentTurn);
@@ -550,7 +579,8 @@ function updateTimerDisplay() {
         return;
     }
     
-    const totalDuration = 120000; // 2 minutes
+    const limitMinutes = gameData?.timerLimit || 2;
+    const totalDuration = limitMinutes * 60000;
     const now = Date.now() + serverTimeOffset;
     const elapsed = now - gameData.turnStartTime;
     const timeLeft = Math.max(0, totalDuration - elapsed);
@@ -698,13 +728,25 @@ function setupRealtimeListeners() {
                 if (waitingModal) waitingModal.style.display = 'none';
                 if (decisionModal) decisionModal.style.display = 'none';
             }
+
+            if (gameData.denyRequest) {
+                handleDenyRequest(gameData.denyRequest);
+            } else {
+                if (denyVoteModal) denyVoteModal.style.display = 'none';
+                const votedMsg = document.getElementById('scrabble-deny-voted-msg');
+                if (votedMsg) votedMsg.style.display = 'none';
+            }
         } else {
             gameScreen.classList.remove('active');
             lobbyScreen.classList.add('active');
             stopTurnTimer();
-            // Sync checkbox with database state
+            // Sync checkbox and limit with database state
             if (timerToggle) {
                 timerToggle.checked = gameData.timerEnabled !== false;
+            }
+            if (timerLimitSelect && timerLimitWrapper) {
+                timerLimitWrapper.style.display = (gameData.timerEnabled !== false) ? 'flex' : 'none';
+                timerLimitSelect.value = gameData.timerLimit || 2;
             }
         }
     });
@@ -846,7 +888,11 @@ async function startSinglePlayer() {
             [`players/${playerId}/rack`]: rack,
             [`players/${playerId}/score`]: 0,
             turnStartTime: { ".sv": "timestamp" },
-            timerEnabled: false
+            timerEnabled: false,
+            lastPlay: null,
+            lastPlayTiles: null,
+            lastPlayState: null,
+            denyRequest: null
         };
         
         await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
@@ -882,6 +928,10 @@ async function startGame() {
         updates.currentTurn = pKeys[0];
         updates.turnOrder = pKeys;
         updates.turnStartTime = { ".sv": "timestamp" };
+        updates.lastPlay = null;
+        updates.lastPlayTiles = null;
+        updates.lastPlayState = null;
+        updates.denyRequest = null;
 
         await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
     } catch(e) {
@@ -919,8 +969,9 @@ function renderGame() {
 
     if (gameData.lastPlay) {
         lastWordCard.style.display = 'block';
+        let wordsHtml = '';
         if (gameData.lastPlay.allWords) {
-            lastWordContent.innerHTML = gameData.lastPlay.allWords.map(w => `
+            wordsHtml = gameData.lastPlay.allWords.map(w => `
                 <div style="margin-bottom: 0.75rem;">
                     <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary-light);">${w.word}</div>
                     <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">${w.definition || 'No definition found.'}</div>
@@ -928,11 +979,27 @@ function renderGame() {
             `).join('');
         } else {
             // Backwards compatibility for games started before this update
-            lastWordContent.innerHTML = `
+            wordsHtml = `
                 <div style="margin-bottom: 0.75rem;">
                     <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary-light);">${gameData.lastPlay.word}</div>
                     <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.4;">${gameData.lastPlay.definition || 'No definition found.'}</div>
                 </div>`;
+        }
+
+        if (gameData.lastPlayState && !gameData.denyRequest) {
+            const playedByName = gameData.lastPlayState.playerName || 'Someone';
+            wordsHtml += `
+                <button id="scrabble-deny-last-btn" class="btn btn-danger" style="width: 100%; margin-top: 0.75rem; font-size: 0.85rem; padding: 0.5rem;">
+                    ⚠️ Deny play by ${escapeHtml(playedByName)}
+                </button>
+            `;
+        }
+
+        lastWordContent.innerHTML = wordsHtml;
+
+        const denyLastBtn = document.getElementById('scrabble-deny-last-btn');
+        if (denyLastBtn) {
+            denyLastBtn.addEventListener('click', handleRequestDenyLastPlay);
         }
     } else {
         lastWordCard.style.display = 'none';
@@ -1510,6 +1577,17 @@ async function commitWord() {
     const currIdx = turnOrder.indexOf(playerId);
     const nextTurn = turnOrder[(currIdx + 1) % turnOrder.length];
 
+    const lastPlayState = {
+        board: gameData.board || Array(15).fill().map(() => Array(15).fill(null)),
+        bag: gameData.bag || [],
+        playerId: playerId,
+        playerName: gameData.players[playerId].name || playerName,
+        playerRack: [...(gameData.players[playerId].rack || [])],
+        playerScore: gameData.players[playerId].score || 0,
+        turnStartTime: gameData.turnStartTime || Date.now(),
+        allWords: pendingCommitData.allWords
+    };
+
     const updates = {
         board: tempBoard,
         bag: bag,
@@ -1519,6 +1597,7 @@ async function commitWord() {
         [`players/${playerId}/score`]: currentScore + wordScore,
         lastPlay: { allWords: pendingCommitData.allWords },
         lastPlayTiles: pendingPlacements.map(p => `${p.r},${p.c}`),
+        lastPlayState: lastPlayState,
         turnStartTime: { ".sv": "timestamp" }
     };
 
@@ -1564,6 +1643,138 @@ function handleApprovalRequest(req) {
                 approvalRequest: null,
                 turnStartTime: { ".sv": "timestamp" }
             });
+        }
+    }
+}
+
+async function handleRequestDenyLastPlay() {
+    if (!roomName || !playerId || !gameData || !gameData.lastPlayState) return;
+
+    if (gameData.denyRequest) return;
+
+    const wordList = gameData.lastPlayState.allWords ? gameData.lastPlayState.allWords.map(w => w.word).join(', ') : '';
+
+    const updates = {
+        denyRequest: {
+            word: wordList,
+            playedBy: gameData.lastPlayState.playerName || 'Unknown',
+            playedById: gameData.lastPlayState.playerId,
+            startedBy: playerName || 'Unknown',
+            votes: {
+                [playerId]: true
+            }
+        }
+    };
+
+    try {
+        await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
+    } catch (e) {
+        console.error("Failed to start deny request:", e);
+    }
+}
+
+function handleDenyRequest(req) {
+    if (!req) {
+        if (denyVoteModal) denyVoteModal.style.display = 'none';
+        return;
+    }
+
+    if (denyVoteModal) denyVoteModal.style.display = 'flex';
+    if (denyVoteText) {
+        denyVoteText.innerText = `${req.startedBy} has requested to deny the last play by ${req.playedBy} (word: "${req.word}").`;
+    }
+
+    const votes = req.votes || {};
+    const totalPlayers = Object.keys(gameData.players || {}).length;
+    const majorityNeeded = Math.floor(totalPlayers / 2) + 1;
+
+    let yesVotes = 0;
+    let noVotes = 0;
+    Object.values(votes).forEach(v => {
+        if (v === true) yesVotes++;
+        else if (v === false) noVotes++;
+    });
+
+    if (denyVoteStats) {
+        denyVoteStats.innerText = `Votes to Deny: ${yesVotes} / ${majorityNeeded} required\nVotes to Keep: ${noVotes}`;
+    }
+
+    const hasVoted = votes[playerId] !== undefined;
+    if (hasVoted) {
+        if (denyVoteButtons) denyVoteButtons.style.display = 'none';
+        let votedMsg = document.getElementById('scrabble-deny-voted-msg');
+        if (!votedMsg) {
+            votedMsg = document.createElement('p');
+            votedMsg.id = 'scrabble-deny-voted-msg';
+            votedMsg.style.textAlign = 'center';
+            votedMsg.style.fontWeight = 'bold';
+            votedMsg.style.marginTop = '1rem';
+            votedMsg.style.color = 'var(--text-secondary)';
+            denyVoteModal.querySelector('.scrabble-modal-card').appendChild(votedMsg);
+        }
+        votedMsg.innerText = `You voted: ${votes[playerId] === true ? 'Yes (Deny)' : 'No (Keep)'}. Waiting for other players...`;
+        votedMsg.style.display = 'block';
+    } else {
+        if (denyVoteButtons) denyVoteButtons.style.display = 'flex';
+        const votedMsg = document.getElementById('scrabble-deny-voted-msg');
+        if (votedMsg) votedMsg.style.display = 'none';
+    }
+
+    const activePlayers = gameData.turnOrder.filter(id => gameData.players && gameData.players[id]);
+    const isLeader = activePlayers[0] === playerId;
+
+    if (isLeader) {
+        if (yesVotes >= majorityNeeded) {
+            resolveDenyRequest(true);
+        } 
+        else if (noVotes >= majorityNeeded || 
+                 (yesVotes + noVotes >= activePlayers.length && yesVotes < majorityNeeded)) {
+            resolveDenyRequest(false);
+        }
+    }
+}
+
+async function castDenyVote(voteValue) {
+    if (!roomName || !playerId) return;
+    try {
+        await set(ref(database, `game/scrabble/rooms/${roomName}/denyRequest/votes/${playerId}`), voteValue);
+    } catch (e) {
+        console.error("Failed to cast deny vote:", e);
+    }
+}
+
+async function resolveDenyRequest(shouldRevert) {
+    if (!roomName || !gameData) return;
+
+    if (shouldRevert && gameData.lastPlayState) {
+        const state = gameData.lastPlayState;
+        
+        const updates = {
+            board: state.board,
+            bag: state.bag,
+            currentTurn: state.playerId,
+            [`players/${state.playerId}/rack`]: state.playerRack,
+            [`players/${state.playerId}/score`]: state.playerScore,
+            lastPlay: null,
+            lastPlayTiles: null,
+            lastPlayState: null,
+            denyRequest: null,
+            turnStartTime: { ".sv": "timestamp" }
+        };
+
+        try {
+            await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
+        } catch (e) {
+            console.error("Failed to resolve deny request (revert):", e);
+        }
+    } else {
+        const updates = {
+            denyRequest: null
+        };
+        try {
+            await update(ref(database, `game/scrabble/rooms/${roomName}`), updates);
+        } catch (e) {
+            console.error("Failed to resolve deny request (clear):", e);
         }
     }
 }
