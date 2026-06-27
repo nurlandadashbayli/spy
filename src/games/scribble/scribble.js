@@ -143,11 +143,7 @@ onValue(guessesRef, (snapshot) => {
 
 onValue(ref(database, 'game/scribble/word'), (snap) => {
     currentWord = snap.val() || '';
-    if (myRole === 'drawer') {
-        wordDisplay.innerText = currentWord.toUpperCase();
-    } else {
-        wordDisplay.innerText = currentWord.split('').map(() => '•').join('');
-    }
+    updateWordDisplay();
 });
 
 onValue(ref(database, 'game/scribble/roles'), (snap) => {
@@ -155,8 +151,21 @@ onValue(ref(database, 'game/scribble/roles'), (snap) => {
     if (playerId && roles[playerId]) {
         myRole = roles[playerId];
         setupRoleUI();
+        updateWordDisplay();
     }
 });
+
+function updateWordDisplay() {
+    if (!currentWord) {
+        wordDisplay.innerText = '';
+        return;
+    }
+    if (myRole === 'drawer') {
+        wordDisplay.innerText = currentWord.toUpperCase();
+    } else {
+        wordDisplay.innerText = currentWord.split('').map(() => '•').join('');
+    }
+}
 
 async function joinScribble() {
     const name = nameInput.value.trim();
