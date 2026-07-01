@@ -1,0 +1,194 @@
+/* towel.css */
+
+.towel-game-container {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Glassmorphism card for the arena */
+.towel-arena-card {
+    background: var(--bg-card);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+/* Block Selector */
+.towel-block-selector {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.towel-block-btn {
+    background: var(--bg-elevated);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 0.75rem 1.25rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    text-align: left;
+    min-width: 180px;
+}
+
+.towel-block-btn .btn-icon {
+    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.towel-block-btn .btn-label {
+    display: flex;
+    flex-direction: column;
+}
+
+.towel-block-btn .btn-label strong {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.towel-block-btn .btn-label span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.1rem;
+}
+
+/* Hover & Active States */
+.towel-block-btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.towel-block-btn.active {
+    border-color: var(--primary);
+    box-shadow: var(--glow-primary);
+    background: rgba(147, 51, 234, 0.15);
+}
+
+/* Custom styling per block type when active */
+.towel-block-btn[data-type="bath"].active {
+    border-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.towel-block-btn[data-type="beach"].active {
+    border-color: #10b981;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.towel-block-btn[data-type="hand"].active {
+    border-color: #ec4899;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+    background: rgba(236, 72, 153, 0.1);
+}
+
+.towel-block-btn[data-type="rolled"].active {
+    border-color: #f59e0b;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+/* Projectiles Selector */
+.towel-proj-selector {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.towel-proj-btn {
+    background: var(--bg-elevated);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 0.6rem 1.2rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.towel-proj-btn:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.towel-proj-btn.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    background: rgba(6, 182, 212, 0.15);
+}
+
+.towel-proj-btn[data-type="soap"].active {
+    border-color: #38bdf8;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    background: rgba(56, 189, 248, 0.15);
+}
+
+.towel-proj-btn[data-type="duck"].active {
+    border-color: #eab308;
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+    background: rgba(234, 179, 8, 0.15);
+}
+
+/* Lobby player items */
+.towel-player-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+}
+
+.towel-player-row .name {
+    font-weight: 600;
+}
+
+.towel-player-row .status {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.towel-player-row .status.ready {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+}
+
+.towel-player-row .status.waiting {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+/* Animations */
+@keyframes towel-pulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+
+.towel-pulse-active {
+    animation: towel-pulse 2s infinite ease-in-out;
+}

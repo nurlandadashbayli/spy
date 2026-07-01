@@ -80,7 +80,7 @@
                     <div class="game-card-icon">🔠</div>
                     <div class="game-card-content">
                         <h3>Scrabble</h3>
-                        <p>Multiplayer Azerbaijani & Turkish Scrabble.</p>
+                        <p>Multiplayer English, Azerbaijani & Turkish Scrabble.</p>
                         <span class="badge">New</span>
                     </div>
                 </div>
@@ -562,7 +562,7 @@
             <div class="game-header">
                 <button id="scrabble-back-btn" class="back-btn">← Back to Hub</button>
                 <h1 class="game-title">🔠 Scrabble</h1>
-                <p class="game-subtitle" id="scrabble-lobby-subtitle">Multiplayer Azerbaijani & Turkish Scrabble.</p>
+                <p class="game-subtitle" id="scrabble-lobby-subtitle">Multiplayer English, Azerbaijani & Turkish Scrabble.</p>
             </div>
 
             <!-- Join Game Section -->
@@ -570,6 +570,7 @@
                 <div class="input-group" style="margin-bottom: 1.5rem;">
                     <label for="scrabble-lang-select" style="font-weight: 600; font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">Game Language</label>
                     <select id="scrabble-lang-select" class="form-control" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.1); outline: none; font-size: 1rem; cursor: pointer; transition: border-color 0.2s;">
+                        <option value="en">🇬🇧 English (oed.com)</option>
                         <option value="az">🇦🇿 Azerbaijani (azleks.az)</option>
                         <option value="tr">🇹🇷 Turkish (sozluk.gov.tr)</option>
                     </select>
@@ -1108,6 +1109,8 @@
         <script type="module" src="src/games/crossword/crossword.js?v=1.0"></script>
         <script type="module" src="src/games/azul/azul.js?v=1.0"></script>
         <script type="module" src="src/games/durak/durak.js?v=1.0"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+        <script type="module" src="src/games/towel/towel.js?v=1.0"></script>
 
         <script>
             const originalTitle = document.title;
