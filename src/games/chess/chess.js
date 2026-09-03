@@ -1,9 +1,10 @@
-// chess.js - Fully Functional 2 Player Chess Game Module
+// chess.js - Fully Functional 2 Player Chess Game (Local, Bot & Firebase Online Multiplayer)
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import {
     getDatabase,
     ref,
     set,
+    push,
     onValue,
     remove,
     update,
@@ -11,7 +12,7 @@ import {
     onDisconnect
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
-// Firebase Configuration (Reused from app)
+// Firebase Configuration (Reused from Scrabble / Durak / Azul)
 const firebaseConfig = {
     apiKey: "AIzaSyBT0StKCiled3K5uAi3lcrJlFALXI5KgvE",
     authDomain: "spy-game-4ce29.firebaseapp.com",
@@ -55,6 +56,11 @@ const PIECE_VALUES = {
     'p': 1, 'n': 3, 'b': 3.25, 'r': 5, 'q': 9, 'k': 200,
     'P': 1, 'N': 3, 'B': 3.25, 'R': 5, 'Q': 9, 'K': 200
 };
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
 
 // -------------------------------------------------------------
 // WEB AUDIO SYNTHESIZER FOR SOUND EFFECTS
@@ -159,7 +165,6 @@ function copyBoard(board) {
     return board.map(row => [...row]);
 }
 
-// Find square of King of specified color ('w' or 'b')
 function findKing(board, color) {
     const targetKing = color === 'w' ? 'K' : 'k';
     for (let r = 0; r < 8; r++) {
@@ -170,10 +175,8 @@ function findKing(board, color) {
     return null;
 }
 
-// Check if square (r, c) is under attack by opponent color
 function isSquareAttacked(board, r, c, attackerColor) {
-    // 1. Pawn attacks
-    const pawnDir = attackerColor === 'w' ? 1 : -1; // Attacking pawn direction towards (r, c)
+    const pawnDir = attackerColor === 'w' ? 1 : -1;
     const attackerPawn = attackerColor === 'w' ? 'P' : 'p';
     for (const dc of [-1, 1]) {
         const ar = r + pawnDir;
@@ -183,7 +186,6 @@ function isSquareAttacked(board, r, c, attackerColor) {
         }
     }
 
-    // 2. Knight attacks
     const attackerKnight = attackerColor === 'w' ? 'N' : 'n';
     const knightMoves = [
         [-2, -1], [-2, 1], [-1, -2], [-1, 2],
@@ -197,7 +199,6 @@ function isSquareAttacked(board, r, c, attackerColor) {
         }
     }
 
-    // 3. King attacks (1 square away)
     const attackerKing = attackerColor === 'w' ? 'K' : 'k';
     for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
@@ -210,7 +211,6 @@ function isSquareAttacked(board, r, c, attackerColor) {
         }
     }
 
-    // 4. Straight line attacks (Rook & Queen)
     const attackerRook = attackerColor === 'w' ? 'R' : 'r';
     const attackerQueen = attackerColor === 'w' ? 'Q' : 'q';
     const straightDirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -221,14 +221,13 @@ function isSquareAttacked(board, r, c, attackerColor) {
             const piece = board[ar][ac];
             if (piece) {
                 if (piece === attackerRook || piece === attackerQueen) return true;
-                break; // blocked by another piece
+                break;
             }
             ar += dr;
             ac += dc;
         }
     }
 
-    // 5. Diagonal attacks (Bishop & Queen)
     const attackerBishop = attackerColor === 'w' ? 'B' : 'b';
     const diagDirs = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
     for (const [dr, dc] of diagDirs) {
@@ -255,7 +254,6 @@ function isKingInCheck(board, color) {
     return isSquareAttacked(board, kingPos.r, kingPos.c, attackerColor);
 }
 
-// Generate pseudo-legal moves for piece at (r, c)
 function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
     const piece = board[r][c];
     if (!piece) return [];
@@ -269,18 +267,15 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
         const dir = color === 'w' ? -1 : 1;
         const startRow = color === 'w' ? 6 : 1;
 
-        // 1 step forward
         const nr = r + dir;
         if (nr >= 0 && nr < 8 && !board[nr][c]) {
             moves.push({ from: { r, c }, to: { r: nr, c }, isPromotion: (color === 'w' && nr === 0) || (color === 'b' && nr === 7) });
-            // 2 steps forward from start
             const nr2 = r + 2 * dir;
             if (r === startRow && !board[nr2][c]) {
                 moves.push({ from: { r, c }, to: { r: nr2, c }, isEnPassantDouble: true });
             }
         }
 
-        // Standard captures
         for (const dc of [-1, 1]) {
             const nc = c + dc;
             if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
@@ -288,7 +283,6 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
                 if (targetPiece && !isSameColor(piece, targetPiece)) {
                     moves.push({ from: { r, c }, to: { r: nr, c: nc }, isPromotion: (color === 'w' && nr === 0) || (color === 'b' && nr === 7) });
                 }
-                // En Passant capture
                 if (enPassantTarget && enPassantTarget.r === nr && enPassantTarget.c === nc) {
                     moves.push({ from: { r, c }, to: { r: nr, c: nc }, isEnPassant: true });
                 }
@@ -344,17 +338,14 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
             }
         }
 
-        // Castling
-        const rights = castlingRights[color];
+        const rights = castlingRights ? castlingRights[color] : { k: false, q: false };
         const kingRow = color === 'w' ? 7 : 0;
-        if (r === kingRow && c === 4 && !isSquareAttacked(board, r, c, opponentColor)) {
-            // Kingside (O-O)
+        if (rights && r === kingRow && c === 4 && !isSquareAttacked(board, r, c, opponentColor)) {
             if (rights.k && !board[kingRow][5] && !board[kingRow][6]) {
                 if (!isSquareAttacked(board, kingRow, 5, opponentColor) && !isSquareAttacked(board, kingRow, 6, opponentColor)) {
                     moves.push({ from: { r, c }, to: { r: kingRow, c: 6 }, isCastle: 'k' });
                 }
             }
-            // Queenside (O-O-O)
             if (rights.q && !board[kingRow][1] && !board[kingRow][2] && !board[kingRow][3]) {
                 if (!isSquareAttacked(board, kingRow, 3, opponentColor) && !isSquareAttacked(board, kingRow, 2, opponentColor)) {
                     moves.push({ from: { r, c }, to: { r: kingRow, c: 2 }, isCastle: 'q' });
@@ -366,7 +357,6 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
     return moves;
 }
 
-// Filter moves that would leave own king in check
 function getLegalMoves(board, color, castlingRights, enPassantTarget) {
     const legal = [];
     for (let r = 0; r < 8; r++) {
@@ -377,7 +367,6 @@ function getLegalMoves(board, color, castlingRights, enPassantTarget) {
                 const candidates = getPseudoMoves(board, r, c, castlingRights, enPassantTarget);
                 for (const move of candidates) {
                     const simBoard = copyBoard(board);
-                    // Apply move on simulated board
                     simBoard[move.to.r][move.to.c] = simBoard[move.from.r][move.from.c];
                     simBoard[move.from.r][move.from.c] = null;
                     if (move.isEnPassant) {
@@ -447,9 +436,9 @@ function minimax(board, depth, alpha, beta, isMaximizing, castlingRights, enPass
 
     if (moves.length === 0) {
         if (isKingInCheck(board, color)) {
-            return isMaximizing ? -10000 + (3 - depth) : 10000 - (3 - depth); // Checkmate
+            return isMaximizing ? -10000 + (3 - depth) : 10000 - (3 - depth);
         }
-        return 0; // Stalemate
+        return 0;
     }
 
     if (depth === 0) {
@@ -488,7 +477,6 @@ function getBestBotMove(board, color, difficulty, castlingRights, enPassantTarge
     if (moves.length === 0) return null;
 
     if (difficulty === 'easy') {
-        // Easy: Pick random move or simple capture
         const captures = moves.filter(m => board[m.to.r][m.to.c] !== null);
         if (captures.length > 0 && Math.random() < 0.6) {
             return captures[Math.floor(Math.random() * captures.length)];
@@ -553,6 +541,9 @@ const chessPlayersList = document.getElementById('chess-players-list');
 const chessStartBtn = document.getElementById('chess-start-btn');
 const chessLeaveBtn = document.getElementById('chess-leave-btn');
 
+const chessActiveRoomsSection = document.getElementById('chess-active-rooms-section');
+const chessActiveRoomsList = document.getElementById('chess-active-rooms-list');
+
 const chessBoardElem = document.getElementById('chess-board');
 const chessStatusText = document.getElementById('chess-status-text');
 const chessModeBadge = document.getElementById('chess-mode-badge');
@@ -592,7 +583,7 @@ const chessLobbyReturnBtn = document.getElementById('chess-lobby-return-btn');
 let gameMode = 'local'; // 'local', 'bot', 'online'
 let botDifficulty = 'easy';
 let isFlipped = false;
-let boardTheme = 'emerald'; // 'emerald', 'wood', 'cyber'
+let boardTheme = 'emerald';
 
 let boardState = createInitialBoard();
 let currentTurn = 'w';
@@ -605,20 +596,26 @@ let castlingRights = {
     b: { k: true, q: true }
 };
 let enPassantTarget = null;
-let moveHistory = []; // Snapshots for undo and log
+let moveHistory = [];
 let isGameOver = false;
 
 // Clock Timers
-let timerSeconds = 300; // 5 min default
+let timerSeconds = 300;
 let whiteTime = 300;
 let blackTime = 300;
 let clockInterval = null;
 
-// Firebase Multiplayer State
+// Firebase Online State
+let isMultiplayer = false;
 let roomName = '';
 let playerName = '';
+let playerId = '';
 let playerColor = 'w'; // 'w' for host, 'b' for guest
+let players = {};
+let gameData = null;
 let unsubscribeRoom = null;
+let unsubscribePlayers = null;
+let activeRoomsUnsubscribe = null;
 
 // -------------------------------------------------------------
 // INITIALIZATION & EVENT HANDLERS
@@ -628,11 +625,13 @@ if (selectChessCard) {
         selectionScreen.classList.remove('active');
         chessLobbyScreen.classList.add('active');
         document.querySelector('.container').classList.add('wide-container');
+        monitorActiveRooms();
     });
 }
 
 if (chessBackBtn) {
     chessBackBtn.addEventListener('click', () => {
+        leaveRoom();
         chessLobbyScreen.classList.remove('active');
         selectionScreen.classList.add('active');
         document.querySelector('.container').classList.remove('wide-container');
@@ -641,17 +640,17 @@ if (chessBackBtn) {
 
 if (chessGameBackBtn) {
     chessGameBackBtn.addEventListener('click', () => {
-        stopClocks();
-        if (unsubscribeRoom) unsubscribeRoom();
-        chessGameScreen.classList.remove('active');
-        chessLobbyScreen.classList.add('active');
+        if (confirm('Are you sure you want to exit the game?')) {
+            leaveRoom();
+        }
     });
 }
 
-// Mode Selection
+// Mode Selection Buttons
 if (chessLocalBtn) {
     chessLocalBtn.addEventListener('click', () => {
         gameMode = 'local';
+        isMultiplayer = false;
         startNewGame();
     });
 }
@@ -676,6 +675,7 @@ if (chessDiffBtns) {
 if (chessStartBotBtn) {
     chessStartBotBtn.addEventListener('click', () => {
         gameMode = 'bot';
+        isMultiplayer = false;
         startNewGame();
     });
 }
@@ -684,6 +684,27 @@ if (chessOnlineToggleBtn) {
     chessOnlineToggleBtn.addEventListener('click', () => {
         chessJoinSection.style.display = chessJoinSection.style.display === 'none' ? 'block' : 'none';
         chessBotOptions.style.display = 'none';
+        if (chessJoinSection.style.display === 'block') {
+            monitorActiveRooms();
+        }
+    });
+}
+
+if (chessJoinBtn) {
+    chessJoinBtn.addEventListener('click', () => {
+        joinOnlineRoom();
+    });
+}
+
+if (chessStartBtn) {
+    chessStartBtn.addEventListener('click', () => {
+        startOnlineGame();
+    });
+}
+
+if (chessLeaveBtn) {
+    chessLeaveBtn.addEventListener('click', () => {
+        leaveRoom();
     });
 }
 
@@ -717,8 +738,8 @@ if (chessFlipBtn) {
 
 if (chessUndoBtn) {
     chessUndoBtn.addEventListener('click', () => {
-        if (gameMode === 'online') {
-            alert('Undo is only available in Local or Bot mode!');
+        if (isMultiplayer) {
+            alert('Undo is only available in Local or vs Computer mode!');
             return;
         }
         undoLastMove();
@@ -726,20 +747,37 @@ if (chessUndoBtn) {
 }
 
 if (chessResignBtn) {
-    chessResignBtn.addEventListener('click', () => {
+    chessResignBtn.addEventListener('click', async () => {
         if (isGameOver) return;
         if (confirm('Are you sure you want to resign?')) {
-            const winner = currentTurn === 'w' ? 'Black' : 'White';
-            endGame(`${winner} wins by Resignation!`, winner === 'White' ? '♔' : '♚');
+            const winnerColor = playerColor === 'w' ? 'Black' : 'White';
+            if (isMultiplayer && roomName) {
+                await update(ref(database, `game/chess/rooms/${roomName}`), {
+                    isGameOver: true,
+                    statusText: `${winnerColor} wins by Resignation!`,
+                    winnerIcon: winnerColor === 'White' ? '♔' : '♚'
+                });
+            } else {
+                const winner = currentTurn === 'w' ? 'Black' : 'White';
+                endGame(`${winner} wins by Resignation!`, winner === 'White' ? '♔' : '♚');
+            }
         }
     });
 }
 
 if (chessDrawBtn) {
-    chessDrawBtn.addEventListener('click', () => {
+    chessDrawBtn.addEventListener('click', async () => {
         if (isGameOver) return;
-        if (confirm('Agree to a Draw?')) {
-            endGame('Game ended in a Mutual Draw! 🤝', '🤝');
+        if (confirm('Offer a Draw to opponent?')) {
+            if (isMultiplayer && roomName) {
+                await update(ref(database, `game/chess/rooms/${roomName}`), {
+                    isGameOver: true,
+                    statusText: 'Game ended in a Mutual Draw! 🤝',
+                    winnerIcon: '🤝'
+                });
+            } else {
+                endGame('Game ended in a Mutual Draw! 🤝', '🤝');
+            }
         }
     });
 }
@@ -758,28 +796,270 @@ if (chessRulesCloseBtn) {
 if (chessRematchBtn) {
     chessRematchBtn.addEventListener('click', () => {
         chessGameOverModal.style.display = 'none';
-        startNewGame();
+        if (isMultiplayer && roomName && gameData && gameData.hostId === playerId) {
+            startOnlineGame();
+        } else if (!isMultiplayer) {
+            startNewGame();
+        }
     });
 }
 
 if (chessLobbyReturnBtn) {
     chessLobbyReturnBtn.addEventListener('click', () => {
         chessGameOverModal.style.display = 'none';
-        chessGameScreen.classList.remove('active');
-        chessLobbyScreen.classList.add('active');
+        leaveRoom();
     });
 }
 
 if (chessTimerSelect) {
     chessTimerSelect.addEventListener('change', (e) => {
         const val = e.target.value;
-        if (val === 'none') {
-            timerSeconds = 0;
-        } else {
-            timerSeconds = parseInt(val, 10);
-        }
+        timerSeconds = val === 'none' ? 0 : parseInt(val, 10);
         resetClocks();
     });
+}
+
+// -------------------------------------------------------------
+// FIREBASE REAL-TIME ONLINE MULTIPLAYER (Scrabble / Durak Style)
+// -------------------------------------------------------------
+
+// Active Rooms Listing (Monitor rooms waiting in lobby)
+function monitorActiveRooms() {
+    const roomsRef = ref(database, 'game/chess/rooms');
+    if (activeRoomsUnsubscribe) activeRoomsUnsubscribe();
+
+    activeRoomsUnsubscribe = onValue(roomsRef, (snap) => {
+        const allRooms = snap.val() || {};
+        const activeRooms = [];
+
+        for (const [rName, rData] of Object.entries(allRooms)) {
+            if (rData.status === 'lobby') {
+                const playerNames = rData.players ? Object.values(rData.players).map(p => p.name).join(', ') : '';
+                const pCount = rData.players ? Object.keys(rData.players).length : 0;
+                activeRooms.push({ roomName: rName, playerNames, pCount });
+            }
+        }
+
+        if (!chessActiveRoomsSection || !chessActiveRoomsList) return;
+
+        if (activeRooms.length === 0) {
+            chessActiveRoomsSection.style.display = 'none';
+        } else {
+            chessActiveRoomsSection.style.display = 'block';
+            chessActiveRoomsList.innerHTML = activeRooms.map(r => `
+                <div class="card" style="padding: 0.6rem 0.8rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); cursor: pointer; border: 1px solid rgba(255,255,255,0.1);" onclick="window.joinChessActiveRoom('${escapeHtml(r.roomName)}')">
+                    <div>
+                        <strong style="color: var(--primary-light);">♟️ ${escapeHtml(r.roomName)}</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Players: ${escapeHtml(r.playerNames)}</div>
+                    </div>
+                    <span class="badge" style="background: var(--success);">${r.pCount}/2 Players</span>
+                </div>
+            `).join('');
+        }
+    });
+}
+
+window.joinChessActiveRoom = function(name) {
+    if (chessRoomInput) chessRoomInput.value = name;
+    if (chessNameInput && !chessNameInput.value.trim()) {
+        chessNameInput.focus();
+    } else {
+        joinOnlineRoom();
+    }
+};
+
+async function joinOnlineRoom() {
+    roomName = chessRoomInput.value.trim().toLowerCase();
+    playerName = chessNameInput.value.trim();
+
+    if (!roomName || !playerName) {
+        return alert('Please enter both room name and your name!');
+    }
+
+    try {
+        const roomRef = ref(database, `game/chess/rooms/${roomName}`);
+        const snap = await get(roomRef);
+        const data = snap.val() || {};
+
+        if (data.status === 'started') {
+            return alert('Game has already started in this room!');
+        }
+
+        const playersRef = ref(database, `game/chess/rooms/${roomName}/players`);
+        const pSnap = await get(playersRef);
+        const existingPlayers = pSnap.val() || {};
+        const pKeys = Object.keys(existingPlayers);
+
+        if (pKeys.length >= 2) {
+            return alert('Room is full (max 2 players for Chess).');
+        }
+
+        // Determine player color: host is White ('w'), 2nd player is Black ('b')
+        const isHost = pKeys.length === 0;
+        playerColor = isHost ? 'w' : 'b';
+
+        const newPlayerRef = push(playersRef);
+        playerId = newPlayerRef.key;
+
+        await set(newPlayerRef, {
+            name: playerName,
+            color: playerColor,
+            isHost
+        });
+
+        if (isHost) {
+            await update(roomRef, {
+                status: 'lobby',
+                hostId: playerId
+            });
+        }
+
+        onDisconnect(newPlayerRef).remove();
+
+        gameMode = 'online';
+        isMultiplayer = true;
+
+        if (chessJoinSection) chessJoinSection.style.display = 'none';
+        if (chessLobbySection) chessLobbySection.style.display = 'block';
+
+        setupRealtimeListeners();
+    } catch (e) {
+        console.error(e);
+        alert('Failed to join online room.');
+    }
+}
+
+function setupRealtimeListeners() {
+    const playersRef = ref(database, `game/chess/rooms/${roomName}/players`);
+    const roomRef = ref(database, `game/chess/rooms/${roomName}`);
+
+    if (unsubscribePlayers) unsubscribePlayers();
+    if (unsubscribeRoom) unsubscribeRoom();
+
+    unsubscribePlayers = onValue(playersRef, (snap) => {
+        players = snap.val() || {};
+        if (playerId && !players[playerId]) {
+            leaveRoom();
+            return;
+        }
+        updateLobbyUI();
+    });
+
+    unsubscribeRoom = onValue(roomRef, (snap) => {
+        gameData = snap.val() || {};
+
+        if (gameData.status === 'started') {
+            chessLobbyScreen.classList.remove('active');
+            chessGameScreen.classList.add('active');
+
+            // Synchronize state from Firebase
+            if (gameData.board) boardState = gameData.board;
+            if (gameData.turn) currentTurn = gameData.turn;
+            if (gameData.castlingRights) castlingRights = gameData.castlingRights;
+            enPassantTarget = gameData.enPassantTarget || null;
+            moveHistory = gameData.moveHistory || [];
+            lastMove = gameData.lastMove || null;
+
+            // Perspective setup: Black player gets flipped board automatically!
+            isFlipped = playerColor === 'b';
+
+            if (chessModeBadge) chessModeBadge.textContent = `Online 2P (${playerColor === 'w' ? 'White ♔' : 'Black ♚'})`;
+
+            // Player Info Names setup
+            const pValues = Object.values(players);
+            const hostPlayer = pValues.find(p => p.isHost) || { name: 'White' };
+            const guestPlayer = pValues.find(p => !p.isHost) || { name: 'Black' };
+
+            if (playerColor === 'w') {
+                if (chessBottomName) chessBottomName.textContent = `${hostPlayer.name} (You ♔)`;
+                if (chessTopName) chessTopName.textContent = `${guestPlayer.name} (Opponent ♚)`;
+            } else {
+                if (chessBottomName) chessBottomName.textContent = `${guestPlayer.name} (You ♚)`;
+                if (chessTopName) chessTopName.textContent = `${hostPlayer.name} (Opponent ♔)`;
+            }
+
+            renderBoard();
+            updateUIInfo();
+
+            if (gameData.isGameOver && !isGameOver) {
+                endGame(gameData.statusText || 'Game Over', gameData.winnerIcon || '🏆');
+            }
+        } else {
+            chessGameScreen.classList.remove('active');
+            chessLobbyScreen.classList.add('active');
+        }
+    });
+}
+
+function updateLobbyUI() {
+    const pKeys = Object.keys(players);
+    if (!chessPlayersList) return;
+
+    chessPlayersList.innerHTML = Object.values(players).map(p => `
+        <div class="card" style="padding: 0.75rem; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); background: var(--bg-card);">
+            <span>${p.color === 'w' ? '♔' : '♚'} <strong>${escapeHtml(p.name)}</strong></span>
+            ${p.isHost ? '<span class="badge" style="background: var(--warning); color: #000; font-weight: bold;">Host (White)</span>' : '<span class="badge" style="background: var(--accent); color: #000; font-weight: bold;">Guest (Black)</span>'}
+        </div>
+    `).join('');
+
+    const isHost = gameData && gameData.hostId === playerId;
+    if (isHost && pKeys.length === 2) {
+        if (chessStartBtn) chessStartBtn.style.display = 'block';
+    } else {
+        if (chessStartBtn) chessStartBtn.style.display = 'none';
+    }
+}
+
+async function startOnlineGame() {
+    if (!roomName || !playerId) return;
+
+    const initialBoard = createInitialBoard();
+    const initialRights = { w: { k: true, q: true }, b: { k: true, q: true } };
+
+    await update(ref(database, `game/chess/rooms/${roomName}`), {
+        status: 'started',
+        board: initialBoard,
+        turn: 'w',
+        castlingRights: initialRights,
+        enPassantTarget: null,
+        moveHistory: [],
+        lastMove: null,
+        isGameOver: false,
+        statusText: ''
+    });
+}
+
+async function leaveRoom() {
+    stopClocks();
+    if (unsubscribePlayers) unsubscribePlayers();
+    if (unsubscribeRoom) unsubscribeRoom();
+
+    if (playerId && roomName) {
+        await remove(ref(database, `game/chess/rooms/${roomName}/players/${playerId}`));
+        const snap = await get(ref(database, `game/chess/rooms/${roomName}/players`));
+        if (!snap.exists()) {
+            await remove(ref(database, `game/chess/rooms/${roomName}`));
+        } else {
+            const remaining = snap.val();
+            const nextHostId = Object.keys(remaining)[0];
+            await update(ref(database, `game/chess/rooms/${roomName}`), { hostId: nextHostId });
+            await update(ref(database, `game/chess/rooms/${roomName}/players/${nextHostId}`), { isHost: true, color: 'w' });
+        }
+    }
+
+    playerId = '';
+    roomName = '';
+    players = {};
+    gameData = null;
+    isMultiplayer = false;
+
+    if (chessJoinSection) chessJoinSection.style.display = 'none';
+    if (chessLobbySection) chessLobbySection.style.display = 'none';
+
+    chessGameScreen.classList.remove('active');
+    chessLobbyScreen.classList.add('active');
+    document.querySelector('.container').classList.remove('wide-container');
+    monitorActiveRooms();
 }
 
 // -------------------------------------------------------------
@@ -795,17 +1075,17 @@ function startNewGame() {
     enPassantTarget = null;
     moveHistory = [];
     isGameOver = false;
-    isFlipped = gameMode === 'online' && playerColor === 'b';
+    isFlipped = false;
 
     chessLobbyScreen.classList.remove('active');
     chessGameScreen.classList.add('active');
 
     if (chessModeBadge) {
-        chessModeBadge.textContent = gameMode === 'local' ? 'Local 2P' : (gameMode === 'bot' ? `vs Bot (${botDifficulty})` : 'Online 2P');
+        chessModeBadge.textContent = gameMode === 'local' ? 'Local 2P' : `vs Bot (${botDifficulty})`;
     }
 
-    if (chessTopName) chessTopName.textContent = gameMode === 'bot' ? `Bot ${botDifficulty.toUpperCase()} 🤖` : (gameMode === 'online' ? 'Opponent' : 'Player 2 (Black)');
-    if (chessBottomName) chessBottomName.textContent = gameMode === 'online' ? (playerName || 'Player 1') : 'Player 1 (White)';
+    if (chessTopName) chessTopName.textContent = gameMode === 'bot' ? `Bot ${botDifficulty.toUpperCase()} 🤖` : 'Player 2 (Black ♚)';
+    if (chessBottomName) chessBottomName.textContent = 'Player 1 (White ♔)';
 
     resetClocks();
     renderBoard();
@@ -863,13 +1143,13 @@ function updateClockDisplay() {
     };
 
     if (chessTopClock) {
-        chessTopClock.textContent = formatTime(blackTime);
-        if (blackTime < 30) chessTopClock.classList.add('low-time');
+        chessTopClock.textContent = formatTime(playerColor === 'b' ? whiteTime : blackTime);
+        if ((playerColor === 'b' ? whiteTime : blackTime) < 30) chessTopClock.classList.add('low-time');
         else chessTopClock.classList.remove('low-time');
     }
     if (chessBottomClock) {
-        chessBottomClock.textContent = formatTime(whiteTime);
-        if (whiteTime < 30) chessBottomClock.classList.add('low-time');
+        chessBottomClock.textContent = formatTime(playerColor === 'b' ? blackTime : whiteTime);
+        if ((playerColor === 'b' ? blackTime : whiteTime) < 30) chessBottomClock.classList.add('low-time');
         else chessBottomClock.classList.remove('low-time');
     }
 }
@@ -877,27 +1157,25 @@ function updateClockDisplay() {
 function onSquareClick(r, c) {
     if (isGameOver) return;
 
-    // In online mode, restrict move if not your turn
-    if (gameMode === 'online') {
+    // Online multiplayer: turn validation
+    if (isMultiplayer) {
         if ((currentTurn === 'w' && playerColor !== 'w') || (currentTurn === 'b' && playerColor !== 'b')) {
             return;
         }
     }
-    // In bot mode, restrict if it's bot's turn (black)
+    // Single player vs Bot: turn validation
     if (gameMode === 'bot' && currentTurn === 'b') {
         return;
     }
 
     const piece = boardState[r][c];
 
-    // If square clicked is a legal move target
     const targetMove = legalMovesForSelected.find(m => m.to.r === r && m.to.c === c);
     if (targetMove) {
         executeMove(targetMove);
         return;
     }
 
-    // Otherwise select piece of current turn color
     if (piece && ((currentTurn === 'w' && isWhite(piece)) || (currentTurn === 'b' && isBlack(piece)))) {
         selectedSquare = { r, c };
         legalMovesForSelected = getLegalMoves(boardState, currentTurn, castlingRights, enPassantTarget)
@@ -915,7 +1193,6 @@ function executeMove(move) {
     const targetPiece = boardState[move.to.r][move.to.c];
     const isCapture = targetPiece !== null || move.isEnPassant;
 
-    // Check Pawn Promotion
     if (move.isPromotion) {
         promptPromotion(move, (promotedPiece) => {
             finalizeMove(move, promotedPiece, isCapture);
@@ -926,10 +1203,9 @@ function executeMove(move) {
     finalizeMove(move, null, isCapture);
 }
 
-function finalizeMove(move, promotedPiece = null, isCapture = false) {
+async function finalizeMove(move, promotedPiece = null, isCapture = false) {
     const fromPiece = boardState[move.from.r][move.from.c];
     
-    // Save snapshot for undo log
     const snapshot = {
         board: copyBoard(boardState),
         turn: currentTurn,
@@ -938,17 +1214,15 @@ function finalizeMove(move, promotedPiece = null, isCapture = false) {
         move
     };
 
-    // Update board
+    // Apply move to board
     boardState[move.to.r][move.to.c] = promotedPiece || fromPiece;
     boardState[move.from.r][move.from.c] = null;
 
-    // En Passant capture removal
     if (move.isEnPassant) {
         const capturedPawnRow = move.from.r;
         boardState[capturedPawnRow][move.to.c] = null;
     }
 
-    // Castling rook repositioning
     if (move.isCastle) {
         const row = move.from.r;
         if (move.isCastle === 'k') {
@@ -960,14 +1234,12 @@ function finalizeMove(move, promotedPiece = null, isCapture = false) {
         }
     }
 
-    // Update En Passant Target
     if (move.isEnPassantDouble) {
         enPassantTarget = { r: (move.from.r + move.to.r) / 2, c: move.from.c };
     } else {
         enPassantTarget = null;
     }
 
-    // Update Castling Rights
     if (fromPiece === 'K') { castlingRights.w.k = false; castlingRights.w.q = false; }
     if (fromPiece === 'k') { castlingRights.b.k = false; castlingRights.b.q = false; }
     if (fromPiece === 'R' && move.from.r === 7 && move.from.c === 0) castlingRights.w.q = false;
@@ -975,7 +1247,6 @@ function finalizeMove(move, promotedPiece = null, isCapture = false) {
     if (fromPiece === 'r' && move.from.r === 0 && move.from.c === 0) castlingRights.b.q = false;
     if (fromPiece === 'r' && move.from.r === 0 && move.from.c === 7) castlingRights.b.k = false;
 
-    // Format Algebraic Notation (PGN)
     const san = generateSAN(snapshot.board, move, promotedPiece);
     snapshot.san = san;
     moveHistory.push(snapshot);
@@ -984,11 +1255,9 @@ function finalizeMove(move, promotedPiece = null, isCapture = false) {
     selectedSquare = null;
     legalMovesForSelected = [];
 
-    // Switch Turn
-    currentTurn = currentTurn === 'w' ? 'b' : 'w';
+    const nextTurn = currentTurn === 'w' ? 'b' : 'w';
 
-    // Play Sound Effect
-    const inCheck = isKingInCheck(boardState, currentTurn);
+    const inCheck = isKingInCheck(boardState, nextTurn);
     if (inCheck) {
         playSound('check');
     } else if (isCapture) {
@@ -997,28 +1266,53 @@ function finalizeMove(move, promotedPiece = null, isCapture = false) {
         playSound('move');
     }
 
-    // Check Win / Draw condition
-    const nextLegalMoves = getLegalMoves(boardState, currentTurn, castlingRights, enPassantTarget);
+    const nextLegalMoves = getLegalMoves(boardState, nextTurn, castlingRights, enPassantTarget);
+    let isGameEnd = false;
+    let endMessage = '';
+    let endIcon = '🏆';
+
     if (nextLegalMoves.length === 0) {
+        isGameEnd = true;
         if (inCheck) {
-            const winner = currentTurn === 'w' ? 'Black' : 'White';
-            endGame(`Checkmate! ${winner} wins! 🏆`, winner === 'White' ? '♔' : '♚');
+            const winner = currentTurn === 'w' ? 'White' : 'Black';
+            endMessage = `Checkmate! ${winner} wins! 🏆`;
+            endIcon = winner === 'White' ? '♔' : '♚';
         } else {
-            endGame('Stalemate! Game is a Draw. 🤝', '🤝');
+            endMessage = 'Stalemate! Game is a Draw. 🤝';
+            endIcon = '🤝';
         }
     }
 
-    renderBoard();
-    updateUIInfo();
+    currentTurn = nextTurn;
 
-    // Trigger Bot Move if applicable
-    if (gameMode === 'bot' && currentTurn === 'b' && !isGameOver) {
-        setTimeout(() => {
-            const botMove = getBestBotMove(boardState, 'b', botDifficulty, castlingRights, enPassantTarget);
-            if (botMove) {
-                executeMove(botMove);
-            }
-        }, 400);
+    // Sync to Firebase if Online Multiplayer
+    if (isMultiplayer && roomName) {
+        await update(ref(database, `game/chess/rooms/${roomName}`), {
+            board: boardState,
+            turn: currentTurn,
+            castlingRights: castlingRights,
+            enPassantTarget: enPassantTarget || null,
+            moveHistory: moveHistory,
+            lastMove: move,
+            isGameOver: isGameEnd,
+            statusText: endMessage,
+            winnerIcon: endIcon
+        });
+    } else {
+        if (isGameEnd) {
+            endGame(endMessage, endIcon);
+        }
+        renderBoard();
+        updateUIInfo();
+
+        if (gameMode === 'bot' && currentTurn === 'b' && !isGameOver) {
+            setTimeout(() => {
+                const botMove = getBestBotMove(boardState, 'b', botDifficulty, castlingRights, enPassantTarget);
+                if (botMove) {
+                    executeMove(botMove);
+                }
+            }, 400);
+        }
     }
 }
 
@@ -1043,7 +1337,6 @@ function promptPromotion(move, callback) {
 function undoLastMove() {
     if (moveHistory.length === 0 || isGameOver) return;
 
-    // Undo 2 moves if in bot mode
     const popCount = (gameMode === 'bot' && moveHistory.length >= 2) ? 2 : 1;
 
     for (let i = 0; i < popCount; i++) {
@@ -1113,7 +1406,6 @@ function renderBoard() {
         let r = Math.floor(i / 8);
         let c = i % 8;
 
-        // Rotate board if flipped for Black
         if (isFlipped) {
             r = 7 - r;
             c = 7 - c;
@@ -1125,7 +1417,6 @@ function renderBoard() {
         square.dataset.r = r;
         square.dataset.c = c;
 
-        // Highlighting
         if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
             square.classList.add('selected-sq');
         }
@@ -1138,7 +1429,6 @@ function renderBoard() {
             square.classList.add('in-check-sq');
         }
 
-        // Move dot or capture ring
         const legalMove = legalMovesForSelected.find(m => m.to.r === r && m.to.c === c);
         if (legalMove) {
             const isCaptureTarget = boardState[r][c] !== null || legalMove.isEnPassant;
@@ -1153,7 +1443,6 @@ function renderBoard() {
             }
         }
 
-        // Coordinate notation labels
         if ((!isFlipped && c === 0) || (isFlipped && c === 7)) {
             const rankLabel = document.createElement('span');
             rankLabel.className = 'coord-rank';
@@ -1167,7 +1456,6 @@ function renderBoard() {
             square.appendChild(fileLabel);
         }
 
-        // Piece rendering
         const piece = boardState[r][c];
         if (piece) {
             const pieceElem = document.createElement('div');
@@ -1182,18 +1470,26 @@ function renderBoard() {
 }
 
 function updateUIInfo() {
-    // Status message
     if (chessStatusText) {
         if (isGameOver) {
             chessStatusText.textContent = 'Game Ended';
         } else {
             const inCheck = isKingInCheck(boardState, currentTurn);
             const turnName = currentTurn === 'w' ? 'White' : 'Black';
-            chessStatusText.textContent = inCheck ? `⚠️ ${turnName} is in CHECK!` : `${turnName}'s Turn`;
+
+            if (isMultiplayer) {
+                const isYourTurn = (currentTurn === 'w' && playerColor === 'w') || (currentTurn === 'b' && playerColor === 'b');
+                if (inCheck) {
+                    chessStatusText.textContent = isYourTurn ? '⚠️ YOU ARE IN CHECK!' : `⚠️ ${turnName} is in CHECK!`;
+                } else {
+                    chessStatusText.textContent = isYourTurn ? '🟢 YOUR TURN!' : `⏳ Waiting for ${turnName}...`;
+                }
+            } else {
+                chessStatusText.textContent = inCheck ? `⚠️ ${turnName} is in CHECK!` : `${turnName}'s Turn`;
+            }
         }
     }
 
-    // Active player highlight
     const topBar = document.getElementById('chess-player-top');
     const bottomBar = document.getElementById('chess-player-bottom');
 
@@ -1210,7 +1506,6 @@ function updateUIInfo() {
         }
     }
 
-    // Captured pieces & Material evaluation
     let whiteMaterial = 0;
     let blackMaterial = 0;
     const capturedWhite = [];
@@ -1241,13 +1536,18 @@ function updateUIInfo() {
     const whiteScoreDiff = Math.max(0, whiteMaterial - blackMaterial);
     const blackScoreDiff = Math.max(0, blackMaterial - whiteMaterial);
 
-    if (chessBottomCaptured) chessBottomCaptured.textContent = capturedBlack.map(p => UNICODE_PIECES[p]).join(' ');
-    if (chessTopCaptured) chessTopCaptured.textContent = capturedWhite.map(p => UNICODE_PIECES[p]).join(' ');
+    if (isFlipped) {
+        if (chessBottomCaptured) chessBottomCaptured.textContent = capturedWhite.map(p => UNICODE_PIECES[p]).join(' ');
+        if (chessTopCaptured) chessTopCaptured.textContent = capturedBlack.map(p => UNICODE_PIECES[p]).join(' ');
+        if (chessBottomScore) chessBottomScore.textContent = blackScoreDiff > 0 ? `+${blackScoreDiff}` : '';
+        if (chessTopScore) chessTopScore.textContent = whiteScoreDiff > 0 ? `+${whiteScoreDiff}` : '';
+    } else {
+        if (chessBottomCaptured) chessBottomCaptured.textContent = capturedBlack.map(p => UNICODE_PIECES[p]).join(' ');
+        if (chessTopCaptured) chessTopCaptured.textContent = capturedWhite.map(p => UNICODE_PIECES[p]).join(' ');
+        if (chessBottomScore) chessBottomScore.textContent = whiteScoreDiff > 0 ? `+${whiteScoreDiff}` : '';
+        if (chessTopScore) chessTopScore.textContent = blackScoreDiff > 0 ? `+${blackScoreDiff}` : '';
+    }
 
-    if (chessBottomScore) chessBottomScore.textContent = whiteScoreDiff > 0 ? `+${whiteScoreDiff}` : '';
-    if (chessTopScore) chessTopScore.textContent = blackScoreDiff > 0 ? `+${blackScoreDiff}` : '';
-
-    // Move Log Table
     if (chessMoveLog) {
         chessMoveLog.innerHTML = '';
         for (let i = 0; i < moveHistory.length; i += 2) {

@@ -1156,6 +1156,12 @@
                         <input type="text" id="chess-player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
                     </div>
                     <button id="chess-join-btn" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Join / Create Room</button>
+
+                    <!-- Active Rooms List -->
+                    <div id="chess-active-rooms-section" style="margin-top: 1.25rem; display: none;">
+                        <h5 style="margin-bottom: 0.5rem; color: var(--text-secondary);">Active Rooms (Click to Join):</h5>
+                        <div id="chess-active-rooms-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                    </div>
                 </div>
 
                 <!-- Online Room Lobby -->
