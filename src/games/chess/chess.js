@@ -610,7 +610,7 @@ let isMultiplayer = false;
 let roomName = '';
 let playerName = '';
 let playerId = '';
-let playerColor = 'w'; // 'w' for host, 'b' for guest
+let playerColor = 'w';
 let players = {};
 let gameData = null;
 let unsubscribeRoom = null;
@@ -862,19 +862,27 @@ function monitorActiveRooms() {
 window.joinChessActiveRoom = function(name) {
     if (chessRoomInput) chessRoomInput.value = name;
     if (chessNameInput && !chessNameInput.value.trim()) {
-        chessNameInput.focus();
-    } else {
-        joinOnlineRoom();
+        chessNameInput.value = 'Player ' + Math.floor(100 + Math.random() * 900);
     }
+    joinOnlineRoom();
 };
 
 async function joinOnlineRoom() {
-    roomName = chessRoomInput.value.trim().toLowerCase();
-    playerName = chessNameInput.value.trim();
+    let rInput = chessRoomInput ? chessRoomInput.value.trim().toLowerCase() : '';
+    let nInput = chessNameInput ? chessNameInput.value.trim() : '';
 
-    if (!roomName || !playerName) {
-        return alert('Please enter both room name and your name!');
+    // Auto-fill defaults if user left inputs empty for instant room creation!
+    if (!rInput) {
+        rInput = 'chess' + Math.floor(1000 + Math.random() * 9000);
+        if (chessRoomInput) chessRoomInput.value = rInput;
     }
+    if (!nInput) {
+        nInput = 'Player ' + Math.floor(100 + Math.random() * 900);
+        if (chessNameInput) chessNameInput.value = nInput;
+    }
+
+    roomName = rInput;
+    playerName = nInput;
 
     try {
         const roomRef = ref(database, `game/chess/rooms/${roomName}`);
@@ -924,8 +932,8 @@ async function joinOnlineRoom() {
 
         setupRealtimeListeners();
     } catch (e) {
-        console.error(e);
-        alert('Failed to join online room.');
+        console.error('Error joining chess room:', e);
+        alert('Failed to join/create online room: ' + e.message);
     }
 }
 
@@ -938,7 +946,8 @@ function setupRealtimeListeners() {
 
     unsubscribePlayers = onValue(playersRef, (snap) => {
         players = snap.val() || {};
-        if (playerId && !players[playerId]) {
+        // Only trigger reset if player was already initialized and explicitly removed from room
+        if (playerId && snap.exists() && !players[playerId]) {
             leaveRoom();
             return;
         }
@@ -952,7 +961,6 @@ function setupRealtimeListeners() {
             chessLobbyScreen.classList.remove('active');
             chessGameScreen.classList.add('active');
 
-            // Synchronize state from Firebase
             if (gameData.board) boardState = gameData.board;
             if (gameData.turn) currentTurn = gameData.turn;
             if (gameData.castlingRights) castlingRights = gameData.castlingRights;
@@ -960,12 +968,10 @@ function setupRealtimeListeners() {
             moveHistory = gameData.moveHistory || [];
             lastMove = gameData.lastMove || null;
 
-            // Perspective setup: Black player gets flipped board automatically!
             isFlipped = playerColor === 'b';
 
             if (chessModeBadge) chessModeBadge.textContent = `Online 2P (${playerColor === 'w' ? 'White ♔' : 'Black ♚'})`;
 
-            // Player Info Names setup
             const pValues = Object.values(players);
             const hostPlayer = pValues.find(p => p.isHost) || { name: 'White' };
             const guestPlayer = pValues.find(p => !p.isHost) || { name: 'Black' };
@@ -995,16 +1001,28 @@ function updateLobbyUI() {
     const pKeys = Object.keys(players);
     if (!chessPlayersList) return;
 
+    const myPlayer = players[playerId];
+    const isHost = (gameData && gameData.hostId === playerId) || (myPlayer && myPlayer.isHost);
+
     chessPlayersList.innerHTML = Object.values(players).map(p => `
         <div class="card" style="padding: 0.75rem; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); background: var(--bg-card);">
-            <span>${p.color === 'w' ? '♔' : '♚'} <strong>${escapeHtml(p.name)}</strong></span>
-            ${p.isHost ? '<span class="badge" style="background: var(--warning); color: #000; font-weight: bold;">Host (White)</span>' : '<span class="badge" style="background: var(--accent); color: #000; font-weight: bold;">Guest (Black)</span>'}
+            <span>${p.color === 'w' ? '♔' : '♚'} <strong>${escapeHtml(p.name)}</strong> ${p.name === playerName ? '(You)' : ''}</span>
+            ${p.isHost ? '<span class="badge" style="background: var(--warning); color: #000; font-weight: bold;">Host (White ♔)</span>' : '<span class="badge" style="background: var(--accent); color: #000; font-weight: bold;">Guest (Black ♚)</span>'}
         </div>
     `).join('');
 
-    const isHost = gameData && gameData.hostId === playerId;
-    if (isHost && pKeys.length === 2) {
-        if (chessStartBtn) chessStartBtn.style.display = 'block';
+    if (isHost) {
+        if (pKeys.length >= 2) {
+            if (chessStartBtn) {
+                chessStartBtn.style.display = 'block';
+                chessStartBtn.textContent = '🚀 Start Game (2 Players Ready)';
+            }
+        } else {
+            if (chessStartBtn) {
+                chessStartBtn.style.display = 'block';
+                chessStartBtn.textContent = '⏳ Waiting for 2nd Player...';
+            }
+        }
     } else {
         if (chessStartBtn) chessStartBtn.style.display = 'none';
     }
@@ -1157,13 +1175,11 @@ function updateClockDisplay() {
 function onSquareClick(r, c) {
     if (isGameOver) return;
 
-    // Online multiplayer: turn validation
     if (isMultiplayer) {
         if ((currentTurn === 'w' && playerColor !== 'w') || (currentTurn === 'b' && playerColor !== 'b')) {
             return;
         }
     }
-    // Single player vs Bot: turn validation
     if (gameMode === 'bot' && currentTurn === 'b') {
         return;
     }
@@ -1214,7 +1230,6 @@ async function finalizeMove(move, promotedPiece = null, isCapture = false) {
         move
     };
 
-    // Apply move to board
     boardState[move.to.r][move.to.c] = promotedPiece || fromPiece;
     boardState[move.from.r][move.from.c] = null;
 
@@ -1285,7 +1300,6 @@ async function finalizeMove(move, promotedPiece = null, isCapture = false) {
 
     currentTurn = nextTurn;
 
-    // Sync to Firebase if Online Multiplayer
     if (isMultiplayer && roomName) {
         await update(ref(database, `game/chess/rooms/${roomName}`), {
             board: boardState,
