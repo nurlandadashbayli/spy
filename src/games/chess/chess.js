@@ -62,6 +62,29 @@ function escapeHtml(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
+// Safely normalize raw Firebase board array/objects so no null or empty rows crash the renderer
+function normalizeBoard(raw) {
+    const result = [];
+    for (let r = 0; r < 8; r++) {
+        const row = [];
+        for (let c = 0; c < 8; c++) {
+            let piece = null;
+            if (raw && raw[r]) {
+                const item = raw[r][c];
+                if (item && item !== '.') piece = item;
+            }
+            row.push(piece);
+        }
+        result.push(row);
+    }
+    return result;
+}
+
+// Convert board to Firebase safe format by replacing null with '.'
+function boardToFirebase(board) {
+    return board.map(row => row.map(cell => cell || '.'));
+}
+
 // -------------------------------------------------------------
 // WEB AUDIO SYNTHESIZER FOR SOUND EFFECTS
 // -------------------------------------------------------------
@@ -169,7 +192,7 @@ function findKing(board, color) {
     const targetKing = color === 'w' ? 'K' : 'k';
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            if (board[r][c] === targetKing) return { r, c };
+            if (board[r] && board[r][c] === targetKing) return { r, c };
         }
     }
     return null;
@@ -182,7 +205,7 @@ function isSquareAttacked(board, r, c, attackerColor) {
         const ar = r + pawnDir;
         const ac = c + dc;
         if (ar >= 0 && ar < 8 && ac >= 0 && ac < 8) {
-            if (board[ar][ac] === attackerPawn) return true;
+            if (board[ar] && board[ar][ac] === attackerPawn) return true;
         }
     }
 
@@ -195,7 +218,7 @@ function isSquareAttacked(board, r, c, attackerColor) {
         const ar = r + dr;
         const ac = c + dc;
         if (ar >= 0 && ar < 8 && ac >= 0 && ac < 8) {
-            if (board[ar][ac] === attackerKnight) return true;
+            if (board[ar] && board[ar][ac] === attackerKnight) return true;
         }
     }
 
@@ -206,7 +229,7 @@ function isSquareAttacked(board, r, c, attackerColor) {
             const ar = r + dr;
             const ac = c + dc;
             if (ar >= 0 && ar < 8 && ac >= 0 && ac < 8) {
-                if (board[ar][ac] === attackerKing) return true;
+                if (board[ar] && board[ar][ac] === attackerKing) return true;
             }
         }
     }
@@ -218,7 +241,7 @@ function isSquareAttacked(board, r, c, attackerColor) {
         let ar = r + dr;
         let ac = c + dc;
         while (ar >= 0 && ar < 8 && ac >= 0 && ac < 8) {
-            const piece = board[ar][ac];
+            const piece = board[ar] ? board[ar][ac] : null;
             if (piece) {
                 if (piece === attackerRook || piece === attackerQueen) return true;
                 break;
@@ -234,7 +257,7 @@ function isSquareAttacked(board, r, c, attackerColor) {
         let ar = r + dr;
         let ac = c + dc;
         while (ar >= 0 && ar < 8 && ac >= 0 && ac < 8) {
-            const piece = board[ar][ac];
+            const piece = board[ar] ? board[ar][ac] : null;
             if (piece) {
                 if (piece === attackerBishop || piece === attackerQueen) return true;
                 break;
@@ -255,7 +278,7 @@ function isKingInCheck(board, color) {
 }
 
 function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
-    const piece = board[r][c];
+    const piece = board[r] ? board[r][c] : null;
     if (!piece) return [];
 
     const moves = [];
@@ -268,17 +291,17 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
         const startRow = color === 'w' ? 6 : 1;
 
         const nr = r + dir;
-        if (nr >= 0 && nr < 8 && !board[nr][c]) {
+        if (nr >= 0 && nr < 8 && board[nr] && !board[nr][c]) {
             moves.push({ from: { r, c }, to: { r: nr, c }, isPromotion: (color === 'w' && nr === 0) || (color === 'b' && nr === 7) });
             const nr2 = r + 2 * dir;
-            if (r === startRow && !board[nr2][c]) {
+            if (r === startRow && board[nr2] && !board[nr2][c]) {
                 moves.push({ from: { r, c }, to: { r: nr2, c }, isEnPassantDouble: true });
             }
         }
 
         for (const dc of [-1, 1]) {
             const nc = c + dc;
-            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr]) {
                 const targetPiece = board[nr][nc];
                 if (targetPiece && !isSameColor(piece, targetPiece)) {
                     moves.push({ from: { r, c }, to: { r: nr, c: nc }, isPromotion: (color === 'w' && nr === 0) || (color === 'b' && nr === 7) });
@@ -296,7 +319,7 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
         for (const [dr, dc] of knightOffsets) {
             const nr = r + dr;
             const nc = c + dc;
-            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr]) {
                 if (!board[nr][nc] || !isSameColor(piece, board[nr][nc])) {
                     moves.push({ from: { r, c }, to: { r: nr, c: nc } });
                 }
@@ -310,7 +333,7 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
         for (const [dr, dc] of dirs) {
             let nr = r + dr;
             let nc = c + dc;
-            while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+            while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr]) {
                 const target = board[nr][nc];
                 if (!target) {
                     moves.push({ from: { r, c }, to: { r: nr, c: nc } });
@@ -330,7 +353,7 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
                 if (dr === 0 && dc === 0) continue;
                 const nr = r + dr;
                 const nc = c + dc;
-                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr]) {
                     if (!board[nr][nc] || !isSameColor(piece, board[nr][nc])) {
                         moves.push({ from: { r, c }, to: { r: nr, c: nc } });
                     }
@@ -341,12 +364,12 @@ function getPseudoMoves(board, r, c, castlingRights, enPassantTarget) {
         const rights = castlingRights ? castlingRights[color] : { k: false, q: false };
         const kingRow = color === 'w' ? 7 : 0;
         if (rights && r === kingRow && c === 4 && !isSquareAttacked(board, r, c, opponentColor)) {
-            if (rights.k && !board[kingRow][5] && !board[kingRow][6]) {
+            if (rights.k && board[kingRow] && !board[kingRow][5] && !board[kingRow][6]) {
                 if (!isSquareAttacked(board, kingRow, 5, opponentColor) && !isSquareAttacked(board, kingRow, 6, opponentColor)) {
                     moves.push({ from: { r, c }, to: { r: kingRow, c: 6 }, isCastle: 'k' });
                 }
             }
-            if (rights.q && !board[kingRow][1] && !board[kingRow][2] && !board[kingRow][3]) {
+            if (rights.q && board[kingRow] && !board[kingRow][1] && !board[kingRow][2] && !board[kingRow][3]) {
                 if (!isSquareAttacked(board, kingRow, 3, opponentColor) && !isSquareAttacked(board, kingRow, 2, opponentColor)) {
                     moves.push({ from: { r, c }, to: { r: kingRow, c: 2 }, isCastle: 'q' });
                 }
@@ -361,7 +384,7 @@ function getLegalMoves(board, color, castlingRights, enPassantTarget) {
     const legal = [];
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            const piece = board[r][c];
+            const piece = board[r] ? board[r][c] : null;
             if (!piece) continue;
             if ((color === 'w' && isWhite(piece)) || (color === 'b' && isBlack(piece))) {
                 const candidates = getPseudoMoves(board, r, c, castlingRights, enPassantTarget);
@@ -412,7 +435,7 @@ function evaluateBoard(board) {
     let score = 0;
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            const piece = board[r][c];
+            const piece = board[r] ? board[r][c] : null;
             if (!piece) continue;
             const val = PIECE_VALUES[piece] || 0;
             const type = piece.toUpperCase();
@@ -477,7 +500,7 @@ function getBestBotMove(board, color, difficulty, castlingRights, enPassantTarge
     if (moves.length === 0) return null;
 
     if (difficulty === 'easy') {
-        const captures = moves.filter(m => board[m.to.r][m.to.c] !== null);
+        const captures = moves.filter(m => board[m.to.r] && board[m.to.r][m.to.c] !== null);
         if (captures.length > 0 && Math.random() < 0.6) {
             return captures[Math.floor(Math.random() * captures.length)];
         }
@@ -871,7 +894,6 @@ async function joinOnlineRoom() {
     let rInput = chessRoomInput ? chessRoomInput.value.trim().toLowerCase() : '';
     let nInput = chessNameInput ? chessNameInput.value.trim() : '';
 
-    // Auto-fill defaults if user left inputs empty for instant room creation!
     if (!rInput) {
         rInput = 'chess' + Math.floor(1000 + Math.random() * 9000);
         if (chessRoomInput) chessRoomInput.value = rInput;
@@ -902,7 +924,6 @@ async function joinOnlineRoom() {
             return alert('Room is full (max 2 players for Chess).');
         }
 
-        // Determine player color: host is White ('w'), 2nd player is Black ('b')
         const isHost = pKeys.length === 0;
         playerColor = isHost ? 'w' : 'b';
 
@@ -946,7 +967,6 @@ function setupRealtimeListeners() {
 
     unsubscribePlayers = onValue(playersRef, (snap) => {
         players = snap.val() || {};
-        // Only trigger reset if player was already initialized and explicitly removed from room
         if (playerId && snap.exists() && !players[playerId]) {
             leaveRoom();
             return;
@@ -961,7 +981,7 @@ function setupRealtimeListeners() {
             chessLobbyScreen.classList.remove('active');
             chessGameScreen.classList.add('active');
 
-            if (gameData.board) boardState = gameData.board;
+            if (gameData.board) boardState = normalizeBoard(gameData.board);
             if (gameData.turn) currentTurn = gameData.turn;
             if (gameData.castlingRights) castlingRights = gameData.castlingRights;
             enPassantTarget = gameData.enPassantTarget || null;
@@ -1012,16 +1032,9 @@ function updateLobbyUI() {
     `).join('');
 
     if (isHost) {
-        if (pKeys.length >= 2) {
-            if (chessStartBtn) {
-                chessStartBtn.style.display = 'block';
-                chessStartBtn.textContent = '🚀 Start Game (2 Players Ready)';
-            }
-        } else {
-            if (chessStartBtn) {
-                chessStartBtn.style.display = 'block';
-                chessStartBtn.textContent = '⏳ Waiting for 2nd Player...';
-            }
+        if (chessStartBtn) {
+            chessStartBtn.style.display = 'block';
+            chessStartBtn.textContent = pKeys.length >= 2 ? '🚀 Start Game (2 Players Ready)' : '🚀 Start Game (1 Player / Wait for 2nd)';
         }
     } else {
         if (chessStartBtn) chessStartBtn.style.display = 'none';
@@ -1036,7 +1049,7 @@ async function startOnlineGame() {
 
     await update(ref(database, `game/chess/rooms/${roomName}`), {
         status: 'started',
-        board: initialBoard,
+        board: boardToFirebase(initialBoard),
         turn: 'w',
         castlingRights: initialRights,
         enPassantTarget: null,
@@ -1184,7 +1197,7 @@ function onSquareClick(r, c) {
         return;
     }
 
-    const piece = boardState[r][c];
+    const piece = boardState[r] ? boardState[r][c] : null;
 
     const targetMove = legalMovesForSelected.find(m => m.to.r === r && m.to.c === c);
     if (targetMove) {
@@ -1302,7 +1315,7 @@ async function finalizeMove(move, promotedPiece = null, isCapture = false) {
 
     if (isMultiplayer && roomName) {
         await update(ref(database, `game/chess/rooms/${roomName}`), {
-            board: boardState,
+            board: boardToFirebase(boardState),
             turn: currentTurn,
             castlingRights: castlingRights,
             enPassantTarget: enPassantTarget || null,
@@ -1445,7 +1458,7 @@ function renderBoard() {
 
         const legalMove = legalMovesForSelected.find(m => m.to.r === r && m.to.c === c);
         if (legalMove) {
-            const isCaptureTarget = boardState[r][c] !== null || legalMove.isEnPassant;
+            const isCaptureTarget = (boardState[r] && boardState[r][c] !== null) || legalMove.isEnPassant;
             if (isCaptureTarget) {
                 const ring = document.createElement('div');
                 ring.className = 'capture-ring';
@@ -1470,7 +1483,7 @@ function renderBoard() {
             square.appendChild(fileLabel);
         }
 
-        const piece = boardState[r][c];
+        const piece = (boardState && boardState[r]) ? boardState[r][c] : null;
         if (piece) {
             const pieceElem = document.createElement('div');
             pieceElem.className = 'chess-piece';
@@ -1530,7 +1543,7 @@ function updateUIInfo() {
 
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            const p = boardState[r][c];
+            const p = boardState[r] ? boardState[r][c] : null;
             if (p) {
                 if (currentCounts[p] !== undefined) currentCounts[p]++;
                 if (isWhite(p)) whiteMaterial += PIECE_VALUES[p];

@@ -163,7 +163,9 @@
 .chess-board-outer {
     width: 100%;
     max-width: 560px;
+    min-width: 300px;
     aspect-ratio: 1 / 1;
+    min-height: 300px;
     position: relative;
     padding: 24px;
     background: #1e1b4b;
@@ -174,6 +176,7 @@
 .chess-board {
     width: 100%;
     height: 100%;
+    min-height: 250px;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
