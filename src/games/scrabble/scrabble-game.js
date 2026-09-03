@@ -69,6 +69,36 @@ const AZ_LETTER_DATA = {
     '*': { count: 5, points: 0 }
 };
 
+const EN_LETTER_DATA = {
+    'A': { count: 9, points: 1 },
+    'B': { count: 2, points: 3 },
+    'C': { count: 2, points: 3 },
+    'D': { count: 4, points: 2 },
+    'E': { count: 12, points: 1 },
+    'F': { count: 2, points: 4 },
+    'G': { count: 3, points: 2 },
+    'H': { count: 2, points: 4 },
+    'I': { count: 9, points: 1 },
+    'J': { count: 1, points: 8 },
+    'K': { count: 1, points: 5 },
+    'L': { count: 4, points: 1 },
+    'M': { count: 2, points: 3 },
+    'N': { count: 6, points: 1 },
+    'O': { count: 8, points: 1 },
+    'P': { count: 2, points: 3 },
+    'Q': { count: 1, points: 10 },
+    'R': { count: 6, points: 1 },
+    'S': { count: 4, points: 1 },
+    'T': { count: 6, points: 1 },
+    'U': { count: 4, points: 1 },
+    'V': { count: 2, points: 4 },
+    'W': { count: 2, points: 4 },
+    'X': { count: 1, points: 8 },
+    'Y': { count: 2, points: 4 },
+    'Z': { count: 1, points: 10 },
+    '*': { count: 2, points: 0 }
+};
+
 const TR_LETTER_DATA = {
     'A': { count: 12, points: 1 },
     'E': { count: 8, points: 1 },
@@ -106,12 +136,18 @@ function getLetterData(lang) {
     if (lang === 'tr') {
         return TR_LETTER_DATA;
     }
+    if (lang === 'en') {
+        return EN_LETTER_DATA;
+    }
     return AZ_LETTER_DATA;
 }
 
 function getVowels(lang) {
     if (lang === 'tr') {
         return ['A', 'E', 'I', 'İ', 'O', 'Ö', 'U', 'Ü'];
+    }
+    if (lang === 'en') {
+        return ['A', 'E', 'I', 'O', 'U', 'Y'];
     }
     return ['A', 'E', 'Ə', 'İ', 'I', 'O', 'Ö', 'U', 'Ü'];
 }
@@ -678,7 +714,9 @@ function setupRealtimeListeners() {
         const gameLangBadge = document.getElementById('scrabble-game-lang');
         const htpObjective = document.getElementById('scrabble-htp-objective');
         
-        const langName = lang === 'tr' ? 'Turkish 🇹🇷' : 'Azerbaijani 🇦🇿';
+        let langName = 'Azerbaijani 🇦🇿';
+        if (lang === 'tr') langName = 'Turkish 🇹🇷';
+        else if (lang === 'en') langName = 'English 🇬🇧';
         
         if (lobbySubtitle) {
             lobbySubtitle.innerText = `Multiplayer ${langName} Scrabble.`;
@@ -690,7 +728,9 @@ function setupRealtimeListeners() {
             gameLangBadge.innerText = langName;
         }
         if (htpObjective) {
-            const wordType = lang === 'tr' ? 'Turkish' : 'Azerbaijani';
+            let wordType = 'Azerbaijani';
+            if (lang === 'tr') wordType = 'Turkish';
+            else if (lang === 'en') wordType = 'English';
             htpObjective.innerHTML = `<strong>Objective:</strong> Score the most points by forming valid ${wordType} words horizontally or vertically on the board.`;
         }
 
@@ -817,7 +857,12 @@ function drawBalancedTile(rack, bag, board, lang = 'az') {
 
     // Vowel/Consonant Balancer
     const vowels = getVowels(lang);
-    const hfConsonants = lang === 'tr' ? ['M', 'N', 'L', 'R', 'D', 'Y', 'T', 'S'] : ['M', 'N', 'L', 'R', 'D', 'Y', 'T'];
+    let hfConsonants = ['M', 'N', 'L', 'R', 'D', 'Y', 'T'];
+    if (lang === 'tr') {
+        hfConsonants = ['M', 'N', 'L', 'R', 'D', 'Y', 'T', 'S'];
+    } else if (lang === 'en') {
+        hfConsonants = ['N', 'R', 'T', 'L', 'S', 'D'];
+    }
     let vCount = 0, cCount = 0;
     
     for (let tile of rack) {
@@ -1191,8 +1236,10 @@ function renderBoard() {
 
 // --- Validation ---
 
-function toWikiLower(word) {
+function toWikiLower(word, lang) {
     if (!word) return word;
+    const activeLang = lang || gameData?.language || 'az';
+    if (activeLang === 'en') return word.toLowerCase();
     const map = {
         'I': 'ı', 'İ': 'i', 'Ə': 'ə', 'Ö': 'ö', 
         'Ü': 'ü', 'Ğ': 'ğ', 'Ç': 'ç', 'Ş': 'ş'
@@ -1200,8 +1247,10 @@ function toWikiLower(word) {
     return word.replace(/[IİƏÖÜĞÇŞ]/g, m => map[m]).toLowerCase();
 }
 
-function toWikiUpper(word) {
+function toWikiUpper(word, lang) {
     if (!word) return word;
+    const activeLang = lang || gameData?.language || 'az';
+    if (activeLang === 'en') return word.toUpperCase();
     const map = {
         'ı': 'I', 'i': 'İ', 'ə': 'Ə', 'ö': 'Ö', 
         'ü': 'Ü', 'ğ': 'Ğ', 'ç': 'Ç', 'ş': 'Ş'
@@ -1213,10 +1262,66 @@ async function isValidWord(word, lang = 'az') {
     if (!word || word.length < 2) return { valid: false, definition: null };
     
     // Custom mapping to prevent JS converting 'İ' to 'i\u0307'
-    let lowerWord = toWikiLower(word);
+    let lowerWord = toWikiLower(word, lang);
 
     try {
-        if (lang === 'tr') {
+        if (lang === 'en') {
+            const targetUrl = `https://www.oed.com/autocomplete/dictionary/?q=${encodeURIComponent(lowerWord)}`;
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+            
+            let exists = false;
+            let definitionText = '';
+            
+            // 1. Try OED via AllOrigins proxy
+            try {
+                const response = await fetch(proxyUrl);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        exists = data.some(item => item.name && item.name.toLowerCase().trim() === lowerWord);
+                    }
+                }
+            } catch (oedErr) {
+                console.warn("OED lookup failed or was blocked, trying backup validation:", oedErr);
+            }
+            
+            // 2. Try Free Dictionary API for definition and as a backup validation
+            try {
+                const defResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lowerWord)}`);
+                if (defResponse.ok) {
+                    exists = true; // The word exists in Wiktionary
+                    const defData = await defResponse.json();
+                    if (Array.isArray(defData) && defData.length > 0) {
+                        const meanings = defData[0].meanings;
+                        if (meanings && meanings.length > 0) {
+                            let defs = [];
+                            meanings.forEach(m => {
+                                const pos = m.partOfSpeech ? `(${m.partOfSpeech}) ` : '';
+                                if (m.definitions && m.definitions.length > 0) {
+                                    m.definitions.slice(0, 3).forEach(d => {
+                                        defs.push(`${pos}${d.definition}`);
+                                    });
+                                }
+                            });
+                            definitionText = defs.map((d, i) => `${i + 1}. ${d}`).join(' ');
+                        }
+                    }
+                }
+            } catch (defErr) {
+                console.error("Backup dictionary API check failed:", defErr);
+            }
+            
+            if (!exists) {
+                return { valid: false, definition: null };
+            }
+            
+            definitionText = definitionText.trim();
+            if (!definitionText) {
+                definitionText = 'Word found in Oxford English Dictionary (OED), but no detailed definition was found.';
+            }
+            
+            return { valid: true, definition: definitionText };
+        } else if (lang === 'tr') {
             // Check Turkish word using sozluk.gov.tr GTS API
             const targetUrl = `https://sozluk.gov.tr/gts?ara=${encodeURIComponent(lowerWord)}`;
             const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
@@ -1525,6 +1630,8 @@ async function handlePlayWord() {
         if (!check.valid) {
             if (lang === 'tr') {
                 failText.innerText = `The word "${fw.word}" was not found in the Turkish dictionary.`;
+            } else if (lang === 'en') {
+                failText.innerText = `The word "${fw.word}" was not found in the Oxford dictionary.`;
             } else {
                 failText.innerText = `The word "${fw.word}" was not found in the Azerbaijani dictionary.`;
             }
