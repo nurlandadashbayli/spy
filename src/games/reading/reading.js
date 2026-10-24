@@ -26,6 +26,7 @@ class ReadingApp {
         this.activePopupTarget = null;
         this.isSelectingSentence = false;
         this.currentPopupData = null;
+        this.activeLibraryFilter = 'all';
 
         // Bindings
         this.handleWordClick = this.handleWordClick.bind(this);
@@ -236,6 +237,16 @@ class ReadingApp {
         this.dom.gutenbergFetchBtn?.addEventListener('click', () => {
             const url = this.dom.gutenbergUrlInput?.value.trim();
             if (url) this.loadGutenbergFromUrl(url);
+        });
+
+        // Library filter buttons
+        document.querySelectorAll('.library-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.library-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.activeLibraryFilter = btn.dataset.filter || 'all';
+                this.renderBookshelf();
+            });
         });
     }
 
@@ -1000,25 +1011,54 @@ class ReadingApp {
         if (!this.dom.bookShelfGrid) return;
         this.dom.bookShelfGrid.innerHTML = '';
 
-        this.booksManifest.forEach(book => {
+        let books = this.booksManifest;
+        if (this.activeLibraryFilter === 'beginner') {
+            books = books.filter(b => b.difficultyLevel === 'beginner' || (b.difficulty && b.difficulty.includes('Beginner')));
+        } else if (this.activeLibraryFilter === 'intermediate') {
+            books = books.filter(b => b.difficultyLevel === 'intermediate' || (b.difficulty && b.difficulty.includes('Intermediate')));
+        } else if (this.activeLibraryFilter === 'advanced') {
+            books = books.filter(b => b.difficultyLevel === 'advanced' || (b.difficulty && b.difficulty.includes('Advanced')));
+        } else if (this.activeLibraryFilter && this.activeLibraryFilter !== 'all') {
+            books = books.filter(b => b.language === this.activeLibraryFilter);
+        }
+
+        const iconMap = {
+            'grimms-maerchen': '🐺',
+            'deutsche-fabeln': '🦊',
+            'alltagsgeschichten': '☕',
+            'japanische-maerchen': '🌸',
+            'die-verwandlung': '🪲',
+            'le-tour-du-monde': '🚂',
+            'don-quijote': '🛡️'
+        };
+
+        books.forEach(book => {
             const card = document.createElement('div');
             card.className = `book-card ${this.currentBook && this.currentBook.id === book.id ? 'active-book' : ''}`;
 
+            const icon = iconMap[book.id] || '📚';
             const coverHtml = book.cover
                 ? `<img src="${book.cover}" alt="${book.title}" class="book-cover-img" />`
-                : `<div class="book-cover-placeholder">📚</div>`;
+                : `<div class="book-cover-placeholder">${icon}</div>`;
+
+            const diffClass = (book.difficultyLevel === 'beginner' || (book.difficulty && book.difficulty.includes('Beginner')))
+                ? 'diff-beginner'
+                : (book.difficultyLevel === 'advanced' ? 'diff-advanced' : 'diff-intermediate');
 
             card.innerHTML = `
                 <div class="book-cover-wrap">
                     ${coverHtml}
                 </div>
                 <div class="book-card-content">
-                    <div class="book-card-lang">${book.languageFlag || '🌐'} ${book.languageName || book.language.toUpperCase()} • ${book.difficulty || 'All Levels'}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.2rem;">
+                        <span class="book-card-lang">${book.languageFlag || '🌐'} ${book.languageName || book.language.toUpperCase()}</span>
+                        <span class="diff-badge ${diffClass}">${book.difficulty || 'All Levels'}</span>
+                    </div>
                     <div class="book-card-title">${book.title}</div>
                     <div class="book-card-author">${book.author} (${book.year || ''})</div>
                     <div class="book-card-desc">${book.description}</div>
                     <div class="book-card-footer">
-                        <span>📖 ${book.chaptersCount || 1} Chapters</span>
+                        <span>📖 ${book.chaptersCount || 1} Stories</span>
                         <span class="badge-tag">${book.featured ? 'Featured' : 'Read'}</span>
                     </div>
                 </div>

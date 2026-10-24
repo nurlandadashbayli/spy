@@ -1,0 +1,38 @@
+{
+  "id": "alltagsgeschichten",
+  "title": "Einfache Alltagsgeschichten",
+  "author": "Moderne Lesetexte",
+  "year": "2026",
+  "language": "de",
+  "languageFlag": "🇩🇪",
+  "languageName": "German",
+  "targetLanguage": "en",
+  "featured": false,
+  "difficulty": "Beginner (A1)",
+  "difficultyLevel": "beginner",
+  "genre": "Everyday Life & Dialogues",
+  "chaptersCount": 3,
+  "cover": "",
+  "description": "Relaxed, everyday short stories packed with high-frequency German words, daily dialogue, café ordering, and city life. Ideal for first-time German learners.",
+  "gutenbergUrl": "",
+  "chapters": [
+    {
+      "index": 0,
+      "id": "morgen-im-cafe",
+      "title": "Ein sonniger Morgen im Café",
+      "html": "\n<p><span class=\"reader-dropcap-letter\">E</span>s ist Samstagmorgen in Berlin. Die Sonne scheint warm am blauen Himmel, und die Vögel singen in den grünen Lindenbäumen. Lukas wacht früh auf, öffnet das Fenster und atmet die frische Morgenluft ein.</p>\n<p>»Heute ist ein wunderbarer Tag für einen Spaziergang«, denkt Lukas fröhlich. Er zieht ein bequemes T-Shirt und seine Lieblingsjeans an und verlässt die Wohnung. Die Straßen sind noch ruhig. Nur ein paar Leute gehen mit ihren Hunden spazieren.</p>\n<p>An der Ecke zur Bergstraße duftet es herrlich nach frischem Brot und geröstetem Kaffee. Lukas betritt das gemütliche »Café Sonnenschein«. Hinter der Theke steht Maria, die freundliche Kellnerin mit den braunen Locken.</p>\n<p>»Guten Morgen, Lukas!«, grüßt Maria mit einem warmen Lächeln. »Schön, dich zu sehen. Wie geht es dir heute?« »Guten Morgen, Maria! Mir geht es blendend, danke. Das Wetter ist einfach fantastisch.«</p>\n<p>»Was darf ich dir heute bringen?«, fragt Maria und nimmt ihren Notizblock zur Hand. Lukas schaut auf die Kreidetafel an der Wand: »Ich hätte gern einen großen Cappuccino mit Hafermilch und ein warmes Schokoladencroissant, bitte.«</p>\n<p>»Sehr gern! Nimm doch draußen auf der Terrasse Platz, die Sonne ist herrlich.« Lukas setzt sich an einen kleinen runden Tisch unter einem roten Sonnenschirm. Er nimmt sein neues Buch aus der Tasche und beginnt zu lesen.</p>\n<p>Wenige Minuten später bringt Maria den dampfenden Kaffee und das knusprige Gebäck. »Lass es dir schmecken!«, sagt sie. Der Kaffee schmeckt cremig und sanft, und die Schokolade schmilzt auf der Zunge. Lukas schließt für einen kurzen Augenblick glücklich die Augen. So schön kann ein Samstag beginnen!</p>\n"
+    },
+    {
+      "index": 1,
+      "id": "tag-in-muenchen",
+      "title": "Ein Tag in München",
+      "html": "\n<p><span class=\"reader-dropcap-letter\">E</span>mma besucht zum allerersten Mal die Stadt München in Bayern. Sie steigt am Hauptbahnhof aus dem Zug und blickt neugierig umher. Überall eilen Menschen mit Koffern und Rucksäcken vorbei.</p>\n<p>Emma holt einen bunten Stadtplan aus ihrem Rucksack. Ihr erstes Ziel ist der berühmte Marienplatz im Herzen der Altstadt. Nach einem kurzen Fußweg durch die Fußgängerzone steht sie vor dem beeindruckenden Neuen Rathaus mit seinem hohen Turm.</p>\n<p>Plötzlich beginnt Musik zu spielen! Es ist genau elf Uhr vormittags, und das berühmte Glockenspiel erwacht zum Leben. Bunte Figuren aus Holz drehen sich im Turm im Kreis und tanzen zu fröhlichen Melodien. Hunderte von Touristen bleiben stehen, staunen und machen Fotos mit ihren Kameras.</p>\n<p>Nach dem Glockenspiel bekommt Emma großen Appetit. Nur wenige Schritte entfernt liegt der lebhafte Viktualienmarkt. An den vielen Marktständen gibt es frisches Obst, bunte Blumen, duftenden Käse und frische Brezeln.</p>\n<p>Emma kauft sich eine ofenfrische, knusprige Brezel mit feinem Meersalz und einen süßen Apfel. Sie setzt sich auf eine Holzbank im Schatten eines alten Kastanienbaums und beobachtet das bunte Treiben der Stadt. »München gefällt mir wirklich sehr«, murmelt sie zufrieden vor sich hin.</p>\n"
+    },
+    {
+      "index": 2,
+      "id": "geheimnis-bibliothek",
+      "title": "Das Geheimnis der alten Bibliothek",
+      "html": "\n<p><span class=\"reader-dropcap-letter\">A</span>n einem regnerischen Dienstagnachmittag sucht Felix Schutz vor dem Gewitter. Er rennt die Steintreppe hinauf und betritt die alte Stadtbibliothek. Schwere Holztüren schließen sich hinter ihm, und sofort umgibt ihn eine tiefe, beruhigende Stille.</p>\n<p>Die Bibliothek riecht nach altem Papier, Leder und Bienenwachs. Riesige Regale reichen bis unter die hohe Decke und sind voller tausender Bücher. Felix schlendert durch die stillen Gänge und lässt die Fingerspitzen über die Buchrücken gleiten.</p>\n<p>Ganz hinten in einer dunklen Ecke fällt sein Blick auf ein Buch mit einem dunkelroten Samteinband und einer goldenen Schließe. Neugierig zieht er es vorsichtig aus dem Regal. Auf dem Einband steht in geschwungenen goldenen Buchstaben: »Geschichten aus vergangenen Zeiten«.</p>\n<p>Als Felix das Buch öffnet, flattert ein kleiner, vergilbter Zettel heraus und segelt lautlos zu Boden. Felix bückt sich und hebt ihn auf. Auf dem Papier steht eine handgeschriebene Nachricht in feiner Tinte:</p>\n<p style=\"font-family: serif; font-style: italic; background: rgba(245, 158, 11, 0.1); border: 1px dashed var(--read-gold); padding: 0.8rem; border-radius: 8px; margin: 1rem 0;\">\n»Dem aufmerksamen Leser, der dieses Buch öffnet: Suche hinter dem dritten Band der Weltgeschichte im Regal Nummer sieben nach dem Schlüssel zum Garten der Träume.«\n</p>\n<p>Felix' Herz beginnt vor Aufregung schneller zu schlagen. Ist das ein altes Lesezeichen oder der Beginn eines echten Abenteuers? Er lächelt geheimnisvoll und macht sich auf die Suche nach Regal Nummer sieben...</p>\n"
+    }
+  ]
+}

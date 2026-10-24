@@ -268,7 +268,7 @@
     "pos": "adverb"
   },
   "morgen": {
-    "t": "tomorrow / morning",
+    "t": "morning / tomorrow",
     "pos": "noun"
   },
   "nacht": {
@@ -973,6 +973,374 @@
   },
   "satz": {
     "t": "sentence / phrase",
+    "pos": "noun"
+  },
+  "rotkäppchen": {
+    "t": "Little Red Riding Hood",
+    "pos": "noun"
+  },
+  "hänsel": {
+    "t": "Hansel",
+    "pos": "noun"
+  },
+  "gretel": {
+    "t": "Gretel",
+    "pos": "noun"
+  },
+  "dornröschen": {
+    "t": "Sleeping Beauty",
+    "pos": "noun"
+  },
+  "froschkönig": {
+    "t": "Frog Prince / Frog King",
+    "pos": "noun"
+  },
+  "frosch": {
+    "t": "frog",
+    "pos": "noun"
+  },
+  "kuchen": {
+    "t": "cake",
+    "pos": "noun"
+  },
+  "wein": {
+    "t": "wine",
+    "pos": "noun"
+  },
+  "flasche": {
+    "t": "bottle",
+    "pos": "noun"
+  },
+  "großmutter": {
+    "t": "grandmother",
+    "pos": "noun"
+  },
+  "großvater": {
+    "t": "grandfather",
+    "pos": "noun"
+  },
+  "wolf": {
+    "t": "wolf",
+    "pos": "noun"
+  },
+  "wölfe": {
+    "t": "wolves",
+    "pos": "noun"
+  },
+  "jäger": {
+    "t": "hunter",
+    "pos": "noun"
+  },
+  "blumen": {
+    "t": "flowers",
+    "pos": "noun"
+  },
+  "blume": {
+    "t": "flower",
+    "pos": "noun"
+  },
+  "ohren": {
+    "t": "ears",
+    "pos": "noun"
+  },
+  "ohr": {
+    "t": "ear",
+    "pos": "noun"
+  },
+  "augen": {
+    "t": "eyes",
+    "pos": "noun"
+  },
+  "auge": {
+    "t": "eye",
+    "pos": "noun"
+  },
+  "hände": {
+    "t": "hands",
+    "pos": "noun"
+  },
+  "hand": {
+    "t": "hand",
+    "pos": "noun"
+  },
+  "maul": {
+    "t": "mouth / jaws (of an animal)",
+    "pos": "noun"
+  },
+  "mund": {
+    "t": "mouth",
+    "pos": "noun"
+  },
+  "brot": {
+    "t": "bread",
+    "pos": "noun"
+  },
+  "brötchen": {
+    "t": "bread roll",
+    "pos": "noun"
+  },
+  "steine": {
+    "t": "stones",
+    "pos": "noun"
+  },
+  "stein": {
+    "t": "stone / rock",
+    "pos": "noun"
+  },
+  "schere": {
+    "t": "scissors",
+    "pos": "noun"
+  },
+  "bauch": {
+    "t": "belly / stomach",
+    "pos": "noun"
+  },
+  "ofen": {
+    "t": "oven / stove",
+    "pos": "noun"
+  },
+  "kieselsteine": {
+    "t": "pebbles",
+    "pos": "noun"
+  },
+  "häuschen": {
+    "t": "cottage / little house",
+    "pos": "noun"
+  },
+  "hexe": {
+    "t": "witch",
+    "pos": "noun"
+  },
+  "zucker": {
+    "t": "sugar",
+    "pos": "noun"
+  },
+  "spindel": {
+    "t": "spindle",
+    "pos": "noun"
+  },
+  "kugel": {
+    "t": "ball / sphere",
+    "pos": "noun"
+  },
+  "goldene": {
+    "t": "golden",
+    "pos": "adjective"
+  },
+  "gold": {
+    "t": "gold",
+    "pos": "noun"
+  },
+  "brunnen": {
+    "t": "well / fountain",
+    "pos": "noun"
+  },
+  "königstochter": {
+    "t": "king's daughter / princess",
+    "pos": "noun"
+  },
+  "königin": {
+    "t": "queen",
+    "pos": "noun"
+  },
+  "schloss": {
+    "t": "castle / palace",
+    "pos": "noun"
+  },
+  "turm": {
+    "t": "tower",
+    "pos": "noun"
+  },
+  "esel": {
+    "t": "donkey / ass",
+    "pos": "noun"
+  },
+  "hund": {
+    "t": "dog",
+    "pos": "noun"
+  },
+  "katze": {
+    "t": "cat",
+    "pos": "noun"
+  },
+  "hahn": {
+    "t": "rooster / cock",
+    "pos": "noun"
+  },
+  "huhn": {
+    "t": "chicken / hen",
+    "pos": "noun"
+  },
+  "räuber": {
+    "t": "robber / thief",
+    "pos": "noun"
+  },
+  "musikant": {
+    "t": "musician",
+    "pos": "noun"
+  },
+  "musik": {
+    "t": "music",
+    "pos": "noun"
+  },
+  "bremen": {
+    "t": "Bremen (German city)",
+    "pos": "noun"
+  },
+  "trauben": {
+    "t": "grapes",
+    "pos": "noun"
+  },
+  "weintrauben": {
+    "t": "grapes",
+    "pos": "noun"
+  },
+  "sauer": {
+    "t": "sour / angry",
+    "pos": "adjective"
+  },
+  "süß": {
+    "t": "sweet / cute",
+    "pos": "adjective"
+  },
+  "reif": {
+    "t": "ripe / mature",
+    "pos": "adjective"
+  },
+  "unreif": {
+    "t": "unripe",
+    "pos": "adjective"
+  },
+  "rennen": {
+    "t": "race / to run",
+    "pos": "noun"
+  },
+  "schnell": {
+    "t": "fast / quick",
+    "pos": "adjective"
+  },
+  "langsam": {
+    "t": "slow / slowly",
+    "pos": "adjective"
+  },
+  "löwe": {
+    "t": "lion",
+    "pos": "noun"
+  },
+  "maus": {
+    "t": "mouse",
+    "pos": "noun"
+  },
+  "mäuschen": {
+    "t": "little mouse",
+    "pos": "noun"
+  },
+  "netz": {
+    "t": "net",
+    "pos": "noun"
+  },
+  "seil": {
+    "t": "rope / cord",
+    "pos": "noun"
+  },
+  "käse": {
+    "t": "cheese",
+    "pos": "noun"
+  },
+  "schnabel": {
+    "t": "beak / bill",
+    "pos": "noun"
+  },
+  "eitel": {
+    "t": "vain / conceited",
+    "pos": "adjective"
+  },
+  "schmeichler": {
+    "t": "flatterer",
+    "pos": "noun"
+  },
+  "hirte": {
+    "t": "shepherd",
+    "pos": "noun"
+  },
+  "hirtenjunge": {
+    "t": "shepherd boy",
+    "pos": "noun"
+  },
+  "schafe": {
+    "t": "sheep",
+    "pos": "noun"
+  },
+  "schaf": {
+    "t": "sheep",
+    "pos": "noun"
+  },
+  "lüge": {
+    "t": "lie / falsehood",
+    "pos": "noun"
+  },
+  "wahrheit": {
+    "t": "truth",
+    "pos": "noun"
+  },
+  "hilfe": {
+    "t": "help",
+    "pos": "noun"
+  },
+  "kaffee": {
+    "t": "coffee",
+    "pos": "noun"
+  },
+  "cappuccino": {
+    "t": "cappuccino",
+    "pos": "noun"
+  },
+  "milch": {
+    "t": "milk",
+    "pos": "noun"
+  },
+  "croissant": {
+    "t": "croissant",
+    "pos": "noun"
+  },
+  "schokolade": {
+    "t": "chocolate",
+    "pos": "noun"
+  },
+  "apfel": {
+    "t": "apple",
+    "pos": "noun"
+  },
+  "brezel": {
+    "t": "pretzel",
+    "pos": "noun"
+  },
+  "kellnerin": {
+    "t": "waitress",
+    "pos": "noun"
+  },
+  "kellner": {
+    "t": "waiter",
+    "pos": "noun"
+  },
+  "bibliothek": {
+    "t": "library",
+    "pos": "noun"
+  },
+  "bücher": {
+    "t": "books",
+    "pos": "noun"
+  },
+  "wetter": {
+    "t": "weather",
+    "pos": "noun"
+  },
+  "freude": {
+    "t": "joy / pleasure",
+    "pos": "noun"
+  },
+  "abenteuer": {
+    "t": "adventure",
     "pos": "noun"
   }
 }

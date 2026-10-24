@@ -1,5 +1,56 @@
 [
   {
+    "id": "grimms-maerchen",
+    "title": "Märchen der Brüder Grimm",
+    "author": "Jacob & Wilhelm Grimm",
+    "year": "1812",
+    "language": "de",
+    "languageFlag": "🇩🇪",
+    "languageName": "German",
+    "targetLanguage": "en",
+    "featured": true,
+    "difficulty": "Beginner (A1-A2)",
+    "difficultyLevel": "beginner",
+    "genre": "Fairy Tales & Legends",
+    "chaptersCount": 5,
+    "cover": "",
+    "description": "Rotkäppchen, Hänsel und Gretel, Dornröschen, and Die Bremer Stadtmusikanten rewritten in clear, accessible German for language learners."
+  },
+  {
+    "id": "deutsche-fabeln",
+    "title": "Klassische Tierfabeln",
+    "author": "Äsop & Martin Luther",
+    "year": "1530",
+    "language": "de",
+    "languageFlag": "🇩🇪",
+    "languageName": "German",
+    "targetLanguage": "en",
+    "featured": true,
+    "difficulty": "Beginner (A1)",
+    "difficultyLevel": "beginner",
+    "genre": "Fables & Wisdom",
+    "chaptersCount": 5,
+    "cover": "",
+    "description": "Ultra-short animal fables with clear vocabulary and timeless morals: The Fox and the Grapes, The Tortoise and the Hare, and The Lion and the Mouse."
+  },
+  {
+    "id": "alltagsgeschichten",
+    "title": "Einfache Alltagsgeschichten",
+    "author": "Moderne Lesetexte",
+    "year": "2026",
+    "language": "de",
+    "languageFlag": "🇩🇪",
+    "languageName": "German",
+    "targetLanguage": "en",
+    "featured": false,
+    "difficulty": "Beginner (A1)",
+    "difficultyLevel": "beginner",
+    "genre": "Daily Life & Modern",
+    "chaptersCount": 3,
+    "cover": "",
+    "description": "Everyday short stories packed with high-frequency German words, café dialogues, and relatable daily life in Berlin and Munich."
+  },
+  {
     "id": "japanische-maerchen",
     "title": "Japanische Märchen",
     "author": "Karl Alberti",
@@ -9,12 +60,12 @@
     "languageName": "German",
     "targetLanguage": "en",
     "featured": true,
+    "difficulty": "Intermediate (B1)",
+    "difficultyLevel": "intermediate",
+    "genre": "Fairy Tales & Legends",
     "chaptersCount": 24,
     "cover": "assets/books/japanische-maerchen/OEBPS/3761235858305626459_cover_light_sm.jpg",
-    "description": "Enchanting Japanese fairy tales translated into German with authentic woodcuts. Click any word or sentence to see English translation!",
-    "gutenbergUrl": "https://www.gutenberg.org/ebooks/23393.epub3.images",
-    "difficulty": "Intermediate",
-    "genre": "Fairy Tales & Legends"
+    "description": "Enchanting Japanese folk tales translated into German with authentic woodcut illustrations (Project Gutenberg #23393)."
   },
   {
     "id": "die-verwandlung",
@@ -26,12 +77,12 @@
     "languageName": "German",
     "targetLanguage": "en",
     "featured": false,
+    "difficulty": "Advanced (B2-C1)",
+    "difficultyLevel": "advanced",
+    "genre": "Modernist Fiction",
     "chaptersCount": 3,
     "cover": "",
-    "description": "Gregor Samsa wakes up transformed into an insect. A towering masterpiece of 20th-century literature.",
-    "gutenbergUrl": "https://www.gutenberg.org/ebooks/22367",
-    "difficulty": "Advanced",
-    "genre": "Modernist Fiction"
+    "description": "Gregor Samsa wakes up transformed into an insect. A towering masterpiece of 20th-century literature."
   },
   {
     "id": "le-tour-du-monde",
@@ -43,12 +94,12 @@
     "languageName": "French",
     "targetLanguage": "en",
     "featured": false,
+    "difficulty": "Intermediate (B1)",
+    "difficultyLevel": "intermediate",
+    "genre": "Classic Adventure",
     "chaptersCount": 10,
     "cover": "",
-    "description": "Phileas Fogg and Passepartout embark on their world-famous wager across steamships, railways, and elephants.",
-    "gutenbergUrl": "https://www.gutenberg.org/ebooks/800",
-    "difficulty": "Intermediate",
-    "genre": "Classic Adventure"
+    "description": "Phileas Fogg and Passepartout embark on their world-famous wager across steamships and railways."
   },
   {
     "id": "don-quijote",
@@ -60,11 +111,11 @@
     "languageName": "Spanish",
     "targetLanguage": "en",
     "featured": false,
+    "difficulty": "Upper Intermediate (B2)",
+    "difficultyLevel": "intermediate",
+    "genre": "Epic Chivalry",
     "chaptersCount": 8,
     "cover": "",
-    "description": "The foundational novel of Western literature about the noble knight of La Mancha and his squire Sancho Panza.",
-    "gutenbergUrl": "https://www.gutenberg.org/ebooks/2000",
-    "difficulty": "Upper Intermediate",
-    "genre": "Epic Chivalry"
+    "description": "The monumental Spanish classic following the adventures of Alonso Quijano and his squire Sancho Panza."
   }
 ]
