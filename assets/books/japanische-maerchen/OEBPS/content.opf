@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<package xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" xml:lang="de">
+  <metadata>
+    <dc:rights>Public domain in the USA.</dc:rights>
+    <dc:identifier id="id">http://www.gutenberg.org/23393</dc:identifier>
+    <dc:contributor id="author_0">Karl Alberti</dc:contributor>
+    <meta property="file-as" refines="#author_0">Alberti, Karl</meta>
+    <meta property="role" refines="#author_0" scheme="marc:relators">trl</meta>
+    <dc:title>Japanische Märchen</dc:title>
+    <dc:language>de</dc:language>
+    <dc:subject>Fairy tales</dc:subject>
+    <dc:subject>Folklore -- Japan</dc:subject>
+    <dc:date>2007-11-07</dc:date>
+    <meta property="dcterms:modified">2026-10-09T17:44:05Z</meta>
+    <dc:source>https://www.gutenberg.org/files/23393/23393-h/23393-h.htm</dc:source>
+    <meta property="schema:accessMode">textual</meta>
+    <meta property="schema:accessibilityFeature">readingOrder</meta>
+    <meta property="schema:accessibilityHazard">none</meta>
+    <meta property="schema:accessModeSufficient">textual,visual</meta>
+    <meta property="schema:accessibilitySummary">This publication may not have complete alternative text descriptions.</meta>
+    <meta name="cover" content="id-1879993456850538291"/>
+  </metadata>
+  <manifest>
+    <!--Image: 449 x 553 size=88274 -->
+    <item href="3761235858305626459_cover_light_sm.jpg" id="id-1879993456850538291" media-type="image/jpeg" properties="cover-image"/>
+    <!--Image: 440 x 554 size=79942 -->
+    <item href="3761235858305626459_cover_old_sm.jpg" id="id-2117265920368142961" media-type="image/jpeg"/>
+    <!--Image: 297 x 144 size=3622 -->
+    <item href="3761235858305626459_title.png" id="img_images_title.png" media-type="image/png"/>
+    <!--Image: 37 x 9 size=295 -->
+    <item href="3761235858305626459_dec_copyrt.gif.png" id="img_images_dec_copyrt.gif" media-type="image/png"/>
+    <!--Image: 190 x 54 size=2975 -->
+    <item href="3761235858305626459_pic03top.png" id="img_images_pic03top.png" media-type="image/png"/>
+    <!--Image: 125 x 70 size=2111 -->
+    <item href="3761235858305626459_pic03middle.png" id="img_images_pic03middle.png" media-type="image/png"/>
+    <!--Image: 64 x 57 size=783 -->
+    <item href="3761235858305626459_pic03bottom.png" id="img_images_pic03bottom.png" media-type="image/png"/>
+    <!--Image: 454 x 46 size=3723 -->
+    <item href="3761235858305626459_head05.png" id="img_images_head05.png" media-type="image/png"/>
+    <!--Image: 80 x 105 size=3437 -->
+    <item href="3761235858305626459_capE.png" id="img_images_capE.png" media-type="image/png"/>
+    <!--Image: 272 x 394 size=34192 -->
+    <item href="3761235858305626459_pic06.png" id="img_images_pic06.png" media-type="image/png"/>
+    <!--Image: 277 x 394 size=38192 -->
+    <item href="3761235858305626459_pic08.png" id="img_images_pic08.png" media-type="image/png"/>
+    <!--Image: 323 x 223 size=8261 -->
+    <item href="3761235858305626459_pic09.png" id="img_images_pic09.png" media-type="image/png"/>
+    <!--Image: 81 x 107 size=3169 -->
+    <item href="3761235858305626459_capV.png" id="img_images_capV.png" media-type="image/png"/>
+    <!--Image: 448 x 70 size=4061 -->
+    <item href="3761235858305626459_head12.png" id="img_images_head12.png" media-type="image/png"/>
+    <!--Image: 82 x 106 size=3644 -->
+    <item href="3761235858305626459_capI1.png" id="img_images_capI1.png" media-type="image/png"/>
+    <!--Image: 426 x 219 size=26996 -->
+    <item href="3761235858305626459_pic19.png" id="img_images_pic19.png" media-type="image/png"/>
+    <!--Image: 498 x 384 size=61799 -->
+    <item href="3761235858305626459_plate20.jpg" id="img_images_plate20.jpg" media-type="image/jpeg"/>
+    <!--Image: 453 x 71 size=4481 -->
+    <item href="3761235858305626459_head21.png" id="img_images_head21.png" media-type="image/png"/>
+    <!--Image: 310 x 294 size=11873 -->
+    <item href="3761235858305626459_pic23.png" id="img_images_pic23.png" media-type="image/png"/>
+    <!--Image: 449 x 69 size=4259 -->
+    <item href="3761235858305626459_head65.png" id="img_images_head65.png" media-type="image/png"/>
+    <!--Image: 96 x 213 size=4431 -->
+    <item href="3761235858305626459_pic24.png" id="img_images_pic24.png" media-type="image/png"/>
+    <!--Image: 96 x 200 size=4188 -->
+    <item href="3761235858305626459_pic25.png" id="img_images_pic25.png" media-type="image/png"/>
+    <!--Image: 391 x 506 size=80183 -->
+    <item href="3761235858305626459_plate26.jpg" id="img_images_plate26.jpg" media-type="image/jpeg"/>
+    <!--Image: 452 x 65 size=4158 -->
+    <item href="3761235858305626459_head58.png" id="img_images_head58.png" media-type="image/png"/>
+    <!--Image: 82 x 106 size=2661 -->
+    <item href="3761235858305626459_capD.png" id="img_images_capD.png" media-type="image/png"/>
+    <!--Image: 154 x 82 size=4038 -->
+    <item href="3761235858305626459_pic29.png" id="img_images_pic29.png" media-type="image/png"/>
+    <!--Image: 453 x 68 size=4103 -->
+    <item href="3761235858305626459_head30.png" id="img_images_head30.png" media-type="image/png"/>
+    <!--Image: 80 x 106 size=3055 -->
+    <item href="3761235858305626459_capB.png" id="img_images_capB.png" media-type="image/png"/>
+    <!--Image: 104 x 145 size=4853 -->
+    <item href="3761235858305626459_pic32.png" id="img_images_pic32.png" media-type="image/png"/>
+    <!--Image: 269 x 353 size=36073 -->
+    <item href="3761235858305626459_pic33.png" id="img_images_pic33.png" media-type="image/png"/>
+    <!--Image: 448 x 74 size=3850 -->
+    <item href="3761235858305626459_head34.png" id="img_images_head34.png" media-type="image/png"/>
+    <!--Image: 452 x 74 size=6512 -->
+    <item href="3761235858305626459_head77.png" id="img_images_head77.png" media-type="image/png"/>
+    <!--Image: 180 x 180 size=10581 -->
+    <item href="3761235858305626459_pic36.png" id="img_images_pic36.png" media-type="image/png"/>
+    <!--Image: 345 x 29 size=1795 -->
+    <item href="3761235858305626459_pic37.png" id="img_images_pic37.png" media-type="image/png"/>
+    <!--Image: 450 x 63 size=3626 -->
+    <item href="3761235858305626459_head38.png" id="img_images_head38.png" media-type="image/png"/>
+    <!--Image: 79 x 107 size=2966 -->
+    <item href="3761235858305626459_capA.png" id="img_images_capA.png" media-type="image/png"/>
+    <!--Image: 450 x 65 size=7184 -->
+    <item href="3761235858305626459_head84.png" id="img_images_head84.png" media-type="image/png"/>
+    <!--Image: 500 x 386 size=80601 -->
+    <item href="3761235858305626459_plate40.jpg" id="img_images_plate40.jpg" media-type="image/jpeg"/>
+    <!--Image: 494 x 72 size=6511 -->
+    <item href="3761235858305626459_recon40.png" id="img_images_recon40.png" media-type="image/png"/>
+    <!--Image: 428 x 513 size=76322 -->
+    <item href="3761235858305626459_pic45.png" id="img_images_pic45.png" media-type="image/png"/>
+    <!--Image: 503 x 391 size=81061 -->
+    <item href="3761235858305626459_plate48.jpg" id="img_images_plate48.jpg" media-type="image/jpeg"/>
+    <!--Image: 236 x 65 size=3213 -->
+    <item href="3761235858305626459_pic48.png" id="img_images_pic48.png" media-type="image/png"/>
+    <!--Image: 450 x 70 size=3821 -->
+    <item href="3761235858305626459_head49.png" id="img_images_head49.png" media-type="image/png"/>
+    <!--Image: 107 x 107 size=4005 -->
+    <item href="3761235858305626459_capM.png" id="img_images_capM.png" media-type="image/png"/>
+    <!--Image: 136 x 84 size=2226 -->
+    <item href="3761235858305626459_tail57.png" id="img_images_tail57.png" media-type="image/png"/>
+    <!--Image: 361 x 333 size=41422 -->
+    <item href="3761235858305626459_pic58.png" id="img_images_pic58.png" media-type="image/png"/>
+    <!--Image: 504 x 388 size=75830 -->
+    <item href="3761235858305626459_plate60.jpg" id="img_images_plate60.jpg" media-type="image/jpeg"/>
+    <!--Image: 25 x 33 size=537 -->
+    <item href="3761235858305626459_tail63.png" id="img_images_tail63.png" media-type="image/png"/>
+    <!--Image: 450 x 132 size=7149 -->
+    <item href="3761235858305626459_head64.png" id="img_images_head64.png" media-type="image/png"/>
+    <!--Image: 80 x 106 size=3351 -->
+    <item href="3761235858305626459_capI2.png" id="img_images_capI2.png" media-type="image/png"/>
+    <!--Image: 52 x 16 size=440 -->
+    <item href="3761235858305626459_tail64.png" id="img_images_tail64.png" media-type="image/png"/>
+    <!--Image: 422 x 193 size=20227 -->
+    <item href="3761235858305626459_pic65.png" id="img_images_pic65.png" media-type="image/png"/>
+    <!--Image: 453 x 67 size=3799 -->
+    <item href="3761235858305626459_head66.png" id="img_images_head66.png" media-type="image/png"/>
+    <!--Image: 391 x 509 size=61355 -->
+    <item href="3761235858305626459_plate68.jpg" id="img_images_plate68.jpg" media-type="image/jpeg"/>
+    <!--Image: 65 x 25 size=772 -->
+    <item href="3761235858305626459_tail68.png" id="img_images_tail68.png" media-type="image/png"/>
+    <!--Image: 450 x 47 size=5141 -->
+    <item href="3761235858305626459_head69.png" id="img_images_head69.png" media-type="image/png"/>
+    <!--Image: 454 x 121 size=6571 -->
+    <item href="3761235858305626459_head70.png" id="img_images_head70.png" media-type="image/png"/>
+    <!--Image: 81 x 106 size=3295 -->
+    <item href="3761235858305626459_capR.png" id="img_images_capR.png" media-type="image/png"/>
+    <!--Image: 331 x 325 size=40530 -->
+    <item href="3761235858305626459_pic71.png" id="img_images_pic71.png" media-type="image/png"/>
+    <!--Image: 506 x 386 size=68994 -->
+    <item href="3761235858305626459_plate72.jpg" id="img_images_plate72.jpg" media-type="image/jpeg"/>
+    <!--Image: 145 x 82 size=3071 -->
+    <item href="3761235858305626459_tail74.png" id="img_images_tail74.png" media-type="image/png"/>
+    <!--Image: 300 x 104 size=4998 -->
+    <item href="3761235858305626459_pic81.png" id="img_images_pic81.png" media-type="image/png"/>
+    <!--Image: 384 x 501 size=67061 -->
+    <item href="3761235858305626459_plate82.jpg" id="img_images_plate82.jpg" media-type="image/jpeg"/>
+    <!--Image: 79 x 65 size=1433 -->
+    <item href="3761235858305626459_tail83.png" id="img_images_tail83.png" media-type="image/png"/>
+    <!--Image: 318 x 305 size=29554 -->
+    <item href="3761235858305626459_pic87.png" id="img_images_pic87.png" media-type="image/png"/>
+    <item href="pgepub.css" id="item1" media-type="text/css"/>
+    <item href="0.css" id="item2" media-type="text/css"/>
+    <item href="1.css" id="item3" media-type="text/css"/>
+    <item href="2.css" id="item4" media-type="text/css"/>
+    <!--Chunk: size=155170 Split on div-->
+    <item href="2824508384728103197_23393-h-0.htm.xhtml" id="pg-header" media-type="application/xhtml+xml"/>
+    <!--Chunk: size=118894 Split on footer-->
+    <item href="2824508384728103197_23393-h-1.htm.xhtml" id="item5" media-type="application/xhtml+xml"/>
+    <!--Chunk: size=19611-->
+    <item href="2824508384728103197_23393-h-2.htm.xhtml" id="pg-footer" media-type="application/xhtml+xml"/>
+    <item href="toc.xhtml" id="ncx" media-type="application/xhtml+xml" properties="nav"/>
+    <item href="toc.ncx" id="ncx2" media-type="application/x-dtbncx+xml"/>
+    <item href="wrap0000.xhtml" id="coverpage-wrapper" media-type="application/xhtml+xml" properties="svg"/>
+  </manifest>
+  <spine toc="ncx2">
+    <itemref idref="coverpage-wrapper"/>
+    <itemref idref="pg-header"/>
+    <itemref idref="item5"/>
+    <itemref idref="pg-footer"/>
+  </spine>
+</package>

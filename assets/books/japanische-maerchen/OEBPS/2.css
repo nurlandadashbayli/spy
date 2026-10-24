@@ -1,0 +1,217 @@
+@media screen {
+    body {
+        margin-left: 10%;
+        margin-right: 10%
+        }
+    }
+.pagedjs_page_content > div {
+    margin-left: 10%;
+    margin-right: 10%
+    }
+div.titlepage {
+    text-align: center;
+    padding: 2em;
+    border: 2px solid #000;
+    margin: 3em 1em;
+    font-family: fantasy, serif
+    }
+div.intro {
+    margin-top: 2em;
+    margin-bottom: 2em
+    }
+hr {
+    width: 80%;
+    margin-top: 1em;
+    margin-bottom: 1em
+    }
+em {
+    font-style: normal;
+    letter-spacing: 0.2em;
+    padding-left: 0.2em
+    }
+a {
+    text-decoration: none
+    }
+a.tag {
+    text-decoration: none;
+    vertical-align: 0.3em;
+    font-size: 80%;
+    padding-left: 0.25em;
+    line-height: 0.1em
+    }
+h3 a.tag {
+    font-size: 66%;
+    vertical-align: 0.5em
+    }
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1.5;
+    margin-top: 0.5em;
+    margin-bottom: 0;
+    font-family: fantasy, serif
+    }
+h1 {
+    font-size: 200%
+    }
+h1.pg {
+    font-size: 200%;
+    text-align: center;
+    font-style: normal;
+    font-weight: bold;
+    line-height: 1;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-family: Times-Roman, serif
+    }
+div.titlepage h1 {
+    font-size: 300%;
+    line-height: normal
+    }
+h2 {
+    font-size: 175%
+    }
+h3 {
+    font-size: 150%;
+    margin-top: 1em
+    }
+h3.right {
+    text-align: right
+    }
+h3.chapter {
+    margin-top: 2em
+    }
+h3.pg {
+    font-size: 110%;
+    text-align: center;
+    font-style: normal;
+    font-weight: bold;
+    line-height: 1;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-family: Times-Roman, serif
+    }
+h4 {
+    font-size: 120%
+    }
+div.titlepage h4 {
+    font-size: 112%
+    }
+h5 {
+    font-size: 100%
+    }
+h3 + h5, h5 + h3 {
+    margin-top: 0
+    }
+h6 {
+    font-size: 85%
+    }
+p {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+    line-height: 1.2
+    }
+p.illustration {
+    text-align: center;
+    margin-top: 1em;
+    margin-bottom: 1em
+    }
+p.corner {
+    float: left;
+    clear: left;
+    margin-left: -10%;
+    margin-top: 0
+    }
+p.floatright {
+    float: right;
+    clear: right;
+    margin: 0.5em 0 0.5em 0.5em
+    }
+p.floatleft {
+    float: left;
+    clear: left;
+    margin: 0.5em 0.5em 0.5em 0
+    }
+p.chapter {
+    margin-top: 4em
+    }
+p.quote {
+    margin-left: 2em;
+    margin-right: 2em
+    }
+p.footnote, div.footnote {
+    margin: 1em 2em;
+    font-size: 95%
+    }
+table {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1em;
+    margin-bottom: 1em
+    }
+td {
+    vertical-align: top;
+    text-align: left;
+    padding: 0.1em 1em 0.1em 0
+    }
+td.number {
+    text-align: right
+    }
+.grey {
+    color: #999;
+    background-color: inherit
+    }
+.sans {
+    font-family: sans-serif;
+    font-size: 95%
+    }
+ins.correction {
+    text-decoration: none;
+    border-bottom: thin dotted red
+    }
+.pagenum {
+    font-size: 90%;
+    font-weight: normal;
+    font-style: normal;
+    text-align: right;
+    text-indent: 0
+    }
+div.mynote, p.mynote, div.endnote {
+    background-color: #FFD;
+    color: #000;
+    border: 2px solid #963;
+    font-family: sans-serif;
+    font-size: 90%
+    }
+div.endnote {
+    margin: 1em 0;
+    padding: 0 0.5em 0.5em
+    }
+div.mynote {
+    margin: 2em 5%;
+    padding: 0.5em 1em 1em
+    }
+p.mynote {
+    margin: 2em 5%;
+    padding: 1em
+    }
+div.mynote a, div.endnote a {
+    text-decoration: none;
+    color: #963;
+    background-color: inherit
+    }
+hr.full {
+    width: 100%;
+    height: 5px
+    }
+pre {
+    font-size: 85%
+    }
+body {
+    background: initial;
+    color: initial
+    }
+a[href] {
+    text-decoration: underline
+    }

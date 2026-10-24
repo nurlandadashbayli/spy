@@ -1,0 +1,10 @@
+.pg_body_wrapper {
+    display: inline
+    }
+body {
+    background: initial;
+    color: initial
+    }
+a[href] {
+    text-decoration: underline
+    }

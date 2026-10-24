@@ -1,0 +1,978 @@
+{
+  "juki": {
+    "t": "snow / Yuki",
+    "pos": "noun"
+  },
+  "onna": {
+    "t": "woman / female (Japanese loanword)",
+    "pos": "noun"
+  },
+  "schnee": {
+    "t": "snow",
+    "pos": "noun"
+  },
+  "schneejungfrau": {
+    "t": "snow maiden",
+    "pos": "noun"
+  },
+  "holzhauer": {
+    "t": "woodcutter / lumberjack",
+    "pos": "noun"
+  },
+  "es": {
+    "t": "it",
+    "pos": "pronoun"
+  },
+  "waren": {
+    "t": "were / was",
+    "pos": "verb"
+  },
+  "war": {
+    "t": "was",
+    "pos": "verb"
+  },
+  "einmal": {
+    "t": "once / once upon a time",
+    "pos": "adverb"
+  },
+  "zwei": {
+    "t": "two",
+    "pos": "numeral"
+  },
+  "eins": {
+    "t": "one",
+    "pos": "numeral"
+  },
+  "drei": {
+    "t": "three",
+    "pos": "numeral"
+  },
+  "der": {
+    "t": "the (masculine)",
+    "pos": "article"
+  },
+  "die": {
+    "t": "the (feminine / plural)",
+    "pos": "article"
+  },
+  "das": {
+    "t": "the (neuter)",
+    "pos": "article"
+  },
+  "eine": {
+    "t": "a / an (feminine)",
+    "pos": "article"
+  },
+  "einer": {
+    "t": "one / of a",
+    "pos": "pronoun"
+  },
+  "ein": {
+    "t": "a / an (masculine / neuter)",
+    "pos": "article"
+  },
+  "eines": {
+    "t": "of a / one",
+    "pos": "article"
+  },
+  "einem": {
+    "t": "to a",
+    "pos": "article"
+  },
+  "einen": {
+    "t": "a / an (accusative)",
+    "pos": "article"
+  },
+  "hieß": {
+    "t": "was named / was called",
+    "pos": "verb"
+  },
+  "heißen": {
+    "t": "to be called / mean",
+    "pos": "verb"
+  },
+  "name": {
+    "t": "name",
+    "pos": "noun"
+  },
+  "dieser": {
+    "t": "this / this one",
+    "pos": "pronoun"
+  },
+  "diese": {
+    "t": "these / this",
+    "pos": "pronoun"
+  },
+  "dieses": {
+    "t": "this (neuter)",
+    "pos": "pronoun"
+  },
+  "älterer": {
+    "t": "older / elderly",
+    "pos": "adjective"
+  },
+  "alt": {
+    "t": "old",
+    "pos": "adjective"
+  },
+  "mann": {
+    "t": "man / husband",
+    "pos": "noun"
+  },
+  "männer": {
+    "t": "men",
+    "pos": "noun"
+  },
+  "frau": {
+    "t": "woman / wife / Mrs.",
+    "pos": "noun"
+  },
+  "frauen": {
+    "t": "women",
+    "pos": "noun"
+  },
+  "jüngling": {
+    "t": "youth / young man",
+    "pos": "noun"
+  },
+  "jung": {
+    "t": "young",
+    "pos": "adjective"
+  },
+  "mädchen": {
+    "t": "girl / maiden",
+    "pos": "noun"
+  },
+  "kind": {
+    "t": "child",
+    "pos": "noun"
+  },
+  "kinder": {
+    "t": "children",
+    "pos": "noun"
+  },
+  "vater": {
+    "t": "father",
+    "pos": "noun"
+  },
+  "mutter": {
+    "t": "mother",
+    "pos": "noun"
+  },
+  "sohn": {
+    "t": "son",
+    "pos": "noun"
+  },
+  "tochter": {
+    "t": "daughter",
+    "pos": "noun"
+  },
+  "bruder": {
+    "t": "brother",
+    "pos": "noun"
+  },
+  "schwester": {
+    "t": "sister",
+    "pos": "noun"
+  },
+  "beide": {
+    "t": "both",
+    "pos": "pronoun"
+  },
+  "wohnten": {
+    "t": "lived / resided",
+    "pos": "verb"
+  },
+  "wohnen": {
+    "t": "to live / reside",
+    "pos": "verb"
+  },
+  "wohnung": {
+    "t": "apartment / flat",
+    "pos": "noun"
+  },
+  "gleichen": {
+    "t": "same / similar",
+    "pos": "adjective"
+  },
+  "gleich": {
+    "t": "equal / right away",
+    "pos": "adverb"
+  },
+  "dorfe": {
+    "t": "village (dative)",
+    "pos": "noun"
+  },
+  "dorf": {
+    "t": "village",
+    "pos": "noun"
+  },
+  "stadt": {
+    "t": "city / town",
+    "pos": "noun"
+  },
+  "und": {
+    "t": "and",
+    "pos": "conjunction"
+  },
+  "oder": {
+    "t": "or",
+    "pos": "conjunction"
+  },
+  "aber": {
+    "t": "but / however",
+    "pos": "conjunction"
+  },
+  "gingen": {
+    "t": "went / walked",
+    "pos": "verb"
+  },
+  "ging": {
+    "t": "went",
+    "pos": "verb"
+  },
+  "gehen": {
+    "t": "to go / walk",
+    "pos": "verb"
+  },
+  "jeden": {
+    "t": "every / each",
+    "pos": "determiner"
+  },
+  "jeder": {
+    "t": "everyone / each",
+    "pos": "pronoun"
+  },
+  "jedes": {
+    "t": "every",
+    "pos": "determiner"
+  },
+  "tag": {
+    "t": "day",
+    "pos": "noun"
+  },
+  "tage": {
+    "t": "days",
+    "pos": "noun"
+  },
+  "tages": {
+    "t": "of the day / one day",
+    "pos": "noun"
+  },
+  "heute": {
+    "t": "today",
+    "pos": "adverb"
+  },
+  "gestern": {
+    "t": "yesterday",
+    "pos": "adverb"
+  },
+  "morgen": {
+    "t": "tomorrow / morning",
+    "pos": "noun"
+  },
+  "nacht": {
+    "t": "night",
+    "pos": "noun"
+  },
+  "nächte": {
+    "t": "nights",
+    "pos": "noun"
+  },
+  "abend": {
+    "t": "evening",
+    "pos": "noun"
+  },
+  "zusammen": {
+    "t": "together",
+    "pos": "adverb"
+  },
+  "in": {
+    "t": "in / into",
+    "pos": "preposition"
+  },
+  "den": {
+    "t": "the (accusative)",
+    "pos": "article"
+  },
+  "dem": {
+    "t": "the (dative)",
+    "pos": "article"
+  },
+  "des": {
+    "t": "of the",
+    "pos": "article"
+  },
+  "wald": {
+    "t": "forest / woods",
+    "pos": "noun"
+  },
+  "walde": {
+    "t": "forest (dative)",
+    "pos": "noun"
+  },
+  "wälder": {
+    "t": "forests",
+    "pos": "noun"
+  },
+  "baum": {
+    "t": "tree",
+    "pos": "noun"
+  },
+  "bäume": {
+    "t": "trees",
+    "pos": "noun"
+  },
+  "um": {
+    "t": "around / in order to",
+    "pos": "preposition"
+  },
+  "holz": {
+    "t": "wood / timber",
+    "pos": "noun"
+  },
+  "zu": {
+    "t": "to / too / at",
+    "pos": "preposition"
+  },
+  "schlagen": {
+    "t": "to hit / chop / beat",
+    "pos": "verb"
+  },
+  "gelangen": {
+    "t": "to reach / arrive at",
+    "pos": "verb"
+  },
+  "mußten": {
+    "t": "had to / were obliged to",
+    "pos": "verb"
+  },
+  "müssen": {
+    "t": "must / have to",
+    "pos": "verb"
+  },
+  "sie": {
+    "t": "she / they / you (formal)",
+    "pos": "pronoun"
+  },
+  "ihr": {
+    "t": "her / their / you (plural)",
+    "pos": "pronoun"
+  },
+  "ihre": {
+    "t": "their / her",
+    "pos": "pronoun"
+  },
+  "ihrer": {
+    "t": "of their / of her",
+    "pos": "pronoun"
+  },
+  "ihrem": {
+    "t": "to their / to her",
+    "pos": "pronoun"
+  },
+  "ihren": {
+    "t": "their / her (accusative)",
+    "pos": "pronoun"
+  },
+  "großen": {
+    "t": "large / big / great",
+    "pos": "adjective"
+  },
+  "groß": {
+    "t": "large / big / tall",
+    "pos": "adjective"
+  },
+  "klein": {
+    "t": "small / little",
+    "pos": "adjective"
+  },
+  "fluß": {
+    "t": "river",
+    "pos": "noun"
+  },
+  "flusses": {
+    "t": "of the river",
+    "pos": "noun"
+  },
+  "passieren": {
+    "t": "to cross / pass / happen",
+    "pos": "verb"
+  },
+  "über": {
+    "t": "over / above / about",
+    "pos": "preposition"
+  },
+  "unter": {
+    "t": "under / below / among",
+    "pos": "preposition"
+  },
+  "vor": {
+    "t": "before / in front of / ago",
+    "pos": "preposition"
+  },
+  "hinter": {
+    "t": "behind",
+    "pos": "preposition"
+  },
+  "neben": {
+    "t": "next to / beside",
+    "pos": "preposition"
+  },
+  "zwischen": {
+    "t": "between",
+    "pos": "preposition"
+  },
+  "fähre": {
+    "t": "ferry",
+    "pos": "noun"
+  },
+  "boot": {
+    "t": "boat",
+    "pos": "noun"
+  },
+  "schiff": {
+    "t": "ship",
+    "pos": "noun"
+  },
+  "meer": {
+    "t": "sea / ocean",
+    "pos": "noun"
+  },
+  "wasser": {
+    "t": "water",
+    "pos": "noun"
+  },
+  "feuer": {
+    "t": "fire",
+    "pos": "noun"
+  },
+  "erde": {
+    "t": "earth / ground",
+    "pos": "noun"
+  },
+  "luft": {
+    "t": "air",
+    "pos": "noun"
+  },
+  "himmel": {
+    "t": "sky / heaven",
+    "pos": "noun"
+  },
+  "sonne": {
+    "t": "sun",
+    "pos": "noun"
+  },
+  "mond": {
+    "t": "moon",
+    "pos": "noun"
+  },
+  "sterne": {
+    "t": "stars",
+    "pos": "noun"
+  },
+  "wind": {
+    "t": "wind",
+    "pos": "noun"
+  },
+  "sturm": {
+    "t": "storm",
+    "pos": "noun"
+  },
+  "regen": {
+    "t": "rain",
+    "pos": "noun"
+  },
+  "winter": {
+    "t": "winter",
+    "pos": "noun"
+  },
+  "sommer": {
+    "t": "summer",
+    "pos": "noun"
+  },
+  "frühling": {
+    "t": "spring",
+    "pos": "noun"
+  },
+  "herbst": {
+    "t": "autumn / fall",
+    "pos": "noun"
+  },
+  "kalt": {
+    "t": "cold",
+    "pos": "adjective"
+  },
+  "kälte": {
+    "t": "cold / coldness",
+    "pos": "noun"
+  },
+  "warm": {
+    "t": "warm",
+    "pos": "adjective"
+  },
+  "heiß": {
+    "t": "hot",
+    "pos": "adjective"
+  },
+  "weiß": {
+    "t": "white / knows",
+    "pos": "adjective"
+  },
+  "schwarz": {
+    "t": "black",
+    "pos": "adjective"
+  },
+  "rot": {
+    "t": "red",
+    "pos": "adjective"
+  },
+  "blau": {
+    "t": "blue",
+    "pos": "adjective"
+  },
+  "grün": {
+    "t": "green",
+    "pos": "adjective"
+  },
+  "gelb": {
+    "t": "yellow",
+    "pos": "adjective"
+  },
+  "haus": {
+    "t": "house / home",
+    "pos": "noun"
+  },
+  "hütte": {
+    "t": "hut / cabin / cottage",
+    "pos": "noun"
+  },
+  "tür": {
+    "t": "door",
+    "pos": "noun"
+  },
+  "fenster": {
+    "t": "window",
+    "pos": "noun"
+  },
+  "zimmer": {
+    "t": "room",
+    "pos": "noun"
+  },
+  "bett": {
+    "t": "bed",
+    "pos": "noun"
+  },
+  "tisch": {
+    "t": "table",
+    "pos": "noun"
+  },
+  "stuhl": {
+    "t": "chair",
+    "pos": "noun"
+  },
+  "schön": {
+    "t": "beautiful / handsome / nice",
+    "pos": "adjective"
+  },
+  "wunderbar": {
+    "t": "wonderful / marvelous",
+    "pos": "adjective"
+  },
+  "gut": {
+    "t": "good / well",
+    "pos": "adjective"
+  },
+  "böse": {
+    "t": "evil / angry / bad",
+    "pos": "adjective"
+  },
+  "schlecht": {
+    "t": "bad / poor",
+    "pos": "adjective"
+  },
+  "leben": {
+    "t": "life / to live",
+    "pos": "noun"
+  },
+  "lebte": {
+    "t": "lived",
+    "pos": "verb"
+  },
+  "lebten": {
+    "t": "lived",
+    "pos": "verb"
+  },
+  "tot": {
+    "t": "dead",
+    "pos": "adjective"
+  },
+  "tod": {
+    "t": "death",
+    "pos": "noun"
+  },
+  "starb": {
+    "t": "died",
+    "pos": "verb"
+  },
+  "sterben": {
+    "t": "to die",
+    "pos": "verb"
+  },
+  "sagte": {
+    "t": "said",
+    "pos": "verb"
+  },
+  "sagten": {
+    "t": "said",
+    "pos": "verb"
+  },
+  "sagen": {
+    "t": "to say / tell",
+    "pos": "verb"
+  },
+  "sprach": {
+    "t": "spoke",
+    "pos": "verb"
+  },
+  "sprechen": {
+    "t": "to speak",
+    "pos": "verb"
+  },
+  "antwortete": {
+    "t": "answered / replied",
+    "pos": "verb"
+  },
+  "fragen": {
+    "t": "to ask",
+    "pos": "verb"
+  },
+  "fragte": {
+    "t": "asked",
+    "pos": "verb"
+  },
+  "sah": {
+    "t": "saw",
+    "pos": "verb"
+  },
+  "sahen": {
+    "t": "saw",
+    "pos": "verb"
+  },
+  "sehen": {
+    "t": "to see / look",
+    "pos": "verb"
+  },
+  "hörte": {
+    "t": "heard",
+    "pos": "verb"
+  },
+  "hören": {
+    "t": "to hear / listen",
+    "pos": "verb"
+  },
+  "wollte": {
+    "t": "wanted",
+    "pos": "verb"
+  },
+  "wollen": {
+    "t": "to want",
+    "pos": "verb"
+  },
+  "konnte": {
+    "t": "could / was able to",
+    "pos": "verb"
+  },
+  "können": {
+    "t": "can / to be able to",
+    "pos": "verb"
+  },
+  "kam": {
+    "t": "came",
+    "pos": "verb"
+  },
+  "kamen": {
+    "t": "came",
+    "pos": "verb"
+  },
+  "kommen": {
+    "t": "to come",
+    "pos": "verb"
+  },
+  "wurde": {
+    "t": "became / was (passive)",
+    "pos": "verb"
+  },
+  "wurden": {
+    "t": "became / were",
+    "pos": "verb"
+  },
+  "werden": {
+    "t": "to become / will",
+    "pos": "verb"
+  },
+  "hatte": {
+    "t": "had",
+    "pos": "verb"
+  },
+  "hatten": {
+    "t": "had (plural)",
+    "pos": "verb"
+  },
+  "haben": {
+    "t": "to have",
+    "pos": "verb"
+  },
+  "ist": {
+    "t": "is",
+    "pos": "verb"
+  },
+  "sind": {
+    "t": "are",
+    "pos": "verb"
+  },
+  "sein": {
+    "t": "his / to be",
+    "pos": "verb"
+  },
+  "seine": {
+    "t": "his (feminine/plural)",
+    "pos": "pronoun"
+  },
+  "seiner": {
+    "t": "of his",
+    "pos": "pronoun"
+  },
+  "seinem": {
+    "t": "to his",
+    "pos": "pronoun"
+  },
+  "seinen": {
+    "t": "his (accusative)",
+    "pos": "pronoun"
+  },
+  "ich": {
+    "t": "I",
+    "pos": "pronoun"
+  },
+  "du": {
+    "t": "you (informal)",
+    "pos": "pronoun"
+  },
+  "er": {
+    "t": "he",
+    "pos": "pronoun"
+  },
+  "wir": {
+    "t": "we",
+    "pos": "pronoun"
+  },
+  "mich": {
+    "t": "me (accusative)",
+    "pos": "pronoun"
+  },
+  "mir": {
+    "t": "me (dative)",
+    "pos": "pronoun"
+  },
+  "dich": {
+    "t": "you (accusative)",
+    "pos": "pronoun"
+  },
+  "dir": {
+    "t": "you (dative)",
+    "pos": "pronoun"
+  },
+  "uns": {
+    "t": "us",
+    "pos": "pronoun"
+  },
+  "sich": {
+    "t": "himself / herself / themselves",
+    "pos": "pronoun"
+  },
+  "nicht": {
+    "t": "not",
+    "pos": "adverb"
+  },
+  "nichts": {
+    "t": "nothing",
+    "pos": "pronoun"
+  },
+  "nie": {
+    "t": "never",
+    "pos": "adverb"
+  },
+  "niemand": {
+    "t": "no one / nobody",
+    "pos": "pronoun"
+  },
+  "immer": {
+    "t": "always",
+    "pos": "adverb"
+  },
+  "oft": {
+    "t": "often",
+    "pos": "adverb"
+  },
+  "schon": {
+    "t": "already / indeed",
+    "pos": "adverb"
+  },
+  "noch": {
+    "t": "still / yet / another",
+    "pos": "adverb"
+  },
+  "auch": {
+    "t": "also / too",
+    "pos": "adverb"
+  },
+  "sehr": {
+    "t": "very",
+    "pos": "adverb"
+  },
+  "viel": {
+    "t": "much / a lot",
+    "pos": "adjective"
+  },
+  "viele": {
+    "t": "many",
+    "pos": "adjective"
+  },
+  "wenig": {
+    "t": "little / few",
+    "pos": "adjective"
+  },
+  "mehr": {
+    "t": "more",
+    "pos": "adverb"
+  },
+  "alle": {
+    "t": "all / everybody",
+    "pos": "pronoun"
+  },
+  "alles": {
+    "t": "everything",
+    "pos": "pronoun"
+  },
+  "gott": {
+    "t": "god",
+    "pos": "noun"
+  },
+  "tempel": {
+    "t": "temple",
+    "pos": "noun"
+  },
+  "kloster": {
+    "t": "monastery / convent",
+    "pos": "noun"
+  },
+  "abt": {
+    "t": "abbot",
+    "pos": "noun"
+  },
+  "priester": {
+    "t": "priest",
+    "pos": "noun"
+  },
+  "könig": {
+    "t": "king",
+    "pos": "noun"
+  },
+  "prinz": {
+    "t": "prince",
+    "pos": "noun"
+  },
+  "prinzessin": {
+    "t": "princess",
+    "pos": "noun"
+  },
+  "schloß": {
+    "t": "castle / palace / lock",
+    "pos": "noun"
+  },
+  "drache": {
+    "t": "dragon / kite",
+    "pos": "noun"
+  },
+  "hase": {
+    "t": "hare / rabbit",
+    "pos": "noun"
+  },
+  "kröte": {
+    "t": "toad",
+    "pos": "noun"
+  },
+  "krabbe": {
+    "t": "crab",
+    "pos": "noun"
+  },
+  "affe": {
+    "t": "monkey / ape",
+    "pos": "noun"
+  },
+  "fuchs": {
+    "t": "fox",
+    "pos": "noun"
+  },
+  "dachs": {
+    "t": "badger",
+    "pos": "noun"
+  },
+  "sperling": {
+    "t": "sparrow",
+    "pos": "noun"
+  },
+  "vogel": {
+    "t": "bird",
+    "pos": "noun"
+  },
+  "fisch": {
+    "t": "fish",
+    "pos": "noun"
+  },
+  "fischer": {
+    "t": "fisherman",
+    "pos": "noun"
+  },
+  "schildkröte": {
+    "t": "turtle / tortoise",
+    "pos": "noun"
+  },
+  "kobold": {
+    "t": "goblin / sprite",
+    "pos": "noun"
+  },
+  "geist": {
+    "t": "ghost / spirit / mind",
+    "pos": "noun"
+  },
+  "zauberer": {
+    "t": "magician / wizard",
+    "pos": "noun"
+  },
+  "märchen": {
+    "t": "fairy tale",
+    "pos": "noun"
+  },
+  "geschichte": {
+    "t": "story / history",
+    "pos": "noun"
+  },
+  "buch": {
+    "t": "book",
+    "pos": "noun"
+  },
+  "wort": {
+    "t": "word",
+    "pos": "noun"
+  },
+  "worte": {
+    "t": "words",
+    "pos": "noun"
+  },
+  "satz": {
+    "t": "sentence / phrase",
+    "pos": "noun"
+  }
+}

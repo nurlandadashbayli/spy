@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Reading App - Read foreign language books with instant word and sentence translation popups. Start with Japanische Märchen (Gutenberg #23393).">
+    <title>Reading — Read & Translate Foreign Books</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+
+    <!-- Reader Styles -->
+    <link rel="stylesheet" href="src/games/reading/reading.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+</head>
+<body>
+    <div id="reading-app" class="reading-app theme-midnight">
+        <div class="reading-app-container">
+
+            <!-- Top Sticky Navigation Bar -->
+            <header id="reader-top-bar" class="reader-top-bar">
+                <div class="top-bar-left">
+                    <a href="games.html" class="reader-icon-btn" title="Back to Game Hub" style="text-decoration: none;">
+                        <span>← Hub</span>
+                    </a>
+                    <button id="reader-library-btn" class="reader-icon-btn primary" title="Choose Book / Library">
+                        <span>📚 Library</span>
+                    </button>
+                    <button id="reader-toc-btn" class="reader-icon-btn" title="Table of Contents">
+                        <span>📑 Contents</span>
+                    </button>
+                </div>
+
+                <div class="top-bar-center" id="reader-title-trigger" title="Click to view book details">
+                    <div id="reader-book-title" class="reader-book-title">📖 Japanische Märchen</div>
+                    <div id="reader-chapter-sub" class="reader-chapter-sub">Juki-onna</div>
+                </div>
+
+                <div class="top-bar-right">
+                    <span id="reader-lang-badge" class="badge-tag">German → English</span>
+                    <button id="reader-vocab-btn" class="reader-icon-btn" title="Saved Vocabulary">
+                        <span>⭐ Vocab</span>
+                        <span id="reader-vocab-count" class="badge-tag" style="padding: 0.1rem 0.35rem; margin-left: 2px;">0</span>
+                    </button>
+                    <button id="reader-settings-btn" class="reader-icon-btn" title="Reading Appearance & Themes">
+                        <span>⚙️ Aa</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scroll Reading Progress Indicator -->
+            <div class="reader-progress-container">
+                <div id="reader-progress-bar" class="reader-progress-bar"></div>
+            </div>
+
+            <!-- Main Reader Viewport -->
+            <main id="reader-viewport" class="reader-viewport">
+                <article id="reader-content-wrap" class="reader-content-wrap font-serif">
+                    <!-- Chapter Header -->
+                    <header class="chapter-header">
+                        <div id="reader-chapter-ornament" class="chapter-ornament"></div>
+                        <h1 id="reader-chapter-heading" class="chapter-title">Juki-onna</h1>
+                        <div id="reader-chapter-meta" class="chapter-meta">Japanische Märchen • Karl Alberti</div>
+                    </header>
+
+                    <!-- Chapter Text Body with Interactive Word Spans -->
+                    <div id="reader-body-content" class="reader-body">
+                        <!-- Populated dynamically with interactive words and authentic woodcuts -->
+                    </div>
+
+                    <!-- Bottom Story Pagination Navigation -->
+                    <nav class="chapter-nav-bottom">
+                        <button id="reader-prev-chapter-btn" class="nav-story-btn">
+                            <span class="nav-label">← Previous Story</span>
+                        </button>
+                        <button id="reader-next-chapter-btn" class="nav-story-btn">
+                            <span class="nav-label">Next Story →</span>
+                        </button>
+                    </nav>
+                </article>
+            </main>
+
+            <!-- Floating Translation Pop-up Tooltip -->
+            <div id="translation-popup" class="translation-popup" role="dialog" aria-live="polite">
+                <div id="popup-arrow" class="popup-arrow"></div>
+                <div class="popup-header">
+                    <span id="popup-lang-badge" class="popup-lang-badge">🇩🇪 German Translation</span>
+                    <div class="popup-header-controls">
+                        <button id="popup-audio-btn" class="popup-mini-btn" title="Listen Pronunciation">🔊</button>
+                        <button id="popup-close-btn" class="popup-mini-btn" title="Close">✕</button>
+                    </div>
+                </div>
+
+                <div id="popup-original" class="popup-original">Word</div>
+                <div id="popup-sentence-preview" class="popup-sentence-preview" style="display: none;"></div>
+
+                <div id="popup-translation" class="popup-translation">
+                    Translation here...
+                </div>
+
+                <div class="popup-actions">
+                    <button id="popup-save-btn" class="popup-action-btn">
+                        <span>☆ Save</span>
+                    </button>
+                    <button id="popup-copy-btn" class="popup-action-btn" title="Copy Translation">
+                        <span>📋 Copy</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Drawer Overlay -->
+            <div id="reader-drawer-overlay" class="reader-drawer-overlay"></div>
+
+            <!-- Table of Contents Drawer (Left) -->
+            <aside id="reader-toc-drawer" class="reader-drawer drawer-left">
+                <div class="drawer-header">
+                    <div class="drawer-title">📑 Table of Contents</div>
+                    <button class="reader-icon-btn drawer-close-btn">✕</button>
+                </div>
+                <div class="drawer-body">
+                    <ul id="reader-toc-list" class="toc-list">
+                        <!-- Generated dynamically -->
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Settings / Appearance Drawer (Right) -->
+            <aside id="reader-settings-drawer" class="reader-drawer drawer-right">
+                <div class="drawer-header">
+                    <div class="drawer-title">⚙️ Reader Appearance</div>
+                    <button class="reader-icon-btn drawer-close-btn">✕</button>
+                </div>
+                <div class="drawer-body">
+                    <!-- Themes -->
+                    <div class="settings-group">
+                        <label class="settings-label">Reading Theme</label>
+                        <div class="theme-grid">
+                            <button class="theme-opt-btn opt-light" data-theme="theme-light" title="Day / Light">☀️</button>
+                            <button class="theme-opt-btn opt-sepia" data-theme="theme-sepia" title="Warm Sepia Book">📜</button>
+                            <button class="theme-opt-btn opt-midnight active" data-theme="theme-midnight" title="Midnight Slate">🌌</button>
+                            <button class="theme-opt-btn opt-dark" data-theme="theme-dark" title="Obsidian OLED">🌙</button>
+                            <button class="theme-opt-btn opt-forest" data-theme="theme-forest" title="Sage Forest">🌲</button>
+                        </div>
+                    </div>
+
+                    <!-- Typography Font Family -->
+                    <div class="settings-group">
+                        <label class="settings-label">Typeface</label>
+                        <div class="font-options-grid">
+                            <button class="font-opt-btn active" data-font="font-serif">Merriweather</button>
+                            <button class="font-opt-btn" data-font="font-classic">Lora Serif</button>
+                            <button class="font-opt-btn" data-font="font-sans">Inter Sans</button>
+                            <button class="font-opt-btn" data-font="font-literary">Decorative</button>
+                        </div>
+                    </div>
+
+                    <!-- Font Size Slider -->
+                    <div class="settings-group">
+                        <label class="settings-label">Font Size</label>
+                        <div class="settings-slider-row">
+                            <span style="font-size: 0.8rem;">A</span>
+                            <input type="range" id="settings-font-size-slider" class="settings-slider" min="14" max="28" value="19" step="1">
+                            <span style="font-size: 1.15rem; font-weight: 700;">A</span>
+                            <span id="font-size-val" class="slider-val">19px</span>
+                        </div>
+                    </div>
+
+                    <!-- Line Height Slider -->
+                    <div class="settings-group">
+                        <label class="settings-label">Line Spacing</label>
+                        <div class="settings-slider-row">
+                            <input type="range" id="settings-line-height-slider" class="settings-slider" min="1.4" max="2.4" value="1.85" step="0.05">
+                            <span id="line-height-val" class="slider-val">1.85</span>
+                        </div>
+                    </div>
+
+                    <!-- Column Width Slider -->
+                    <div class="settings-group">
+                        <label class="settings-label">Reading Width</label>
+                        <div class="settings-slider-row">
+                            <input type="range" id="settings-width-slider" class="settings-slider" min="600" max="980" value="780" step="20">
+                            <span id="width-val" class="slider-val">780px</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Instructions -->
+                    <div class="settings-group" style="margin-top: 2rem; padding: 1rem; background: var(--read-bg); border-radius: 10px; border: 1px solid var(--read-border);">
+                        <div style="font-weight: 700; margin-bottom: 0.4rem; font-size: 0.85rem;">💡 Reader Tips:</div>
+                        <ul style="font-size: 0.78rem; color: var(--read-text-muted); padding-left: 1.2rem; line-height: 1.6;">
+                            <li>Click any word to see its English translation & pronunciation.</li>
+                            <li>Highlight / select a sentence to translate the full sentence.</li>
+                            <li>Tap ⭐ Save to add vocabulary to your personal flashcards.</li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Vocabulary Notebook Drawer (Right) -->
+            <aside id="reader-vocab-drawer" class="reader-drawer drawer-right">
+                <div class="drawer-header">
+                    <div class="drawer-title">⭐ Vocabulary Notebook</div>
+                    <button class="reader-icon-btn drawer-close-btn">✕</button>
+                </div>
+                <div class="drawer-body">
+                    <input type="text" id="vocab-search-input" class="vocab-search-input" placeholder="Search saved words...">
+                    <div class="vocab-filter-row">
+                        <button id="export-vocab-csv-btn" class="reader-icon-btn" style="flex: 1; font-size: 0.78rem; justify-content: center;">Export CSV (Anki)</button>
+                        <button id="export-vocab-json-btn" class="reader-icon-btn" style="flex: 1; font-size: 0.78rem; justify-content: center;">Export JSON</button>
+                        <button id="clear-vocab-btn" class="reader-icon-btn" style="font-size: 0.78rem; color: var(--read-danger);" title="Clear All">🗑️</button>
+                    </div>
+                    <div id="reader-vocab-list" class="vocab-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Book Library Modal -->
+            <div id="reader-library-modal" class="library-modal-overlay">
+                <div class="library-modal">
+                    <div class="library-header">
+                        <div class="library-title-group">
+                            <h2>📚 Choose a Book</h2>
+                            <p>Select from classic literature or upload your own book to read and translate.</p>
+                        </div>
+                        <button class="reader-icon-btn drawer-close-btn">✕</button>
+                    </div>
+                    <div class="library-body">
+                        <!-- Book Shelf Grid -->
+                        <div id="reader-bookshelf-grid" class="book-shelf-grid">
+                            <!-- Populated dynamically with books -->
+                        </div>
+
+                        <!-- Upload Custom Book -->
+                        <div class="custom-book-zone" onclick="document.getElementById('custom-book-file-input').click()">
+                            <input type="file" id="custom-book-file-input" accept=".epub,.txt,.html,.xhtml" style="display: none;">
+                            <div style="font-size: 1.8rem; margin-bottom: 0.4rem;">📥</div>
+                            <div style="font-weight: 700; font-size: 0.95rem;">Upload Your Own Book</div>
+                            <div style="font-size: 0.8rem; color: var(--read-text-muted); margin-top: 0.2rem;">Drop or click to open any EPUB, TXT, or HTML file to read & translate</div>
+                        </div>
+
+                        <!-- Load from Gutenberg URL -->
+                        <div style="background: var(--read-bg); padding: 1.2rem; border-radius: 12px; border: 1px solid var(--read-border);">
+                            <div style="font-weight: 700; font-size: 0.9rem;">Load from Project Gutenberg</div>
+                            <div style="font-size: 0.78rem; color: var(--read-text-muted); margin-bottom: 0.5rem;">Paste any Project Gutenberg URL or eBook ID:</div>
+                            <div class="gutenberg-input-row">
+                                <input type="text" id="gutenberg-url-input" class="gutenberg-input" placeholder="e.g. https://www.gutenberg.org/ebooks/23393">
+                                <button id="gutenberg-fetch-btn" class="reader-icon-btn primary">Load Book</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast Notification -->
+            <div id="reader-toast" class="reader-toast">Notification</div>
+
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script type="module" src="src/games/reading/reading.js"></script>
+</body>
+</html>
