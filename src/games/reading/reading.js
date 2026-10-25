@@ -790,12 +790,49 @@ class ReadingApp {
         const cleanKey = text.toLowerCase().trim();
         const cacheKey = `${srcLang}_${targetLang}_${cleanKey}`;
 
-        // 1. Check in-memory / local storage cache
+        // 1. Check in-memory / local storage cache (v3)
         if (this.translationCache[cacheKey]) {
-            return this.translationCache[cacheKey];
+            const cachedVal = this.translationCache[cacheKey];
+            // If cached value was an untranslated echo of the source word, invalidate it
+            if (cachedVal.toLowerCase() !== cleanKey) {
+                return cachedVal;
+            }
         }
 
-        // 2. Primary Engine: Google Translate (GTX) - ultra-fast neural translation with 100% dictionary accuracy
+        // Helper: returns true only if the result is valid and NOT an identical echo
+        const isValidTranslation = (cand) => {
+            if (!cand || typeof cand !== 'string') return false;
+            const trimmed = cand.trim();
+            if (!trimmed) return false;
+            // Reject if the result is just the input word repeated
+            if (trimmed.toLowerCase() === cleanKey && cleanKey.length > 2) {
+                return false;
+            }
+            return true;
+        };
+
+        // 2. Primary Engine: Google Official Chrome Dictionary API (clients5.google.com)
+        // High availability, ultra-fast, 100% accurate neural translations, no echo
+        try {
+            const chromeApiUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=${srcLang}&tl=${targetLang}&q=${encodeURIComponent(text)}`;
+            const res = await fetch(chromeApiUrl);
+            if (res.ok) {
+                const data = await res.json();
+                let trans = null;
+                if (Array.isArray(data) && data[0]) {
+                    trans = Array.isArray(data[0]) ? data[0][0] : data[0];
+                }
+                if (isValidTranslation(trans)) {
+                    const cleanTrans = trans.trim();
+                    this.cacheTranslation(cacheKey, cleanTrans);
+                    return cleanTrans;
+                }
+            }
+        } catch (e) {
+            console.warn('Google clients5 API error, trying secondary Google GTX:', e);
+        }
+
+        // 3. Secondary Engine: Google Translate GTX endpoint (translate.googleapis.com)
         try {
             const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${srcLang}&tl=${targetLang}&dt=t&dt=bd&q=${encodeURIComponent(text)}`;
             const gRes = await fetch(googleUrl);
@@ -803,7 +840,7 @@ class ReadingApp {
                 const gData = await gRes.json();
                 if (gData && gData[0]) {
                     const trans = gData[0].map(item => item[0]).filter(Boolean).join('');
-                    if (trans && trans.trim()) {
+                    if (isValidTranslation(trans)) {
                         const cleanTrans = trans.trim();
                         this.cacheTranslation(cacheKey, cleanTrans);
                         return cleanTrans;
@@ -811,31 +848,17 @@ class ReadingApp {
                 }
             }
         } catch (e) {
-            console.warn('Google Translate API error, checking fallbacks:', e);
+            console.warn('Google Translate GTX error, checking dictionary & fallbacks:', e);
         }
 
-        // 3. High-frequency offline dictionary fallback for common words (0ms)
+        // 4. High-frequency offline dictionary fallback for common words (0ms)
         if (!cleanKey.includes(' ') && this.offlineDict[cleanKey]) {
             const entry = this.offlineDict[cleanKey];
             const result = entry.t;
-            this.cacheTranslation(cacheKey, result);
-            return result;
-        }
-
-        // 4. Secondary fallback: Lingva Translate public API
-        try {
-            const lingvaUrl = `https://lingva.ml/api/v1/${srcLang}/${targetLang}/${encodeURIComponent(text)}`;
-            const lRes = await fetch(lingvaUrl);
-            if (lRes.ok) {
-                const lData = await lRes.json();
-                if (lData && lData.translation) {
-                    const cleanTrans = lData.translation.trim();
-                    this.cacheTranslation(cacheKey, cleanTrans);
-                    return cleanTrans;
-                }
+            if (isValidTranslation(result)) {
+                this.cacheTranslation(cacheKey, result);
+                return result;
             }
-        } catch (e) {
-            console.warn('Lingva translation fallback error:', e);
         }
 
         // 5. Tertiary fallback: MyMemory (crowdsourced memory, filtered for quality)
@@ -846,10 +869,8 @@ class ReadingApp {
                 const data = await res.json();
                 if (data.responseData && data.responseData.translatedText) {
                     const trans = data.responseData.translatedText.trim();
-                    // Reject weirdly long crowdsourced text for single words
-                    if (cleanKey.split(' ').length === 1 && (trans.includes(',') || trans.split(' ').length > 3)) {
-                        console.warn('Rejected suspicious crowdsourced translation for single word:', trans);
-                    } else {
+                    // Reject weirdly long crowdsourced text or identical echo for single words
+                    if (isValidTranslation(trans) && !(cleanKey.split(' ').length === 1 && (trans.includes(',') || trans.split(' ').length > 3))) {
                         this.cacheTranslation(cacheKey, trans);
                         return trans;
                     }
@@ -859,14 +880,30 @@ class ReadingApp {
             console.warn('MyMemory fallback error:', e);
         }
 
-        // 6. Offline placeholder if all network requests fail
+        // 6. Quaternary fallback: Lingva Translate public API (only if not echoing)
+        try {
+            const lingvaUrl = `https://lingva.ml/api/v1/${srcLang}/${targetLang}/${encodeURIComponent(text)}`;
+            const lRes = await fetch(lingvaUrl);
+            if (lRes.ok) {
+                const lData = await lRes.json();
+                if (lData && isValidTranslation(lData.translation)) {
+                    const cleanTrans = lData.translation.trim();
+                    this.cacheTranslation(cacheKey, cleanTrans);
+                    return cleanTrans;
+                }
+            }
+        } catch (e) {
+            console.warn('Lingva translation fallback error:', e);
+        }
+
+        // 7. Offline placeholder if all network requests fail
         return `[Translation unavailable offline]`;
     }
 
     cacheTranslation(key, value) {
         this.translationCache[key] = value;
         try {
-            localStorage.setItem('reading_trans_cache_v2', JSON.stringify(this.translationCache));
+            localStorage.setItem('reading_trans_cache_v3', JSON.stringify(this.translationCache));
         } catch (e) {
             // storage quota full
         }
@@ -874,10 +911,11 @@ class ReadingApp {
 
     loadTranslationCache() {
         try {
-            // Purge legacy v1 cache which stored crowdsourced gibberish (e.g. "she, from a brain")
+            // Purge legacy caches which stored crowdsourced or echoed words (e.g. "morgens" -> "morgens")
             localStorage.removeItem('reading_trans_cache');
+            localStorage.removeItem('reading_trans_cache_v2');
 
-            const cached = localStorage.getItem('reading_trans_cache_v2');
+            const cached = localStorage.getItem('reading_trans_cache_v3');
             if (cached) {
                 this.translationCache = JSON.parse(cached);
             }
@@ -961,6 +999,43 @@ class ReadingApp {
     // =========================================================================
 
     speakText(text, lang = 'de') {
+        const cleanText = text.trim();
+        if (!cleanText) return;
+
+        const langMap = {
+            'de': 'de',
+            'fr': 'fr',
+            'es': 'es',
+            'it': 'it',
+            'en': 'en',
+            'ru': 'ru',
+            'ja': 'ja'
+        };
+        const voiceLang = langMap[lang] || 'de';
+
+        // 1. Google Official TTS Audio (Natural human pronunciation across all browsers: Safari, Chrome, iOS)
+        try {
+            const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${voiceLang}&q=${encodeURIComponent(cleanText)}`;
+            const audio = new Audio(googleTtsUrl);
+            audio.playbackRate = 0.95;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    this.showToast(`Pronouncing: "${cleanText.substring(0, 25)}"`);
+                }).catch(err => {
+                    console.warn('Google TTS play error, falling back to Web Speech API:', err);
+                    this.speakWebSpeech(cleanText, voiceLang);
+                });
+                return;
+            }
+        } catch (e) {
+            console.warn('Google TTS initialization error, falling back to Web Speech API:', e);
+        }
+
+        this.speakWebSpeech(cleanText, voiceLang);
+    }
+
+    speakWebSpeech(cleanText, lang) {
         if (!window.speechSynthesis) {
             this.showToast('Speech synthesis not supported on this browser');
             return;
@@ -968,24 +1043,25 @@ class ReadingApp {
 
         window.speechSynthesis.cancel(); // Stop any previous utterance
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        const langMap = {
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        const fullLangMap = {
             'de': 'de-DE',
             'fr': 'fr-FR',
             'es': 'es-ES',
             'it': 'it-IT',
             'en': 'en-US'
         };
-        utterance.lang = langMap[lang] || 'de-DE';
-        utterance.rate = 0.9; // slightly clearer pacing for language learners
+        utterance.lang = fullLangMap[lang] || 'de-DE';
+        utterance.rate = 0.9;
 
-        // Choose native voice if available
+        // Prioritize natural / Siri / Google voices over legacy robotic compact voices
         const voices = window.speechSynthesis.getVoices();
-        const matchingVoice = voices.find(v => v.lang.startsWith(utterance.lang.substring(0, 2)));
-        if (matchingVoice) utterance.voice = matchingVoice;
+        const langVoices = voices.filter(v => v.lang.startsWith(utterance.lang.substring(0, 2)));
+        const bestVoice = langVoices.find(v => !v.name.includes('Compact') && (v.name.includes('Google') || v.name.includes('Siri') || v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Enhanced'))) || langVoices[0];
+        if (bestVoice) utterance.voice = bestVoice;
 
         window.speechSynthesis.speak(utterance);
-        this.showToast(`Pronouncing: "${text.substring(0, 25)}..."`);
+        this.showToast(`Pronouncing: "${cleanText.substring(0, 25)}..."`);
     }
 
     // =========================================================================
