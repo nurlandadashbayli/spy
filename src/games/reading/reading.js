@@ -4,6 +4,27 @@
  * ============================================================================
  */
 
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { getDatabase, ref, set, get, child, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBT0StKCiled3K5uAi3lcrJlFALXI5KgvE",
+    authDomain: "spy-game-4ce29.firebaseapp.com",
+    databaseURL: "https://spy-game-4ce29-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "spy-game-4ce29",
+    storageBucket: "spy-game-4ce29.firebasestorage.app",
+    messagingSenderId: "20232358549",
+    appId: "1:20232358549:web:feb22d19fb56e13ec9699c"
+};
+
+let db = null;
+try {
+    const fbApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    db = getDatabase(fbApp);
+} catch (e) {
+    console.warn('Firebase init warning in reading.js:', e);
+}
+
 class ReadingApp {
     constructor() {
         this.currentBook = null;
@@ -95,10 +116,16 @@ class ReadingApp {
             bookShelfGrid: document.getElementById('reader-bookshelf-grid'),
             toast: document.getElementById('reader-toast'),
 
-            // File upload & Gutenberg fetch
+            // File upload, paste modal & Gutenberg fetch
             fileUploadInput: document.getElementById('custom-book-file-input'),
+            openPasteBtn: document.getElementById('open-paste-modal-btn'),
+            pasteModal: document.getElementById('reader-paste-modal'),
+            pasteTitleInput: document.getElementById('paste-book-title-input'),
+            pasteTextInput: document.getElementById('paste-book-text-input'),
+            pasteSubmitBtn: document.getElementById('paste-book-submit-btn'),
             gutenbergUrlInput: document.getElementById('gutenberg-url-input'),
-            gutenbergFetchBtn: document.getElementById('gutenberg-fetch-btn')
+            gutenbergFetchBtn: document.getElementById('gutenberg-fetch-btn'),
+            gutenbergHint: document.getElementById('gutenberg-help-hint')
         };
     }
 
@@ -233,6 +260,22 @@ class ReadingApp {
             if (file) this.handleFileUpload(file);
         });
 
+        // Paste Text Modal bindings
+        this.dom.openPasteBtn?.addEventListener('click', () => {
+            this.openPasteModal();
+        });
+
+        this.dom.pasteSubmitBtn?.addEventListener('click', () => {
+            const title = this.dom.pasteTitleInput?.value.trim() || 'Custom Story';
+            const text = this.dom.pasteTextInput?.value.trim();
+            if (!text) {
+                alert('Please paste some text to read.');
+                return;
+            }
+            this.createCustomBook(title, text);
+            this.closeAllDrawers();
+        });
+
         // Gutenberg URL fetch
         this.dom.gutenbergFetchBtn?.addEventListener('click', () => {
             const url = this.dom.gutenbergUrlInput?.value.trim();
@@ -274,15 +317,116 @@ class ReadingApp {
         } catch (err) {
             console.warn('Could not load books manifest:', err);
         }
+
+        // 1. Merge locally stored custom/uploaded books from localStorage
+        try {
+            const localCustom = JSON.parse(localStorage.getItem('reading_custom_books') || '{}');
+            Object.values(localCustom).forEach(book => {
+                if (!this.booksManifest.find(b => b.id === book.id)) {
+                    this.booksManifest.unshift({
+                        id: book.id,
+                        title: book.title,
+                        author: book.author || 'Custom Upload',
+                        language: book.language || 'de',
+                        languageName: book.languageName || 'German',
+                        languageFlag: book.languageFlag || '🌐',
+                        description: book.description || 'Uploaded Book',
+                        difficulty: book.difficulty || 'Custom Book',
+                        difficultyLevel: book.difficultyLevel || 'intermediate',
+                        chaptersCount: book.chapters ? book.chapters.length : 1,
+                        isCloud: true,
+                        source: 'cloud',
+                        updatedAt: book.updatedAt || Date.now()
+                    });
+                }
+            });
+        } catch (e) {
+            console.warn('Could not load local custom books:', e);
+        }
+
+        // 2. Fetch shared cloud books from Firebase Realtime Database
+        if (db) {
+            try {
+                const snapshot = await get(ref(db, 'reading_books_meta'));
+                if (snapshot.exists()) {
+                    const cloudMetaMap = snapshot.val();
+                    Object.values(cloudMetaMap).forEach(meta => {
+                        const existingIdx = this.booksManifest.findIndex(b => b.id === meta.id);
+                        if (existingIdx >= 0) {
+                            this.booksManifest[existingIdx] = meta;
+                        } else {
+                            this.booksManifest.unshift(meta);
+                        }
+                    });
+                }
+
+                // Setup realtime listener so books uploaded from another computer appear instantly!
+                onValue(ref(db, 'reading_books_meta'), (snapshot) => {
+                    if (snapshot.exists()) {
+                        const cloudMetaMap = snapshot.val();
+                        let updated = false;
+                        Object.values(cloudMetaMap).forEach(meta => {
+                            const existingIdx = this.booksManifest.findIndex(b => b.id === meta.id);
+                            if (existingIdx === -1) {
+                                this.booksManifest.unshift(meta);
+                                updated = true;
+                            }
+                        });
+                        if (updated && this.dom.libraryModal?.classList.contains('open')) {
+                            this.renderBookshelf();
+                        }
+                    }
+                });
+            } catch (err) {
+                console.warn('Could not load cloud books metadata from Firebase:', err);
+            }
+        }
     }
 
     async loadBook(bookId, chapterIndex = 0) {
         try {
             this.showToast('Loading book...');
-            const res = await fetch(`assets/books/${bookId}.json`);
-            if (!res.ok) throw new Error('Book file not found');
-            this.currentBook = await res.json();
-            this.currentChapterIndex = Math.min(Math.max(0, chapterIndex), this.currentBook.chapters.length - 1);
+            let bookData = null;
+
+            // 1. Try local assets/books/
+            try {
+                const res = await fetch(`assets/books/${bookId}.json`);
+                if (res.ok) {
+                    bookData = await res.json();
+                }
+            } catch (e) {}
+
+            // 2. Try localStorage custom books
+            if (!bookData) {
+                try {
+                    const localCustom = JSON.parse(localStorage.getItem('reading_custom_books') || '{}');
+                    if (localCustom[bookId]) {
+                        bookData = localCustom[bookId];
+                    }
+                } catch (e) {}
+            }
+
+            // 3. Try Firebase Realtime Database cloud library
+            if (!bookData && db) {
+                this.showToast('☁️ Fetching book from Cloud Library...');
+                const snapshot = await get(ref(db, `reading_books/${bookId}`));
+                if (snapshot.exists()) {
+                    bookData = snapshot.val();
+                    // Cache in localStorage for future fast loading
+                    try {
+                        const local = JSON.parse(localStorage.getItem('reading_custom_books') || '{}');
+                        local[bookId] = bookData;
+                        localStorage.setItem('reading_custom_books', JSON.stringify(local));
+                    } catch (e) {}
+                }
+            }
+
+            if (!bookData) {
+                throw new Error(`Book "${bookId}" not found in assets, local storage, or cloud library.`);
+            }
+
+            this.currentBook = bookData;
+            this.currentChapterIndex = Math.min(Math.max(0, chapterIndex), (this.currentBook.chapters?.length || 1) - 1);
 
             localStorage.setItem('reading_active_book_id', bookId);
             this.renderBookMeta();
@@ -467,9 +611,9 @@ class ReadingApp {
     // =========================================================================
 
     handleWordClick(e) {
-        // If the user was just dragging to select multiple words/sentences, don't trigger word-click
+        // If the user was dragging to select multiple words/sentences, don't trigger word-click
         const selection = window.getSelection();
-        if (selection && selection.toString().trim().length > 0) {
+        if (selection && selection.toString().trim().split(/\s+/).length > 1) {
             return;
         }
 
@@ -644,14 +788,33 @@ class ReadingApp {
 
     async translateText(text, srcLang = 'de', targetLang = 'en') {
         const cleanKey = text.toLowerCase().trim();
-
-        // 1. Check in-memory / localStorage cache
         const cacheKey = `${srcLang}_${targetLang}_${cleanKey}`;
+
+        // 1. Check in-memory / local storage cache
         if (this.translationCache[cacheKey]) {
             return this.translationCache[cacheKey];
         }
 
-        // 2. Check offline high-frequency dictionary for single words
+        // 2. Primary Engine: Google Translate (GTX) - ultra-fast neural translation with 100% dictionary accuracy
+        try {
+            const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${srcLang}&tl=${targetLang}&dt=t&dt=bd&q=${encodeURIComponent(text)}`;
+            const gRes = await fetch(googleUrl);
+            if (gRes.ok) {
+                const gData = await gRes.json();
+                if (gData && gData[0]) {
+                    const trans = gData[0].map(item => item[0]).filter(Boolean).join('');
+                    if (trans && trans.trim()) {
+                        const cleanTrans = trans.trim();
+                        this.cacheTranslation(cacheKey, cleanTrans);
+                        return cleanTrans;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Google Translate API error, checking fallbacks:', e);
+        }
+
+        // 3. High-frequency offline dictionary fallback for common words (0ms)
         if (!cleanKey.includes(' ') && this.offlineDict[cleanKey]) {
             const entry = this.offlineDict[cleanKey];
             const result = entry.t;
@@ -659,55 +822,65 @@ class ReadingApp {
             return result;
         }
 
-        // 3. Online Translation via MyMemory API
+        // 4. Secondary fallback: Lingva Translate public API
+        try {
+            const lingvaUrl = `https://lingva.ml/api/v1/${srcLang}/${targetLang}/${encodeURIComponent(text)}`;
+            const lRes = await fetch(lingvaUrl);
+            if (lRes.ok) {
+                const lData = await lRes.json();
+                if (lData && lData.translation) {
+                    const cleanTrans = lData.translation.trim();
+                    this.cacheTranslation(cacheKey, cleanTrans);
+                    return cleanTrans;
+                }
+            }
+        } catch (e) {
+            console.warn('Lingva translation fallback error:', e);
+        }
+
+        // 5. Tertiary fallback: MyMemory (crowdsourced memory, filtered for quality)
         try {
             const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcLang}|${targetLang}`;
             const res = await fetch(myMemoryUrl);
             if (res.ok) {
                 const data = await res.json();
                 if (data.responseData && data.responseData.translatedText) {
-                    const trans = data.responseData.translatedText;
-                    this.cacheTranslation(cacheKey, trans);
-                    return trans;
+                    const trans = data.responseData.translatedText.trim();
+                    // Reject weirdly long crowdsourced text for single words
+                    if (cleanKey.split(' ').length === 1 && (trans.includes(',') || trans.split(' ').length > 3)) {
+                        console.warn('Rejected suspicious crowdsourced translation for single word:', trans);
+                    } else {
+                        this.cacheTranslation(cacheKey, trans);
+                        return trans;
+                    }
                 }
             }
         } catch (e) {
-            console.warn('MyMemory translation error, trying Google fallback:', e);
+            console.warn('MyMemory fallback error:', e);
         }
 
-        // 4. Fallback to Google Translate GTX endpoint
-        try {
-            const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${srcLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-            const gRes = await fetch(googleUrl);
-            if (gRes.ok) {
-                const gData = await gRes.json();
-                if (gData && gData[0]) {
-                    const trans = gData[0].map(item => item[0]).join('');
-                    this.cacheTranslation(cacheKey, trans);
-                    return trans;
-                }
-            }
-        } catch (e) {
-            console.warn('Google GTX fallback error:', e);
-        }
-
-        // 5. Fallback dictionary word lookup / placeholder
+        // 6. Offline placeholder if all network requests fail
         return `[Translation unavailable offline]`;
     }
 
     cacheTranslation(key, value) {
         this.translationCache[key] = value;
         try {
-            localStorage.setItem('reading_trans_cache', JSON.stringify(this.translationCache));
+            localStorage.setItem('reading_trans_cache_v2', JSON.stringify(this.translationCache));
         } catch (e) {
-            // storage full
+            // storage quota full
         }
     }
 
     loadTranslationCache() {
         try {
-            const cached = localStorage.getItem('reading_trans_cache');
-            if (cached) this.translationCache = JSON.parse(cached);
+            // Purge legacy v1 cache which stored crowdsourced gibberish (e.g. "she, from a brain")
+            localStorage.removeItem('reading_trans_cache');
+
+            const cached = localStorage.getItem('reading_trans_cache_v2');
+            if (cached) {
+                this.translationCache = JSON.parse(cached);
+            }
         } catch (e) {
             this.translationCache = {};
         }
@@ -999,6 +1172,16 @@ class ReadingApp {
         this.dom.settingsDrawer?.classList.remove('open');
         this.dom.vocabDrawer?.classList.remove('open');
         this.dom.libraryModal?.classList.remove('open');
+        this.dom.pasteModal?.classList.remove('open');
+    }
+
+    openPasteModal(defaultTitle = '') {
+        this.closeAllDrawers();
+        if (this.dom.pasteTitleInput && defaultTitle) {
+            this.dom.pasteTitleInput.value = defaultTitle;
+        }
+        this.dom.overlay?.classList.add('open');
+        this.dom.pasteModal?.classList.add('open');
     }
 
     openLibraryModal() {
@@ -1018,8 +1201,21 @@ class ReadingApp {
             books = books.filter(b => b.difficultyLevel === 'intermediate' || (b.difficulty && b.difficulty.includes('Intermediate')));
         } else if (this.activeLibraryFilter === 'advanced') {
             books = books.filter(b => b.difficultyLevel === 'advanced' || (b.difficulty && b.difficulty.includes('Advanced')));
+        } else if (this.activeLibraryFilter === 'cloud') {
+            books = books.filter(b => b.isCloud || b.source === 'cloud' || b.source === 'custom');
         } else if (this.activeLibraryFilter && this.activeLibraryFilter !== 'all') {
             books = books.filter(b => b.language === this.activeLibraryFilter);
+        }
+
+        if (books.length === 0) {
+            this.dom.bookShelfGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--read-text-muted);">
+                    <div style="font-size: 2.8rem; margin-bottom: 0.6rem;">☁️</div>
+                    <div style="font-size: 1.05rem; font-weight: 700; color: var(--read-text); margin-bottom: 0.3rem;">No books found in this category</div>
+                    <div style="font-size: 0.85rem; max-width: 400px; margin: 0 auto;">Upload an .epub book or paste text below to add it to your cloud library!</div>
+                </div>
+            `;
+            return;
         }
 
         const iconMap = {
@@ -1027,6 +1223,7 @@ class ReadingApp {
             'deutsche-fabeln': '🦊',
             'alltagsgeschichten': '☕',
             'japanische-maerchen': '🌸',
+            'der-fremde': '👤',
             'die-verwandlung': '🪲',
             'le-tour-du-monde': '🚂',
             'don-quijote': '🛡️'
@@ -1036,7 +1233,7 @@ class ReadingApp {
             const card = document.createElement('div');
             card.className = `book-card ${this.currentBook && this.currentBook.id === book.id ? 'active-book' : ''}`;
 
-            const icon = iconMap[book.id] || '📚';
+            const icon = iconMap[book.id] || (book.isCloud ? '☁️' : '📚');
             const coverHtml = book.cover
                 ? `<img src="${book.cover}" alt="${book.title}" class="book-cover-img" />`
                 : `<div class="book-cover-placeholder">${icon}</div>`;
@@ -1045,21 +1242,25 @@ class ReadingApp {
                 ? 'diff-beginner'
                 : (book.difficultyLevel === 'advanced' ? 'diff-advanced' : 'diff-intermediate');
 
+            const cloudTagHtml = book.isCloud
+                ? `<span class="badge-tag" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);">☁️ Cloud Synced</span>`
+                : `<span class="badge-tag">${book.featured ? 'Featured' : 'Read'}</span>`;
+
             card.innerHTML = `
                 <div class="book-cover-wrap">
                     ${coverHtml}
                 </div>
                 <div class="book-card-content">
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.2rem;">
-                        <span class="book-card-lang">${book.languageFlag || '🌐'} ${book.languageName || book.language.toUpperCase()}</span>
+                        <span class="book-card-lang">${book.languageFlag || '🌐'} ${book.languageName || (book.language ? book.language.toUpperCase() : 'MULTI')}</span>
                         <span class="diff-badge ${diffClass}">${book.difficulty || 'All Levels'}</span>
                     </div>
                     <div class="book-card-title">${book.title}</div>
-                    <div class="book-card-author">${book.author} (${book.year || ''})</div>
-                    <div class="book-card-desc">${book.description}</div>
+                    <div class="book-card-author">${book.author || 'Unknown Author'} ${book.year ? `(${book.year})` : ''}</div>
+                    <div class="book-card-desc">${book.description || 'Custom uploaded book.'}</div>
                     <div class="book-card-footer">
-                        <span>📖 ${book.chaptersCount || 1} Stories</span>
-                        <span class="badge-tag">${book.featured ? 'Featured' : 'Read'}</span>
+                        <span>📖 ${book.chaptersCount || 1} Chapters</span>
+                        ${cloudTagHtml}
                     </div>
                 </div>
             `;
@@ -1073,37 +1274,380 @@ class ReadingApp {
     }
 
     // =========================================================================
-    // Custom Book Upload & Live Gutenberg Fetch
+    // Custom Book Upload & In-Browser EPUB Parser
     // =========================================================================
 
     async handleFileUpload(file) {
-        this.showToast(`Loading: ${file.name}...`);
-        const name = file.name.replace(/\.[^/.]+$/, '');
+        try {
+            this.showToast(`Processing: ${file.name}...`);
+            let bookData = null;
 
-        if (file.name.endsWith('.txt')) {
-            const text = await file.text();
-            this.createCustomBook(name, text);
-        } else if (file.name.endsWith('.html') || file.name.endsWith('.xhtml')) {
-            const html = await file.text();
-            this.createCustomBook(name, html, true);
-        } else {
-            // For EPUB files: basic text extraction or notify
-            const text = await file.text();
-            this.createCustomBook(name, text);
+            if (file.name.toLowerCase().endsWith('.epub')) {
+                bookData = await this.parseEpubFile(file);
+            } else if (file.name.toLowerCase().endsWith('.html') || file.name.toLowerCase().endsWith('.xhtml')) {
+                const html = await file.text();
+                const name = file.name.replace(/\.[^/.]+$/, '');
+                bookData = {
+                    id: `html-${Date.now()}`,
+                    title: name,
+                    author: 'Custom Upload',
+                    language: 'de',
+                    languageName: 'German / Multi',
+                    languageFlag: '🇩🇪',
+                    targetLanguage: 'en',
+                    description: 'Custom HTML Book',
+                    difficulty: 'Uploaded File',
+                    difficultyLevel: 'intermediate',
+                    chaptersCount: 1,
+                    isCloud: true,
+                    source: 'cloud',
+                    updatedAt: Date.now(),
+                    chapters: [{
+                        index: 0,
+                        id: 'chap-1',
+                        title: 'Chapter 1',
+                        html: html
+                    }]
+                };
+            } else {
+                // Text file (.txt or generic)
+                const text = await file.text();
+                const name = file.name.replace(/\.[^/.]+$/, '');
+                const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+                const bodyHtml = paragraphs.map(p => `<p>${p.replace(/\n/g, ' ')}</p>`).join('\n');
+                bookData = {
+                    id: `txt-${Date.now()}`,
+                    title: name,
+                    author: 'Custom Text',
+                    language: 'de',
+                    languageName: 'German / Multi',
+                    languageFlag: '🇩🇪',
+                    targetLanguage: 'en',
+                    description: `Text Document (${paragraphs.length} paragraphs)`,
+                    difficulty: 'Uploaded Text',
+                    difficultyLevel: 'intermediate',
+                    chaptersCount: 1,
+                    isCloud: true,
+                    source: 'cloud',
+                    updatedAt: Date.now(),
+                    chapters: [{
+                        index: 0,
+                        id: 'chap-1',
+                        title: 'Chapter 1',
+                        html: bodyHtml
+                    }]
+                };
+            }
+
+            if (bookData) {
+                this.currentBook = bookData;
+                this.currentChapterIndex = 0;
+                localStorage.setItem('reading_active_book_id', bookData.id);
+                this.renderBookMeta();
+                this.renderTOC();
+                this.renderChapter(0);
+                this.closeAllDrawers();
+                this.showToast(`Opened: ${bookData.title}`);
+
+                // Automatically save to local and Firebase Cloud Library
+                await this.saveBookToCloudAndLocal(bookData);
+            }
+        } catch (err) {
+            console.error('EPUB / File parsing error:', err);
+            alert(`Could not parse EPUB book: ${err.message}`);
+            this.showToast('Failed to open file. Please verify it is a valid EPUB/text file.');
         }
     }
 
-    createCustomBook(title, content, isHtml = false) {
+    /**
+     * Parses an EPUB (.epub) ZIP archive in-browser using JSZip.
+     * Extracts OPF manifest, spine reading order, chapter XHTML documents,
+     * inlines embedded images into base64 data URLs, and structures clean chapters.
+     */
+    async parseEpubFile(file) {
+        if (!window.JSZip) {
+            throw new Error('JSZip library not loaded. Please check your internet connection.');
+        }
+
+        const zip = await window.JSZip.loadAsync(file);
+
+        // Helper to locate files in zip with case-insensitivity and slash normalization
+        const findZipFile = (path) => {
+            if (zip.file(path)) return zip.file(path);
+            const normPath = path.replace(/\\/g, '/');
+            if (zip.file(normPath)) return zip.file(normPath);
+            const lower = normPath.toLowerCase();
+            for (const name of Object.keys(zip.files)) {
+                if (name.toLowerCase() === lower) return zip.files[name];
+            }
+            const baseName = normPath.split('/').pop().toLowerCase();
+            for (const name of Object.keys(zip.files)) {
+                if (name.split('/').pop().toLowerCase() === baseName) return zip.files[name];
+            }
+            return null;
+        };
+
+        const resolveZipPath = (baseDir, relativePath) => {
+            const raw = (baseDir + decodeURIComponent(relativePath)).replace(/\\/g, '/');
+            const parts = raw.split('/');
+            const stack = [];
+            for (const part of parts) {
+                if (part === '.' || part === '') continue;
+                if (part === '..') {
+                    if (stack.length > 0) stack.pop();
+                } else {
+                    stack.push(part);
+                }
+            }
+            return stack.join('/');
+        };
+
+        // 1. Read META-INF/container.xml to find the root OPF file
+        let containerFile = findZipFile('META-INF/container.xml');
+        let opfPath = null;
+        const domParser = new DOMParser();
+
+        if (containerFile) {
+            const containerXml = await containerFile.async('string');
+            const containerDoc = domParser.parseFromString(containerXml, 'application/xml');
+            const rootfile = containerDoc.querySelector('rootfile');
+            if (rootfile) {
+                opfPath = rootfile.getAttribute('full-path');
+            }
+        }
+
+        if (!opfPath) {
+            // Fallback: search for any .opf file in the archive
+            for (const name of Object.keys(zip.files)) {
+                if (name.toLowerCase().endsWith('.opf')) {
+                    opfPath = name;
+                    break;
+                }
+            }
+        }
+
+        if (!opfPath) {
+            throw new Error('No OPF package manifest found inside EPUB archive.');
+        }
+
+        const opfFile = findZipFile(opfPath);
+        if (!opfFile) {
+            throw new Error(`OPF package file not found at path: ${opfPath}`);
+        }
+
+        const opfDir = opfPath.includes('/') ? opfPath.substring(0, opfPath.lastIndexOf('/') + 1) : '';
+        const opfXml = await opfFile.async('string');
+        const opfDoc = domParser.parseFromString(opfXml, 'application/xml');
+
+        // 2. Extract Metadata (Title, Author, Language)
+        const titleEl = opfDoc.querySelector('title');
+        const creatorEl = opfDoc.querySelector('creator');
+        const langEl = opfDoc.querySelector('language');
+
+        const fallbackName = file.name
+            .replace(/\.[^/.]+$/, '')
+            .replace(/\{[^}]+\}/g, ' ')
+            .replace(/\[[^\]]+\]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const bookTitle = titleEl?.textContent?.trim() || fallbackName || 'Untitled EPUB';
+        const bookAuthor = creatorEl?.textContent?.trim() || 'Unknown Author';
+        const rawLang = langEl?.textContent?.trim()?.toLowerCase() || 'de';
+        const bookLang = rawLang.split('-')[0].split('_')[0].slice(0, 2) || 'de';
+
+        const langMap = {
+            'de': 'German',
+            'en': 'English',
+            'fr': 'French',
+            'es': 'Spanish',
+            'it': 'Italian',
+            'ru': 'Russian',
+            'ja': 'Japanese'
+        };
+
+        // 3. Map manifest items: id -> href & media-type
+        const manifestMap = {};
+        opfDoc.querySelectorAll('manifest > item').forEach(item => {
+            const id = item.getAttribute('id');
+            const href = item.getAttribute('href');
+            const mediaType = item.getAttribute('media-type');
+            if (id && href) {
+                manifestMap[id] = { href, mediaType };
+            }
+        });
+
+        // 4. Read spine itemrefs to preserve the exact linear reading order
+        const spineRefs = Array.from(opfDoc.querySelectorAll('spine > itemref'));
+        const chapters = [];
+
+        for (let i = 0; i < spineRefs.length; i++) {
+            const idref = spineRefs[i].getAttribute('idref');
+            const item = manifestMap[idref];
+            if (!item || !item.href) continue;
+
+            const chapterZipPath = resolveZipPath(opfDir, item.href);
+            const chapterFile = findZipFile(chapterZipPath);
+            if (!chapterFile) continue;
+
+            try {
+                const chapterRaw = await chapterFile.async('string');
+                const chapDoc = domParser.parseFromString(chapterRaw, 'text/html');
+
+                const chapDir = chapterZipPath.includes('/') ? chapterZipPath.substring(0, chapterZipPath.lastIndexOf('/') + 1) : '';
+
+                // Convert relative image URLs to base64 data URIs
+                const imgEls = Array.from(chapDoc.querySelectorAll('img, image'));
+                for (const img of imgEls) {
+                    const src = img.getAttribute('src') || img.getAttribute('xlink:href') || img.getAttribute('href');
+                    if (src && !src.startsWith('data:') && !src.startsWith('http://') && !src.startsWith('https://')) {
+                        const imgPath = resolveZipPath(chapDir, src);
+                        const imgFile = findZipFile(imgPath);
+                        if (imgFile) {
+                            try {
+                                const ext = imgPath.split('.').pop().toLowerCase();
+                                const mime = ext === 'png' ? 'image/png' : (ext === 'svg' ? 'image/svg+xml' : (ext === 'webp' ? 'image/webp' : 'image/jpeg'));
+                                const b64 = await imgFile.async('base64');
+                                const dataUri = `data:${mime};base64,${b64}`;
+                                if (img.hasAttribute('src')) img.setAttribute('src', dataUri);
+                                if (img.hasAttribute('xlink:href')) img.setAttribute('xlink:href', dataUri);
+                                if (img.hasAttribute('href')) img.setAttribute('href', dataUri);
+                            } catch (e) {
+                                console.warn('Could not encode image:', imgPath, e);
+                            }
+                        }
+                    }
+                }
+
+                // Extract Chapter Title
+                const headingEl = chapDoc.querySelector('h1, h2, h3, .chapter-title, .title, title');
+                let chapTitle = headingEl?.textContent?.trim()?.replace(/\s+/g, ' ');
+                if (!chapTitle || chapTitle.length > 70) {
+                    chapTitle = `Chapter ${chapters.length + 1}`;
+                }
+
+                // Remove script, style, and link elements to avoid polluting reader styles
+                chapDoc.querySelectorAll('script, style, link').forEach(el => el.remove());
+
+                const bodyHtml = chapDoc.body ? chapDoc.body.innerHTML.trim() : chapterRaw.trim();
+                const textOnly = chapDoc.body ? chapDoc.body.textContent.trim() : '';
+
+                // Skip only if completely empty (no text and no images)
+                if (textOnly.length === 0 && !chapDoc.querySelector('img, image, svg')) {
+                    continue;
+                }
+
+                chapters.push({
+                    index: chapters.length,
+                    id: `chap-${chapters.length + 1}`,
+                    title: chapTitle,
+                    html: bodyHtml
+                });
+            } catch (err) {
+                console.warn(`Error parsing chapter ${item.href}:`, err);
+            }
+        }
+
+        if (chapters.length === 0) {
+            throw new Error('Could not extract any readable chapters from the EPUB.');
+        }
+
+        const safeId = 'epub-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+        return {
+            id: safeId,
+            title: bookTitle,
+            author: bookAuthor,
+            language: bookLang,
+            languageName: langMap[bookLang] || bookLang.toUpperCase(),
+            languageFlag: bookLang === 'de' ? '🇩🇪' : (bookLang === 'fr' ? '🇫🇷' : (bookLang === 'es' ? '🇪🇸' : '🌐')),
+            targetLanguage: 'en',
+            description: `EPUB Book • ${chapters.length} chapters`,
+            difficulty: 'Custom EPUB',
+            difficultyLevel: 'intermediate',
+            chaptersCount: chapters.length,
+            isCloud: true,
+            source: 'cloud',
+            updatedAt: Date.now(),
+            chapters: chapters
+        };
+    }
+
+    /**
+     * Persists uploaded/custom books to:
+     * 1) localStorage (for fast offline reading on this machine)
+     * 2) Firebase Realtime Database (so the book is automatically synchronized to other computers)
+     */
+    async saveBookToCloudAndLocal(bookData) {
+        // 1. Save locally
+        try {
+            const localCustom = JSON.parse(localStorage.getItem('reading_custom_books') || '{}');
+            localCustom[bookData.id] = bookData;
+            localStorage.setItem('reading_custom_books', JSON.stringify(localCustom));
+        } catch (e) {
+            console.warn('LocalStorage save warning:', e);
+        }
+
+        const meta = {
+            id: bookData.id,
+            title: bookData.title,
+            author: bookData.author || 'Custom Author',
+            language: bookData.language || 'de',
+            languageName: bookData.languageName || 'German',
+            languageFlag: bookData.languageFlag || '🌐',
+            description: bookData.description || `Custom Book • ${bookData.chapters ? bookData.chapters.length : 1} Chapters`,
+            difficulty: bookData.difficulty || 'Custom Book',
+            difficultyLevel: bookData.difficultyLevel || 'intermediate',
+            chaptersCount: bookData.chapters ? bookData.chapters.length : 1,
+            isCloud: true,
+            source: 'cloud',
+            updatedAt: bookData.updatedAt || Date.now()
+        };
+
+        const existingIdx = this.booksManifest.findIndex(b => b.id === bookData.id);
+        if (existingIdx >= 0) {
+            this.booksManifest[existingIdx] = meta;
+        } else {
+            this.booksManifest.unshift(meta);
+        }
+
+        // 2. Sync to Firebase Cloud Database
+        if (db) {
+            try {
+                this.showToast('☁️ Syncing book to Cloud Library...');
+                await set(ref(db, `reading_books_meta/${bookData.id}`), meta);
+                await set(ref(db, `reading_books/${bookData.id}`), bookData);
+                this.showToast('✅ Saved to Cloud Library! Available on all your devices.');
+            } catch (err) {
+                console.error('Firebase cloud save error:', err);
+                this.showToast('Saved locally (Cloud sync failed or offline).');
+            }
+        }
+
+        // Re-render shelf if open
+        if (this.dom.libraryModal?.classList.contains('open')) {
+            this.renderBookshelf();
+        }
+    }
+
+    async createCustomBook(title, content, isHtml = false) {
         const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
         const bodyHtml = isHtml ? content : paragraphs.map(p => `<p>${p.replace(/\n/g, ' ')}</p>`).join('\n');
 
         const customBook = {
             id: `custom-${Date.now()}`,
-            title: title,
-            author: 'Custom Upload',
+            title: title || 'Custom Story',
+            author: 'Custom Text',
             language: 'de',
             languageName: 'German / Multi',
+            languageFlag: '🇩🇪',
             targetLanguage: 'en',
+            description: `Custom text (${paragraphs.length} paragraphs)`,
+            difficulty: 'Custom Text',
+            difficultyLevel: 'intermediate',
+            chaptersCount: 1,
+            isCloud: true,
+            source: 'cloud',
+            updatedAt: Date.now(),
             chapters: [
                 {
                     index: 0,
@@ -1116,35 +1660,128 @@ class ReadingApp {
 
         this.currentBook = customBook;
         this.currentChapterIndex = 0;
+        localStorage.setItem('reading_active_book_id', customBook.id);
         this.renderBookMeta();
         this.renderTOC();
         this.renderChapter(0);
         this.closeAllDrawers();
-        this.showToast(`Loaded custom book: ${title}`);
+        this.showToast(`Loaded: ${customBook.title}`);
+
+        await this.saveBookToCloudAndLocal(customBook);
     }
 
     async loadGutenbergFromUrl(url) {
-        this.showToast('Fetching Gutenberg book...');
+        if (!url) return;
+        this.showToast('Checking Gutenberg book...');
+
+        // Clear previous hint
+        if (this.dom.gutenbergHint) {
+            this.dom.gutenbergHint.style.display = 'none';
+            this.dom.gutenbergHint.innerHTML = '';
+        }
+
+        // Extract Gutenberg ID
+        const idMatch = url.match(/\/(\d+)(?:\.[^/]+)?$/) || url.match(/ebooks\/(\d+)/) || url.match(/^(\d+)$/);
+        if (!idMatch) {
+            alert('Please enter a valid Project Gutenberg URL or eBook ID (e.g. 36227 or 23393)');
+            return;
+        }
+        const ebookId = idMatch[1];
+
+        // 1. Check if this book is already in our manifest or preloaded!
+        const existing = this.booksManifest.find(b =>
+            b.gutenbergId == ebookId ||
+            b.id == ebookId ||
+            (ebookId === '36227' && b.id === 'der-fremde') ||
+            (ebookId === '23393' && b.id === 'japanische-maerchen') ||
+            (ebookId === '22367' && b.id === 'die-verwandlung') ||
+            (ebookId === '800' && b.id === 'le-tour-du-monde') ||
+            (ebookId === '2000' && b.id === 'don-quijote')
+        );
+
+        if (existing) {
+            this.showToast(`Found "${existing.title}" in library! Loading...`);
+            await this.loadBook(existing.id);
+            return;
+        }
+
+        // 2. Check if local JSON exists for this ID
         try {
-            // Extract Gutenberg ID
-            const idMatch = url.match(/\/(\d+)(?:\.[^/]+)?$/) || url.match(/ebooks\/(\d+)/);
-            if (!idMatch) {
-                alert('Please enter a valid Project Gutenberg URL or eBook ID (e.g. 23393)');
+            const localRes = await fetch(`assets/books/${ebookId}.json`);
+            if (localRes.ok) {
+                const data = await localRes.json();
+                this.currentBook = data;
+                this.currentChapterIndex = 0;
+                this.renderBookMeta();
+                this.renderTOC();
+                this.renderChapter(0);
+                this.closeAllDrawers();
+                this.showToast(`Loaded ${data.title}!`);
                 return;
             }
-            const ebookId = idMatch[1];
-            this.showToast(`Fetching Gutenberg #${ebookId}...`);
+        } catch (e) {}
 
-            // Fetch text or HTML from Project Gutenberg cache
-            const cacheUrl = `https://www.gutenberg.org/cache/epub/${ebookId}/pg${ebookId}.txt`;
-            const res = await fetch(cacheUrl);
-            if (!res.ok) throw new Error('Could not download Gutenberg eBook text');
-            const text = await res.text();
-            this.createCustomBook(`Gutenberg #${ebookId}`, text);
-        } catch (e) {
-            console.error(e);
-            this.showToast('Failed to fetch Gutenberg book. Check CORS or URL.');
+        this.showToast(`Fetching Gutenberg #${ebookId}...`);
+
+        // 3. Attempt downloading via CORS-friendly proxies with timeout
+        const directUrl = `https://www.gutenberg.org/cache/epub/${ebookId}/pg${ebookId}.txt`;
+        const proxyUrls = [
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(directUrl)}`,
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`
+        ];
+
+        let text = null;
+        for (const pUrl of proxyUrls) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+                const res = await fetch(pUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    const candidateText = await res.text();
+                    if (candidateText && candidateText.length > 200 && !candidateText.includes('error code: 522')) {
+                        text = candidateText;
+                        break;
+                    }
+                }
+            } catch (err) {
+                // try next proxy
+            }
         }
+
+        if (text) {
+            this.createCustomBook(`Gutenberg #${ebookId}`, text);
+            this.showToast(`Loaded Gutenberg #${ebookId}!`);
+            return;
+        }
+
+        // 4. If all automated downloads are blocked by Gutenberg's strict CORS/bot filter,
+        // provide immediate, clear, friendly 1-click fallback buttons:
+        if (this.dom.gutenbergHint) {
+            this.dom.gutenbergHint.style.display = 'block';
+            this.dom.gutenbergHint.innerHTML = `
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.85rem; margin-top: 0.5rem;">
+                    <div style="color: #fca5a5; font-weight: 700; font-size: 0.84rem; margin-bottom: 0.25rem;">
+                        ⚠️ Project Gutenberg blocks direct in-browser downloads due to CORS policy.
+                    </div>
+                    <div style="color: var(--read-text-muted); font-size: 0.78rem; line-height: 1.45; margin-bottom: 0.7rem;">
+                        To read <strong>Gutenberg #${ebookId}</strong>, you can download it directly or copy-paste its text below:
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="${directUrl}" target="_blank" rel="noopener noreferrer" class="reader-icon-btn" style="text-decoration: none; font-size: 0.75rem;">
+                            📥 Open pg${ebookId}.txt in New Tab
+                        </a>
+                        <button type="button" class="reader-icon-btn primary" id="gutenberg-paste-helper-btn" style="font-size: 0.75rem;">
+                            📋 Paste Text Directly
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('gutenberg-paste-helper-btn')?.addEventListener('click', () => {
+                this.openPasteModal(`Gutenberg #${ebookId}`);
+            });
+        }
+        this.showToast('Gutenberg blocked direct browser download. See options below.');
     }
 
     // =========================================================================

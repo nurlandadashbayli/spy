@@ -68,6 +68,25 @@
     "description": "Enchanting Japanese folk tales translated into German with authentic woodcut illustrations (Project Gutenberg #23393)."
   },
   {
+    "id": "der-fremde",
+    "title": "Der Fremde: Ein Gleichniss",
+    "author": "Hans von Kahlenberg",
+    "year": "1901",
+    "language": "de",
+    "languageFlag": "🇩🇪",
+    "languageName": "German",
+    "targetLanguage": "en",
+    "featured": true,
+    "difficulty": "Intermediate (B1-B2)",
+    "difficultyLevel": "intermediate",
+    "genre": "Philosophical Allegory",
+    "chaptersCount": 20,
+    "cover": "",
+    "description": "A moving German allegorical novel set around Christmas Eve exploring alienation and human connection (Gutenberg #36227).",
+    "gutenbergUrl": "https://www.gutenberg.org/ebooks/36227",
+    "gutenbergId": 36227
+  },
+  {
     "id": "die-verwandlung",
     "title": "Die Verwandlung",
     "author": "Franz Kafka",
