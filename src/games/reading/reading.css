@@ -1319,3 +1319,177 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   Web & Wikipedia In-App Browser Styles
+   ========================================================================== */
+.web-nav-bar {
+    background: var(--read-surface);
+    border-bottom: 1px solid var(--read-border);
+    padding: 0.4rem 1.5rem;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    font-size: 0.82rem;
+    position: sticky;
+    top: 57px;
+    z-index: 90;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: fadeIn 0.2s ease-out;
+}
+.web-nav-bar.show {
+    display: flex;
+}
+
+.web-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.web-nav-center {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--read-text-muted);
+}
+
+.web-nav-title {
+    font-weight: 700;
+    color: var(--read-text);
+}
+
+.web-nav-url {
+    font-size: 0.75rem;
+    color: var(--read-accent);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+.web-nav-url:hover {
+    text-decoration: underline;
+}
+
+/* Suggestions Dropdown */
+.web-suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--read-surface);
+    border: 1px solid var(--read-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    z-index: 100;
+    overflow: hidden;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.web-suggestion-item {
+    padding: 0.65rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.15s ease;
+}
+.web-suggestion-item:last-child {
+    border-bottom: none;
+}
+.web-suggestion-item:hover, .web-suggestion-item.active {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--read-primary);
+}
+
+.web-suggestion-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+
+.web-suggestion-meta {
+    font-size: 0.72rem;
+    color: var(--read-text-muted);
+}
+
+/* Quick Topic Chips */
+.web-topic-chip {
+    background: var(--read-bg);
+    border: 1px solid var(--read-border);
+    color: var(--read-text);
+    padding: 0.4rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.15s ease;
+}
+.web-topic-chip:hover {
+    background: var(--read-primary);
+    color: #ffffff;
+    border-color: var(--read-primary);
+    transform: translateY(-1px);
+}
+
+/* Wikipedia Content Styling within Reader */
+.reader-body-content a {
+    color: var(--read-accent);
+    text-decoration: underline;
+    text-decoration-color: rgba(56, 189, 248, 0.35);
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.reader-body-content a:hover {
+    color: var(--read-primary);
+    text-decoration-color: var(--read-primary);
+}
+
+.reader-body-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.2rem auto;
+    display: block;
+}
+
+.reader-body-content figure {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.reader-body-content figcaption {
+    font-size: 0.82rem;
+    color: var(--read-text-muted);
+    margin-top: 0.4rem;
+    font-style: italic;
+}
+
+.reader-body-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.88rem;
+}
+
+.reader-body-content th,
+.reader-body-content td {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--read-border);
+    text-align: left;
+}
+
+.reader-body-content th {
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 700;
+}

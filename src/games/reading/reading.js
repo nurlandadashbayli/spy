@@ -49,6 +49,10 @@ class ReadingApp {
         this.currentPopupData = null;
         this.activeLibraryFilter = 'all';
 
+        // Web & Wikipedia Browser State
+        this.webHistory = [];
+        this.webHistoryIndex = -1;
+
         // Bindings
         this.handleWordClick = this.handleWordClick.bind(this);
         this.handleTextSelection = this.handleTextSelection.bind(this);
@@ -115,6 +119,21 @@ class ReadingApp {
             libraryModal: document.getElementById('reader-library-modal'),
             bookShelfGrid: document.getElementById('reader-bookshelf-grid'),
             toast: document.getElementById('reader-toast'),
+
+            // Web & Wikipedia Browser elements
+            webBtn: document.getElementById('reader-web-btn'),
+            webModal: document.getElementById('reader-web-modal'),
+            webLangSelect: document.getElementById('web-lang-select'),
+            webSearchInput: document.getElementById('web-search-input'),
+            webSearchBtn: document.getElementById('web-search-submit-btn'),
+            webSuggestions: document.getElementById('web-search-suggestions'),
+            webQuickTopics: document.getElementById('web-quick-topics'),
+            webNavBar: document.getElementById('web-nav-bar'),
+            webNavBackBtn: document.getElementById('web-nav-back-btn'),
+            webNavForwardBtn: document.getElementById('web-nav-forward-btn'),
+            webNavNewBtn: document.getElementById('web-nav-new-btn'),
+            webNavTitle: document.getElementById('web-nav-title'),
+            webNavSourceLink: document.getElementById('web-nav-source-link'),
 
             // File upload, paste modal & Gutenberg fetch
             fileUploadInput: document.getElementById('custom-book-file-input'),
@@ -281,6 +300,21 @@ class ReadingApp {
             const url = this.dom.gutenbergUrlInput?.value.trim();
             if (url) this.loadGutenbergFromUrl(url);
         });
+
+        // Web & Wikipedia Browser bindings
+        this.dom.webBtn?.addEventListener('click', () => this.openWebModal());
+        this.dom.webSearchInput?.addEventListener('input', (e) => this.handleWebSearchInput(e.target.value));
+        this.dom.webSearchInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.triggerWebSearch();
+            }
+        });
+        this.dom.webSearchBtn?.addEventListener('click', () => this.triggerWebSearch());
+        this.dom.webLangSelect?.addEventListener('change', () => this.renderQuickTopics());
+        this.dom.webNavBackBtn?.addEventListener('click', () => this.navigateWebHistory(-1));
+        this.dom.webNavForwardBtn?.addEventListener('click', () => this.navigateWebHistory(1));
+        this.dom.webNavNewBtn?.addEventListener('click', () => this.openWebModal());
 
         // Library filter buttons
         document.querySelectorAll('.library-filter-btn').forEach(btn => {
@@ -525,6 +559,19 @@ class ReadingApp {
             this.dom.nextBtn.querySelector('.nav-label') && (this.dom.nextBtn.querySelector('.nav-label').textContent = nextTitle ? `${nextTitle} →` : 'Next');
         }
 
+        // Update Web Navigation Bar if reading a web/Wikipedia article
+        if (this.currentBook && this.currentBook.isWebArticle) {
+            this.dom.webNavBar?.classList.add('show');
+            if (this.dom.webNavTitle) {
+                this.dom.webNavTitle.textContent = `${this.currentBook.title} (${chap.title})`;
+            }
+            if (this.dom.webNavSourceLink) {
+                this.dom.webNavSourceLink.href = this.currentBook.webUrl || '#';
+            }
+        } else {
+            this.dom.webNavBar?.classList.remove('show');
+        }
+
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
         this.hidePopup();
@@ -632,12 +679,24 @@ class ReadingApp {
         this.activePopupTarget = wordSpan;
         this.isSelectingSentence = false;
 
+        // Check if word is inside a Wikipedia article link
+        const linkParent = wordSpan.closest('a');
+        let wikiTopic = null;
+        if (linkParent && this.currentBook && this.currentBook.isWebArticle) {
+            const href = linkParent.getAttribute('href');
+            if (href && (href.includes('/wiki/') || href.startsWith('./'))) {
+                const topic = href.replace(/^.*\/wiki\//, '').replace(/^\.\//, '');
+                wikiTopic = decodeURIComponent(topic).replace(/_/g, ' ');
+            }
+        }
+
         this.showTranslationPopup({
             type: 'word',
             text: cleanWord,
             targetEl: wordSpan,
             targetRect: wordSpan.getBoundingClientRect(),
-            contextSentence: this.getSentenceAroundElement(wordSpan)
+            contextSentence: this.getSentenceAroundElement(wordSpan),
+            wikiTopic: wikiTopic
         });
     }
 
@@ -773,6 +832,27 @@ class ReadingApp {
         // Position & Show Popup
         this.dom.popup.style.display = 'flex';
         this.positionPopupAboveRect(targetRect);
+
+        // Display Wikipedia Article jump button if clicked inside a wiki hyperlink
+        let wikiBtn = this.dom.popup.querySelector('#popup-wiki-article-btn');
+        if (data.wikiTopic) {
+            if (!wikiBtn) {
+                wikiBtn = document.createElement('button');
+                wikiBtn.id = 'popup-wiki-article-btn';
+                wikiBtn.className = 'reader-icon-btn primary';
+                wikiBtn.style.cssText = 'width: 100%; justify-content: center; font-size: 0.76rem; padding: 0.4rem 0.6rem; margin-top: 0.45rem;';
+                this.dom.popup.appendChild(wikiBtn);
+            }
+            wikiBtn.style.display = 'flex';
+            wikiBtn.innerHTML = `<span>📖 Read Wikipedia: "${data.wikiTopic}" →</span>`;
+            wikiBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.hidePopup();
+                this.loadWikipediaArticle(data.wikiTopic, srcLang);
+            };
+        } else if (wikiBtn) {
+            wikiBtn.style.display = 'none';
+        }
 
         // Perform Translation (offline dict -> memory/local cache -> online APIs)
         const translation = await this.translateText(text, srcLang, targetLang);
@@ -1249,6 +1329,16 @@ class ReadingApp {
         this.dom.vocabDrawer?.classList.remove('open');
         this.dom.libraryModal?.classList.remove('open');
         this.dom.pasteModal?.classList.remove('open');
+        this.dom.webModal?.classList.remove('open');
+        if (this.dom.webSuggestions) this.dom.webSuggestions.style.display = 'none';
+    }
+
+    openWebModal() {
+        this.closeAllDrawers();
+        this.renderQuickTopics();
+        this.dom.overlay?.classList.add('open');
+        this.dom.webModal?.classList.add('open');
+        setTimeout(() => this.dom.webSearchInput?.focus(), 120);
     }
 
     openPasteModal(defaultTitle = '') {
@@ -1858,6 +1948,291 @@ class ReadingApp {
             });
         }
         this.showToast('Gutenberg blocked direct browser download. See options below.');
+    }
+
+    // =========================================================================
+    // Web & Wikipedia In-App Article Browser
+    // =========================================================================
+
+    handleWebSearchInput(query) {
+        clearTimeout(this._searchTimer);
+        const trimmed = (query || '').trim();
+        if (trimmed.length < 2) {
+            if (this.dom.webSuggestions) this.dom.webSuggestions.style.display = 'none';
+            return;
+        }
+
+        this._searchTimer = setTimeout(async () => {
+            const lang = this.dom.webLangSelect ? this.dom.webLangSelect.value : 'de';
+            try {
+                const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(trimmed)}&limit=6&format=json&origin=*`;
+                const res = await fetch(searchUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    const suggestions = data[1] || [];
+                    this.renderWebSuggestions(suggestions, lang);
+                }
+            } catch (e) {
+                console.warn('Wikipedia OpenSearch error:', e);
+            }
+        }, 200);
+    }
+
+    renderWebSuggestions(suggestions, lang) {
+        if (!this.dom.webSuggestions) return;
+        if (!suggestions || suggestions.length === 0) {
+            this.dom.webSuggestions.style.display = 'none';
+            return;
+        }
+
+        this.dom.webSuggestions.innerHTML = '';
+        suggestions.forEach(title => {
+            const div = document.createElement('div');
+            div.className = 'web-suggestion-item';
+            div.innerHTML = `
+                <span class="web-suggestion-title">📖 ${title}</span>
+                <span class="web-suggestion-meta">${lang.toUpperCase()} Wikipedia</span>
+            `;
+            div.addEventListener('click', () => {
+                if (this.dom.webSearchInput) this.dom.webSearchInput.value = title;
+                this.dom.webSuggestions.style.display = 'none';
+                this.loadWikipediaArticle(title, lang);
+            });
+            this.dom.webSuggestions.appendChild(div);
+        });
+        this.dom.webSuggestions.style.display = 'block';
+    }
+
+    triggerWebSearch() {
+        const query = this.dom.webSearchInput ? this.dom.webSearchInput.value.trim() : '';
+        if (!query) return;
+        const lang = this.dom.webLangSelect ? this.dom.webLangSelect.value : 'de';
+        if (this.dom.webSuggestions) this.dom.webSuggestions.style.display = 'none';
+        this.loadWikipediaArticle(query, lang);
+    }
+
+    renderQuickTopics() {
+        if (!this.dom.webQuickTopics) return;
+        const lang = this.dom.webLangSelect ? this.dom.webLangSelect.value : 'de';
+
+        const topicsByLang = {
+            'de': [
+                'Albert Camus', 'Philosophie', 'Künstliche Intelligenz', 'Franz Kafka',
+                'Berlin', 'Deutsche Literatur', 'Grimms Märchen', 'Psychologie', 'Quantenmechanik', 'Sonne'
+            ],
+            'fr': [
+                'Albert Camus', "L'Étranger", 'Philosophie', 'Paris', 'Victor Hugo',
+                'Révolution française', 'Intelligence artificielle', 'Cinéma français'
+            ],
+            'es': [
+                'Don Quijote', 'Gabriel García Márquez', 'Filosofía', 'Madrid',
+                'Historia de España', 'Inteligencia artificial', 'Literatura española'
+            ],
+            'it': [
+                'Dante Alighieri', 'Divina Commedia', 'Roma', 'Leonardo da Vinci', 'Filosofia', 'Rinascimento'
+            ],
+            'en': [
+                'Albert Camus', 'Philosophy', 'Artificial intelligence', 'German literature', 'Existentialism'
+            ]
+        };
+
+        const topics = topicsByLang[lang] || topicsByLang['de'];
+        this.dom.webQuickTopics.innerHTML = '';
+
+        topics.forEach(t => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'web-topic-chip';
+            btn.innerHTML = `<span>📖</span> <span>${t}</span>`;
+            btn.addEventListener('click', () => {
+                if (this.dom.webSearchInput) this.dom.webSearchInput.value = t;
+                this.loadWikipediaArticle(t, lang);
+            });
+            this.dom.webQuickTopics.appendChild(btn);
+        });
+    }
+
+    /**
+     * Loads any Wikipedia article in the chosen language.
+     * Parses sections into chapters, fixes relative images, and enables live in-app reading.
+     */
+    async loadWikipediaArticle(query, lang = 'de', addToHistory = true) {
+        if (!query || !query.trim()) return;
+        let cleanQuery = query.trim();
+
+        // Detect if input was a full Wikipedia URL (e.g. https://de.wikipedia.org/wiki/Albert_Camus)
+        const urlMatch = cleanQuery.match(/([a-z]{2,3})\.wikipedia\.org\/wiki\/([^#?]+)/i);
+        if (urlMatch) {
+            lang = urlMatch[1].toLowerCase();
+            cleanQuery = decodeURIComponent(urlMatch[2]).replace(/_/g, ' ');
+        }
+
+        this.showToast(`🌐 Fetching "${cleanQuery}" from Wikipedia (${lang.toUpperCase()})...`);
+
+        try {
+            const apiTitle = encodeURIComponent(cleanQuery.replace(/ /g, '_'));
+            let articleHtml = null;
+            let articleTitle = cleanQuery;
+
+            // 1. Attempt direct REST API HTML fetch
+            const restUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/html/${apiTitle}`;
+            const res = await fetch(restUrl);
+            if (res.ok) {
+                articleHtml = await res.text();
+            } else {
+                // Fallback: search via OpenSearch for closest match
+                const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(cleanQuery)}&limit=1&format=json&origin=*`;
+                const sRes = await fetch(searchUrl);
+                if (sRes.ok) {
+                    const sData = await sRes.json();
+                    if (sData[1] && sData[1][0]) {
+                        articleTitle = sData[1][0];
+                        const retryUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(articleTitle.replace(/ /g, '_'))}`;
+                        const rRes = await fetch(retryUrl);
+                        if (rRes.ok) {
+                            articleHtml = await rRes.text();
+                        }
+                    }
+                }
+            }
+
+            if (!articleHtml) {
+                throw new Error(`Could not find Wikipedia article for "${cleanQuery}".`);
+            }
+
+            // 2. Parse and sanitize article HTML
+            const domParser = new DOMParser();
+            const doc = domParser.parseFromString(articleHtml, 'text/html');
+
+            const titleEl = doc.querySelector('title, h1');
+            if (titleEl) {
+                articleTitle = titleEl.textContent.trim().replace(/ - Wikipedia.*$/, '');
+            }
+
+            // Remove unneeded Wikipedia UI junk
+            doc.querySelectorAll('script, style, link, .mw-editsection, .navbox, .vertical-navbox, .metadata, sup.reference').forEach(el => el.remove());
+
+            // Fix image src protocols (e.g. //upload.wikimedia.org -> https://upload.wikimedia.org)
+            doc.querySelectorAll('img, source').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && src.startsWith('//')) {
+                    img.setAttribute('src', 'https:' + src);
+                }
+                const srcset = img.getAttribute('srcset');
+                if (srcset) {
+                    img.setAttribute('srcset', srcset.replace(/(^|\s)\/\//g, '$1https://'));
+                }
+            });
+
+            // 3. Structure into chapters by major section
+            const sections = Array.from(doc.querySelectorAll('section'));
+            const chapters = [];
+
+            if (sections.length > 1) {
+                sections.forEach((sec, idx) => {
+                    const h = sec.querySelector('h2, h3, h1');
+                    let secTitle = h ? h.textContent.trim() : (idx === 0 ? 'Introduction' : `Section ${idx + 1}`);
+                    const secText = sec.textContent.trim();
+                    if (secText.length > 25 || sec.querySelector('img')) {
+                        chapters.push({
+                            index: chapters.length,
+                            id: `sec-${chapters.length + 1}`,
+                            title: secTitle,
+                            html: sec.innerHTML
+                        });
+                    }
+                });
+            }
+
+            if (chapters.length === 0) {
+                chapters.push({
+                    index: 0,
+                    id: 'sec-1',
+                    title: articleTitle,
+                    html: doc.body ? doc.body.innerHTML : articleHtml
+                });
+            }
+
+            const langNameMap = {
+                'de': 'German',
+                'fr': 'French',
+                'es': 'Spanish',
+                'it': 'Italian',
+                'en': 'English'
+            };
+            const langFlagMap = {
+                'de': '🇩🇪',
+                'fr': '🇫🇷',
+                'es': '🇪🇸',
+                'it': '🇮🇹',
+                'en': '🇬🇧'
+            };
+
+            const bookData = {
+                id: `wiki-${lang}-${encodeURIComponent(articleTitle).toLowerCase().replace(/%/g, '').substring(0, 30)}`,
+                title: articleTitle,
+                author: `Wikipedia (${lang.toUpperCase()})`,
+                language: lang,
+                languageName: langNameMap[lang] || lang.toUpperCase(),
+                languageFlag: langFlagMap[lang] || '🌐',
+                targetLanguage: 'en',
+                description: `Wikipedia Article • ${chapters.length} sections`,
+                difficulty: 'Wikipedia Article',
+                difficultyLevel: 'intermediate',
+                chaptersCount: chapters.length,
+                isWebArticle: true,
+                webUrl: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(articleTitle.replace(/ /g, '_'))}`,
+                isCloud: true,
+                source: 'cloud',
+                updatedAt: Date.now(),
+                chapters: chapters
+            };
+
+            // 4. Update Web History
+            if (addToHistory) {
+                this.webHistory = this.webHistory.slice(0, this.webHistoryIndex + 1);
+                this.webHistory.push({ title: articleTitle, lang: lang });
+                this.webHistoryIndex = this.webHistory.length - 1;
+            }
+            this.updateWebNavHistoryButtons();
+
+            // 5. Render Book & Close Modal
+            this.currentBook = bookData;
+            this.currentChapterIndex = 0;
+            localStorage.setItem('reading_active_book_id', bookData.id);
+            this.renderBookMeta();
+            this.renderTOC();
+            this.renderChapter(0);
+            this.closeAllDrawers();
+            this.showToast(`Opened: ${articleTitle}`);
+
+            // Automatically sync to Cloud Library
+            await this.saveBookToCloudAndLocal(bookData);
+
+        } catch (err) {
+            console.error('Wikipedia load error:', err);
+            alert(`Could not load Wikipedia article: ${err.message}`);
+            this.showToast('Failed to load Wikipedia article.');
+        }
+    }
+
+    navigateWebHistory(delta) {
+        const newIndex = this.webHistoryIndex + delta;
+        if (newIndex >= 0 && newIndex < this.webHistory.length) {
+            this.webHistoryIndex = newIndex;
+            const item = this.webHistory[newIndex];
+            this.loadWikipediaArticle(item.title, item.lang, false);
+            this.updateWebNavHistoryButtons();
+        }
+    }
+
+    updateWebNavHistoryButtons() {
+        if (this.dom.webNavBackBtn) {
+            this.dom.webNavBackBtn.disabled = this.webHistoryIndex <= 0;
+        }
+        if (this.dom.webNavForwardBtn) {
+            this.dom.webNavForwardBtn.disabled = this.webHistoryIndex >= this.webHistory.length - 1;
+        }
     }
 
     // =========================================================================

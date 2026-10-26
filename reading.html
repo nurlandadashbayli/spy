@@ -31,6 +31,9 @@
                     <button id="reader-library-btn" class="reader-icon-btn primary" title="Choose Book / Library">
                         <span>📚 Library</span>
                     </button>
+                    <button id="reader-web-btn" class="reader-icon-btn" title="Web & Wikipedia Article Browser">
+                        <span>🌐 Web Reader</span>
+                    </button>
                     <button id="reader-toc-btn" class="reader-icon-btn" title="Table of Contents">
                         <span>📑 Contents</span>
                     </button>
@@ -52,6 +55,30 @@
                     </button>
                 </div>
             </header>
+
+            <!-- Web Article Browser Sticky Navigation Bar (shown when reading web/wiki pages) -->
+            <div id="web-nav-bar" class="web-nav-bar">
+                <div class="web-nav-left">
+                    <button id="web-nav-back-btn" class="reader-icon-btn" title="Back to previous article" style="padding: 0.3rem 0.6rem; font-size: 0.78rem;">
+                        <span>← Back</span>
+                    </button>
+                    <button id="web-nav-forward-btn" class="reader-icon-btn" title="Forward to next article" style="padding: 0.3rem 0.6rem; font-size: 0.78rem;" disabled>
+                        <span>Forward →</span>
+                    </button>
+                    <button id="web-nav-new-btn" class="reader-icon-btn" title="Browse / Search another article" style="padding: 0.3rem 0.6rem; font-size: 0.78rem;">
+                        <span>🔍 Search Wiki</span>
+                    </button>
+                </div>
+                <div class="web-nav-center">
+                    <span>🌐 Article:</span>
+                    <span id="web-nav-title" class="web-nav-title">Albert Camus</span>
+                </div>
+                <div>
+                    <a id="web-nav-source-link" href="#" target="_blank" rel="noopener noreferrer" class="web-nav-url" title="Open original page in Wikipedia">
+                        <span>Open Wikipedia ↗</span>
+                    </a>
+                </div>
+            </div>
 
             <!-- Scroll Reading Progress Indicator -->
             <div class="reader-progress-container">
@@ -275,6 +302,61 @@
                                 <button id="gutenberg-fetch-btn" class="reader-icon-btn primary">Load Book</button>
                             </div>
                             <div id="gutenberg-help-hint" style="font-size: 0.74rem; color: var(--read-text-muted); margin-top: 0.5rem; display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Web & Wikipedia Article Browser Modal -->
+            <div id="reader-web-modal" class="library-modal-overlay">
+                <div class="library-modal" style="width: 820px; max-height: 88vh;">
+                    <div class="library-header">
+                        <div class="library-title-group">
+                            <h2>🌐 Web & Wikipedia Reader</h2>
+                            <p>Read any Wikipedia article or topic in foreign languages with instant word & sentence translations.</p>
+                        </div>
+                        <button class="reader-icon-btn drawer-close-btn">✕</button>
+                    </div>
+                    <div class="library-body" style="gap: 1.4rem;">
+                        <!-- Search & URL Row -->
+                        <div>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: var(--read-text-muted); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.04em;">
+                                Search Wikipedia or Enter Article URL:
+                            </div>
+                            <div style="display: flex; gap: 0.6rem; align-items: stretch;">
+                                <select id="web-lang-select" class="gutenberg-input" style="width: 140px; font-weight: 700; cursor: pointer;">
+                                    <option value="de" selected>🇩🇪 German</option>
+                                    <option value="fr">🇫🇷 French</option>
+                                    <option value="es">🇪🇸 Spanish</option>
+                                    <option value="it">🇮🇹 Italian</option>
+                                    <option value="en">🇬🇧 English</option>
+                                </select>
+                                <div style="flex: 1; position: relative;">
+                                    <input type="text" id="web-search-input" class="gutenberg-input" style="width: 100%;" placeholder="Search topic (e.g. Albert Camus, Philosophie, Berlin) or paste URL..." autocomplete="off">
+                                    <div id="web-search-suggestions" class="web-suggestions-dropdown" style="display: none;"></div>
+                                </div>
+                                <button id="web-search-submit-btn" class="reader-icon-btn primary" style="padding: 0 1.3rem;">
+                                    <span>🔍 Open</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Popular Topics in Target Language -->
+                        <div>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: var(--read-text-muted); text-transform: uppercase; margin-bottom: 0.6rem; letter-spacing: 0.04em;">
+                                ⚡ Popular Topics to Read:
+                            </div>
+                            <div id="web-quick-topics" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                <!-- Populated dynamically based on chosen language -->
+                            </div>
+                        </div>
+
+                        <!-- Info / Tips box -->
+                        <div style="background: var(--read-bg); border: 1px solid var(--read-border); border-radius: 12px; padding: 1rem; display: flex; align-items: flex-start; gap: 0.8rem;">
+                            <div style="font-size: 1.4rem;">💡</div>
+                            <div style="font-size: 0.82rem; color: var(--read-text-muted); line-height: 1.5;">
+                                <strong style="color: var(--read-text);">Interactive In-App Browsing:</strong> Every Wikipedia article is tokenized word-by-word. Click on any word for instant Google translation and audio pronunciation. <strong>All hyperlinks inside articles are clickable</strong>, letting you browse smoothly from article to article!
+                            </div>
                         </div>
                     </div>
                 </div>
