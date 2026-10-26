@@ -5,7 +5,7 @@
  */
 
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getDatabase, ref, set, get, child, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+import { getDatabase, ref, set, get, child, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBT0StKCiled3K5uAi3lcrJlFALXI5KgvE",
@@ -73,7 +73,11 @@ class ReadingApp {
         this.bindEvents();
 
         // Load default book: Japanische Märchen (Gutenberg 23393)
-        const defaultBookId = localStorage.getItem('reading_active_book_id') || 'japanische-maerchen';
+        let defaultBookId = localStorage.getItem('reading_active_book_id') || 'japanische-maerchen';
+        if (defaultBookId.startsWith('wiki-')) {
+            defaultBookId = 'japanische-maerchen';
+            try { localStorage.removeItem('reading_active_book_id'); } catch (e) {}
+        }
         const defaultChapterIdx = parseInt(localStorage.getItem(`reading_book_${defaultBookId}_chapter`) || '0', 10);
         await this.loadBook(defaultBookId, defaultChapterIdx);
     }
@@ -352,11 +356,22 @@ class ReadingApp {
             console.warn('Could not load books manifest:', err);
         }
 
-        // 1. Merge locally stored custom/uploaded books from localStorage
+        // 1. Merge locally stored custom/uploaded books from localStorage (excluding temporary web articles)
         try {
             const localCustom = JSON.parse(localStorage.getItem('reading_custom_books') || '{}');
+            let cleanedLocal = false;
+            Object.keys(localCustom).forEach(key => {
+                if (key.startsWith('wiki-') || localCustom[key].isWebArticle) {
+                    delete localCustom[key];
+                    cleanedLocal = true;
+                }
+            });
+            if (cleanedLocal) {
+                localStorage.setItem('reading_custom_books', JSON.stringify(localCustom));
+            }
+
             Object.values(localCustom).forEach(book => {
-                if (!this.booksManifest.find(b => b.id === book.id)) {
+                if (!book.id.startsWith('wiki-') && !book.isWebArticle && !this.booksManifest.find(b => b.id === book.id)) {
                     this.booksManifest.unshift({
                         id: book.id,
                         title: book.title,
@@ -385,30 +400,44 @@ class ReadingApp {
                 if (snapshot.exists()) {
                     const cloudMetaMap = snapshot.val();
                     Object.values(cloudMetaMap).forEach(meta => {
-                        const existingIdx = this.booksManifest.findIndex(b => b.id === meta.id);
-                        if (existingIdx >= 0) {
-                            this.booksManifest[existingIdx] = meta;
-                        } else {
-                            this.booksManifest.unshift(meta);
+                        if (!meta.id.startsWith('wiki-') && !meta.isWebArticle) {
+                            const existingIdx = this.booksManifest.findIndex(b => b.id === meta.id);
+                            if (existingIdx >= 0) {
+                                this.booksManifest[existingIdx] = meta;
+                            } else {
+                                this.booksManifest.unshift(meta);
+                            }
                         }
                     });
                 }
 
-                // Setup realtime listener so books uploaded from another computer appear instantly!
+                // Setup realtime listener so books uploaded or deleted appear or disappear instantly!
                 onValue(ref(db, 'reading_books_meta'), (snapshot) => {
-                    if (snapshot.exists()) {
-                        const cloudMetaMap = snapshot.val();
-                        let updated = false;
-                        Object.values(cloudMetaMap).forEach(meta => {
+                    const cloudMetaMap = snapshot.exists() ? snapshot.val() : {};
+                    const cloudIds = Object.keys(cloudMetaMap);
+
+                    // Remove any cloud books that were deleted from Firebase
+                    this.booksManifest = this.booksManifest.filter(b => {
+                        if (b.isCloud || b.source === 'cloud') {
+                            return cloudIds.includes(b.id);
+                        }
+                        return true;
+                    });
+
+                    // Add or update cloud books
+                    Object.values(cloudMetaMap).forEach(meta => {
+                        if (!meta.id.startsWith('wiki-') && !meta.isWebArticle) {
                             const existingIdx = this.booksManifest.findIndex(b => b.id === meta.id);
                             if (existingIdx === -1) {
                                 this.booksManifest.unshift(meta);
-                                updated = true;
+                            } else {
+                                this.booksManifest[existingIdx] = meta;
                             }
-                        });
-                        if (updated && this.dom.libraryModal?.classList.contains('open')) {
-                            this.renderBookshelf();
                         }
+                    });
+
+                    if (this.dom.libraryModal?.classList.contains('open')) {
+                        this.renderBookshelf();
                     }
                 });
             } catch (err) {
@@ -1408,9 +1437,26 @@ class ReadingApp {
                 ? 'diff-beginner'
                 : (book.difficultyLevel === 'advanced' ? 'diff-advanced' : 'diff-intermediate');
 
+            const isStaticAsset = [
+                'grimms-maerchen', 'deutsche-fabeln', 'alltagsgeschichten',
+                'japanische-maerchen', 'der-fremde', 'die-verwandlung',
+                'le-tour-du-monde', 'don-quijote'
+            ].includes(book.id);
+            const isDeletable = !isStaticAsset || book.isCloud || book.source === 'cloud' || book.source === 'custom';
+
             const cloudTagHtml = book.isCloud
                 ? `<span class="badge-tag" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);">☁️ Cloud Synced</span>`
                 : `<span class="badge-tag">${book.featured ? 'Featured' : 'Read'}</span>`;
+
+            const delBtnHtml = isDeletable
+                ? `<button class="book-card-del-btn" title="Delete from Library and Cloud" type="button">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span>Delete</span>
+                   </button>`
+                : '';
 
             card.innerHTML = `
                 <div class="book-cover-wrap">
@@ -1425,11 +1471,22 @@ class ReadingApp {
                     <div class="book-card-author">${book.author || 'Unknown Author'} ${book.year ? `(${book.year})` : ''}</div>
                     <div class="book-card-desc">${book.description || 'Custom uploaded book.'}</div>
                     <div class="book-card-footer">
-                        <span>📖 ${book.chaptersCount || 1} Chapters</span>
-                        ${cloudTagHtml}
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <span>📖 ${book.chaptersCount || 1} Chapters</span>
+                            ${cloudTagHtml}
+                        </div>
+                        ${delBtnHtml}
                     </div>
                 </div>
             `;
+
+            const delBtn = card.querySelector('.book-card-del-btn');
+            if (delBtn) {
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.deleteBook(book.id);
+                });
+            }
 
             card.addEventListener('click', () => {
                 this.loadBook(book.id);
@@ -1793,6 +1850,50 @@ class ReadingApp {
         if (this.dom.libraryModal?.classList.contains('open')) {
             this.renderBookshelf();
         }
+    }
+
+    async deleteBook(bookId) {
+        const book = this.booksManifest.find(b => b.id === bookId);
+        const title = book ? book.title : 'this book';
+        if (!confirm(`Are you sure you want to delete "${title}" from your library and cloud?`)) {
+            return;
+        }
+
+        this.showToast(`Deleting "${title}"...`);
+
+        // 1. Remove from in-memory manifest
+        this.booksManifest = this.booksManifest.filter(b => b.id !== bookId);
+
+        // 2. Remove from LocalStorage
+        try {
+            const localCustom = JSON.parse(localStorage.getItem('reading_custom_books') || '{}');
+            if (localCustom[bookId]) {
+                delete localCustom[bookId];
+                localStorage.setItem('reading_custom_books', JSON.stringify(localCustom));
+            }
+        } catch (e) {
+            console.warn('LocalStorage delete warning:', e);
+        }
+
+        // 3. Remove from Firebase Realtime Database
+        if (db) {
+            try {
+                await remove(ref(db, `reading_books_meta/${bookId}`));
+                await remove(ref(db, `reading_books/${bookId}`));
+            } catch (err) {
+                console.error('Firebase cloud delete error:', err);
+            }
+        }
+
+        // 4. If currently reading this book, switch back to default
+        if (this.currentBook && this.currentBook.id === bookId) {
+            const fallbackId = this.booksManifest[0]?.id || 'japanische-maerchen';
+            await this.loadBook(fallbackId);
+        }
+
+        // 5. Update UI
+        this.renderBookshelf();
+        this.showToast(`Deleted "${title}"`);
     }
 
     async createCustomBook(title, content, isHtml = false) {
@@ -2182,8 +2283,8 @@ class ReadingApp {
                 chaptersCount: chapters.length,
                 isWebArticle: true,
                 webUrl: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(articleTitle.replace(/ /g, '_'))}`,
-                isCloud: true,
-                source: 'cloud',
+                isCloud: false,
+                source: 'web',
                 updatedAt: Date.now(),
                 chapters: chapters
             };
@@ -2199,15 +2300,12 @@ class ReadingApp {
             // 5. Render Book & Close Modal
             this.currentBook = bookData;
             this.currentChapterIndex = 0;
-            localStorage.setItem('reading_active_book_id', bookData.id);
+            // Note: Wikipedia articles are ephemeral live reading sessions and not saved to the library
             this.renderBookMeta();
             this.renderTOC();
             this.renderChapter(0);
             this.closeAllDrawers();
             this.showToast(`Opened: ${articleTitle}`);
-
-            // Automatically sync to Cloud Library
-            await this.saveBookToCloudAndLocal(bookData);
 
         } catch (err) {
             console.error('Wikipedia load error:', err);
