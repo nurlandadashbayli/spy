@@ -106,14 +106,16 @@
                 </article>
             </main>
 
-            <!-- Floating Dictionary / Translation Pop-up -->
-            <div id="translation-popup" class="translation-popup" style="display: none;">
-                <div id="popup-arrow" class="popup-arrow"></div>
-
+            <!-- Right-Side Sentence & Word Translation Panel -->
+            <aside id="translation-popup" class="translation-popup" style="display: none;">
                 <div class="popup-header">
                     <div class="popup-word-group">
-                        <div id="popup-lang-badge" class="popup-lang-badge">Word</div>
-                        <div id="popup-original" class="popup-original-word">Wort</div>
+                        <div id="popup-lang-badge" class="popup-lang-badge">Sentence Translation</div>
+                        <div id="popup-word-row" class="popup-word-row">
+                            <span id="popup-original" class="popup-original-word">Wort</span>
+                            <span id="popup-word-arrow" class="popup-word-arrow">→</span>
+                            <span id="popup-word-meaning" class="popup-word-meaning">...</span>
+                        </div>
                     </div>
                     <div class="popup-actions-top">
                         <button id="popup-audio-btn" class="popup-mini-btn" title="Pronounce">Listen</button>
@@ -122,10 +124,10 @@
                 </div>
 
                 <div class="popup-body">
-                    <div id="popup-sentence-preview" class="popup-sentence-preview" style="display: none;"></div>
                     <div id="popup-translation" class="popup-translation-result">
                         Translating...
                     </div>
+                    <div id="popup-sentence-preview" class="popup-sentence-preview" style="display: none;"></div>
                 </div>
 
                 <div class="popup-footer">
@@ -139,7 +141,7 @@
                         <span>Copy</span>
                     </button>
                 </div>
-            </div>
+            </aside>
 
             <!-- Backdrop Overlay for Drawers -->
             <div id="reader-drawer-overlay" class="reader-drawer-overlay"></div>

@@ -115,11 +115,13 @@ class ReadingApp {
             prevBtn: document.getElementById('reader-prev-chapter-btn'),
             nextBtn: document.getElementById('reader-next-chapter-btn'),
 
-            // Pop-up
+            // Right-Side Translation Panel
             popup: document.getElementById('translation-popup'),
-            popupArrow: document.getElementById('popup-arrow'),
             popupLangBadge: document.getElementById('popup-lang-badge'),
+            popupWordRow: document.getElementById('popup-word-row'),
             popupOriginal: document.getElementById('popup-original'),
+            popupWordArrow: document.getElementById('popup-word-arrow'),
+            popupWordMeaning: document.getElementById('popup-word-meaning'),
             popupPreview: document.getElementById('popup-sentence-preview'),
             popupTranslation: document.getElementById('popup-translation'),
             popupAudioBtn: document.getElementById('popup-audio-btn'),
@@ -235,9 +237,12 @@ class ReadingApp {
         if (this.dom.popupCopyBtn) {
             this.dom.popupCopyBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (this.currentPopupData && this.currentPopupData.translation) {
-                    navigator.clipboard.writeText(this.currentPopupData.translation);
-                    this.showToast('Copied translation to clipboard!');
+                if (this.currentPopupData) {
+                    const copyText = this.currentPopupData.sentenceTranslation || this.currentPopupData.translation;
+                    if (copyText) {
+                        navigator.clipboard.writeText(copyText);
+                        this.showToast('Copied translation to clipboard!');
+                    }
                 }
             });
         }
@@ -764,6 +769,82 @@ class ReadingApp {
     // Word Click & Sentence Selection Handlers
     // =========================================================================
 
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    getSentenceDataForWord(wordSpan) {
+        if (!wordSpan) return null;
+        if (!this.voiceChunks || !this.voiceChunks.length) {
+            this.voiceChunks = this.buildSpeechChunks();
+        }
+
+        const chunk = this.voiceChunks.find(c => c.items && c.items.some(item => item.span === wordSpan));
+        if (!chunk || !chunk.items.length) {
+            const fallbackSentence = this.getSentenceAroundElement(wordSpan);
+            const rawWord = (wordSpan.dataset.word || wordSpan.textContent || '').trim();
+            return {
+                plainSentence: fallbackSentence || rawWord,
+                markedSentence: fallbackSentence ? fallbackSentence.replace(rawWord, `**${rawWord}**`) : `**${rawWord}**`,
+                htmlSourceSentence: this.escapeHtml(fallbackSentence || rawWord),
+                fullWord: rawWord,
+                wordSpans: [wordSpan],
+                sentenceSpans: [wordSpan]
+            };
+        }
+
+        const targetIdx = chunk.items.findIndex(item => item.span === wordSpan);
+        // Group adjacent spans with empty afterText (e.g., dropcap initial letter + rest of word)
+        let wordStartIdx = targetIdx;
+        while (wordStartIdx > 0 && chunk.items[wordStartIdx - 1].afterText === '') {
+            wordStartIdx--;
+        }
+        let wordEndIdx = targetIdx;
+        while (wordEndIdx < chunk.items.length - 1 && chunk.items[wordEndIdx].afterText === '') {
+            wordEndIdx++;
+        }
+
+        const wordSpans = [];
+        let fullWord = '';
+        for (let k = wordStartIdx; k <= wordEndIdx; k++) {
+            wordSpans.push(chunk.items[k].span);
+            fullWord += chunk.items[k].span.textContent.trim();
+        }
+
+        let markedSentence = '';
+        let htmlSourceSentence = '';
+        for (let i = 0; i < chunk.items.length; i++) {
+            const wText = chunk.items[i].span.textContent.trim();
+            const after = chunk.items[i].afterText;
+            if (i === wordStartIdx) {
+                markedSentence += '**';
+                htmlSourceSentence += '<span class="source-word-highlight">';
+            }
+            markedSentence += wText;
+            htmlSourceSentence += this.escapeHtml(wText);
+            if (i === wordEndIdx) {
+                markedSentence += '**';
+                htmlSourceSentence += '</span>';
+            }
+            markedSentence += after;
+            htmlSourceSentence += this.escapeHtml(after);
+        }
+
+        return {
+            plainSentence: chunk.text,
+            markedSentence: markedSentence.trim(),
+            htmlSourceSentence: htmlSourceSentence.trim(),
+            fullWord: fullWord.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '') || fullWord,
+            wordSpans,
+            sentenceSpans: chunk.spans || []
+        };
+    }
+
     handleWordClick(e) {
         // If the user was dragging to select multiple words/sentences, don't trigger word-click
         const selection = window.getSelection();
@@ -774,15 +855,25 @@ class ReadingApp {
         const wordSpan = e.target.closest('.reader-word');
         if (!wordSpan) return;
 
-        // Clear active word styles
-        this.dom.bodyContent.querySelectorAll('.active-word').forEach(el => el.classList.remove('active-word'));
-        wordSpan.classList.add('active-word');
-
-        const rawWord = wordSpan.dataset.word || wordSpan.textContent;
+        const sentenceData = this.getSentenceDataForWord(wordSpan);
+        const rawWord = (sentenceData && sentenceData.fullWord) || wordSpan.dataset.word || wordSpan.textContent;
         const cleanWord = rawWord.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
         if (!cleanWord) return;
 
-        // Show word pop-up
+        // Clear previous active word & sentence styles
+        this.dom.bodyContent.querySelectorAll('.active-word, .active-sentence').forEach(el => {
+            el.classList.remove('active-word', 'active-sentence');
+        });
+        if (sentenceData && sentenceData.sentenceSpans) {
+            sentenceData.sentenceSpans.forEach(s => s.classList.add('active-sentence'));
+        }
+        if (sentenceData && sentenceData.wordSpans) {
+            sentenceData.wordSpans.forEach(s => s.classList.add('active-word'));
+        } else {
+            wordSpan.classList.add('active-word');
+        }
+
+        // Show right-side translation panel
         this.activePopupTarget = wordSpan;
         this.isSelectingSentence = false;
 
@@ -807,7 +898,8 @@ class ReadingApp {
             text: cleanWord,
             targetEl: wordSpan,
             targetRect: wordSpan.getBoundingClientRect(),
-            contextSentence: this.getSentenceAroundElement(wordSpan),
+            contextSentence: sentenceData ? sentenceData.plainSentence : this.getSentenceAroundElement(wordSpan),
+            sentenceData,
             wikiTopic: wikiTopic
         });
     }
@@ -889,11 +981,60 @@ class ReadingApp {
     }
 
     // =========================================================================
-    // Translation Engine & Popup UI
+    // Translation Engine & Right-Side Sentence Translation Panel
     // =========================================================================
 
+    formatHighlightedSentenceTranslation(rawTranslatedSentence, fallbackWordMeaning = '') {
+        if (!rawTranslatedSentence) return { html: '', highlightedWord: '', cleanSentence: '' };
+
+        let highlightedWord = '';
+        const markerRegex = /\*\*\s*([^*]+?)\s*\*\*/g;
+        const match = markerRegex.exec(rawTranslatedSentence);
+        if (match && match[1]) {
+            highlightedWord = match[1].trim();
+        }
+
+        const cleanSentence = rawTranslatedSentence.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
+
+        if (highlightedWord) {
+            // Replace **word** markers with <mark class="translated-word-highlight">word</mark>
+            const parts = rawTranslatedSentence.split(/\*\*\s*([^*]+?)\s*\*\*/g);
+            let html = '';
+            for (let i = 0; i < parts.length; i++) {
+                if (i % 2 === 1) {
+                    html += `<mark class="translated-word-highlight">${this.escapeHtml(parts[i].trim())}</mark>`;
+                } else {
+                    html += this.escapeHtml(parts[i].replace(/\*/g, ''));
+                }
+            }
+            return { html, highlightedWord, cleanSentence };
+        }
+
+        // Fallback: if the endpoint stripped ** markers, match the standalone word meaning inside the sentence
+        let candidate = (fallbackWordMeaning || '').replace(/^to\s+/i, '').trim();
+        if (candidate && candidate.length >= 2) {
+            const escapedCand = candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const wordBoundaryRegex = new RegExp(`(\\b${escapedCand}(?:s|es|ed|d|ing|er|est)?\\b)`, 'i');
+            const fallbackMatch = cleanSentence.match(wordBoundaryRegex);
+            if (fallbackMatch) {
+                highlightedWord = fallbackMatch[1];
+                const idx = fallbackMatch.index;
+                const before = this.escapeHtml(cleanSentence.slice(0, idx));
+                const middle = `<mark class="translated-word-highlight">${this.escapeHtml(highlightedWord)}</mark>`;
+                const after = this.escapeHtml(cleanSentence.slice(idx + highlightedWord.length));
+                return { html: before + middle + after, highlightedWord, cleanSentence };
+            }
+        }
+
+        return {
+            html: this.escapeHtml(cleanSentence),
+            highlightedWord: fallbackWordMeaning || '',
+            cleanSentence
+        };
+    }
+
     async showTranslationPopup(data) {
-        const { type, text, targetRect, contextSentence } = data;
+        const { type, text, targetRect, contextSentence, sentenceData } = data;
         const srcLang = this.currentBook ? this.currentBook.language : 'de';
         const targetLang = 'en';
 
@@ -903,25 +1044,38 @@ class ReadingApp {
             srcLang,
             targetLang,
             translation: '',
+            contextSentence: contextSentence || '',
             targetRect
         };
 
-        // Populate Popup UI
+        // Populate Panel Header
         if (this.dom.popupLangBadge) {
-            this.dom.popupLangBadge.textContent = `${type === 'word' ? 'Word' : 'Sentence'} Translation`;
+            this.dom.popupLangBadge.textContent = type === 'word' ? 'Sentence & Word Translation' : 'Passage Translation';
         }
 
         if (this.dom.popupOriginal) {
-            this.dom.popupOriginal.textContent = text;
+            this.dom.popupOriginal.textContent = type === 'word' ? text : 'Selected Passage';
+        }
+
+        if (this.dom.popupWordArrow) {
+            this.dom.popupWordArrow.style.display = type === 'word' ? 'inline' : 'none';
+        }
+
+        if (this.dom.popupWordMeaning) {
+            this.dom.popupWordMeaning.style.display = type === 'word' ? 'inline' : 'none';
+            this.dom.popupWordMeaning.textContent = '...';
         }
 
         if (this.dom.popupPreview) {
-            if (type === 'sentence') {
+            if (type === 'word' && sentenceData && sentenceData.htmlSourceSentence) {
                 this.dom.popupPreview.style.display = 'block';
-                this.dom.popupPreview.textContent = text.length > 120 ? `"${text.substring(0, 120)}..."` : `"${text}"`;
+                this.dom.popupPreview.innerHTML = sentenceData.htmlSourceSentence;
+            } else if (type === 'sentence') {
+                this.dom.popupPreview.style.display = 'block';
+                this.dom.popupPreview.textContent = text;
             } else if (contextSentence) {
                 this.dom.popupPreview.style.display = 'block';
-                this.dom.popupPreview.textContent = `"...${contextSentence.substring(0, 90)}..."`;
+                this.dom.popupPreview.textContent = contextSentence;
             } else {
                 this.dom.popupPreview.style.display = 'none';
             }
@@ -932,7 +1086,7 @@ class ReadingApp {
             this.dom.popupTranslation.innerHTML = `
                 <div class="popup-loading">
                     <div class="popup-spinner"></div>
-                    <span>Translating to English...</span>
+                    <span>Translating sentence...</span>
                 </div>
             `;
         }
@@ -940,9 +1094,10 @@ class ReadingApp {
         // Check if already saved in vocabulary
         this.updateSaveButtonState(text);
 
-        // Position & Show Popup
+        // Open Right-Side Panel & Position alongside sentence
+        this.dom.app?.classList.add('translation-panel-open');
         this.dom.popup.style.display = 'flex';
-        this.positionPopupAboveRect(targetRect);
+        this.repositionPopup();
 
         // Display Wikipedia Article jump button if clicked inside a wiki hyperlink
         let wikiBtn = this.dom.popup.querySelector('#popup-wiki-article-btn');
@@ -964,12 +1119,37 @@ class ReadingApp {
             wikiBtn.style.display = 'none';
         }
 
-        // Perform Translation (offline dict -> memory/local cache -> online APIs)
-        const translation = await this.translateText(text, srcLang, targetLang);
-        this.currentPopupData.translation = translation;
+        if (type === 'word') {
+            const markedQuery = (sentenceData && sentenceData.markedSentence) || `**${text}**`;
+            const [rawSentenceTrans, standaloneWordTrans] = await Promise.all([
+                this.translateText(markedQuery, srcLang, targetLang),
+                this.translateText(text, srcLang, targetLang)
+            ]);
 
-        if (this.dom.popupTranslation) {
-            this.dom.popupTranslation.textContent = translation;
+            // Ensure user hasn't clicked a different word while awaiting
+            if (!this.currentPopupData || this.currentPopupData.text !== text) return;
+
+            const formatted = this.formatHighlightedSentenceTranslation(rawSentenceTrans, standaloneWordTrans);
+            const wordMeaning = formatted.highlightedWord || standaloneWordTrans;
+
+            this.currentPopupData.translation = wordMeaning;
+            this.currentPopupData.sentenceTranslation = formatted.cleanSentence;
+
+            if (this.dom.popupWordMeaning) {
+                this.dom.popupWordMeaning.textContent = wordMeaning;
+            }
+
+            if (this.dom.popupTranslation) {
+                this.dom.popupTranslation.innerHTML = formatted.html;
+            }
+        } else {
+            const translation = await this.translateText(text, srcLang, targetLang);
+            if (!this.currentPopupData || this.currentPopupData.text !== text) return;
+
+            this.currentPopupData.translation = translation;
+            if (this.dom.popupTranslation) {
+                this.dom.popupTranslation.textContent = translation;
+            }
         }
 
         // Reposition smoothly after translation content resolves
@@ -1115,52 +1295,47 @@ class ReadingApp {
     }
 
     // =========================================================================
-    // Precise Floating Pop-up Positioning
+    // Right-Side Translation Panel Positioning
     // =========================================================================
 
     positionPopupAboveRect(targetRect) {
-        if (!this.dom.popup || !targetRect) return;
+        if (!this.dom.popup) return;
 
         const popup = this.dom.popup;
-        const arrow = this.dom.popupArrow;
-        const popupW = popup.offsetWidth || 320;
-        const popupH = popup.offsetHeight || 140;
+        const popupW = popup.offsetWidth || 340;
+        const popupH = popup.offsetHeight || 220;
 
-        const targetCenter = targetRect.left + targetRect.width / 2;
-        let left = targetCenter - popupW / 2;
-
-        // Clamp horizontally inside viewport
-        const margin = 12;
-        if (left < margin) left = margin;
-        if (left + popupW > window.innerWidth - margin) {
-            left = window.innerWidth - popupW - margin;
+        // On mobile / narrow tablets (< 900px), CSS docks the panel cleanly at the bottom
+        if (window.innerWidth < 900) {
+            popup.style.left = '';
+            popup.style.right = '';
+            popup.style.top = '';
+            return;
         }
 
-        // Place directly above target with 10px gap
-        let top = targetRect.top - popupH - 12;
-        let isArrowTop = false;
+        // Place on the right side of the book page column, never overlapping the text
+        const wrapRect = this.dom.contentWrap ? this.dom.contentWrap.getBoundingClientRect() : null;
+        const margin = 16;
+        let left = window.innerWidth - popupW - 24;
 
-        // If not enough room on top, flip below target!
-        if (top < 65) {
-            top = targetRect.bottom + 12;
-            isArrowTop = true;
+        if (wrapRect) {
+            const desiredLeft = wrapRect.right + 20;
+            if (desiredLeft + popupW + margin <= window.innerWidth) {
+                left = desiredLeft;
+            } else {
+                left = Math.max(wrapRect.right + 12, window.innerWidth - popupW - margin);
+            }
         }
 
-        popup.style.left = `${left}px`;
-        popup.style.top = `${top}px`;
+        // Align vertically with the clicked word/sentence, clamped within the viewport
+        let top = targetRect ? (targetRect.top - 16) : 88;
+        const minTop = 74;
+        const maxTop = Math.max(minTop, window.innerHeight - popupH - 24);
+        top = Math.max(minTop, Math.min(maxTop, top));
 
-        if (isArrowTop) {
-            popup.classList.add('arrow-top');
-        } else {
-            popup.classList.remove('arrow-top');
-        }
-
-        // Center arrow horizontally to point exactly to the word
-        if (arrow) {
-            const arrowOffset = targetCenter - left;
-            const clampedArrowOffset = Math.max(16, Math.min(popupW - 16, arrowOffset));
-            arrow.style.left = `${clampedArrowOffset}px`;
-        }
+        popup.style.right = 'auto';
+        popup.style.left = `${Math.round(left)}px`;
+        popup.style.top = `${Math.round(top)}px`;
     }
 
     repositionPopup() {
@@ -1177,8 +1352,11 @@ class ReadingApp {
         if (this.dom.popup) {
             this.dom.popup.style.display = 'none';
         }
+        this.dom.app?.classList.remove('translation-panel-open');
         if (this.dom.bodyContent) {
-            this.dom.bodyContent.querySelectorAll('.active-word').forEach(el => el.classList.remove('active-word'));
+            this.dom.bodyContent.querySelectorAll('.active-word, .active-sentence').forEach(el => {
+                el.classList.remove('active-word', 'active-sentence');
+            });
         }
         this.activePopupTarget = null;
         this.currentPopupData = null;
