@@ -809,6 +809,21 @@ body.reading-page-body {
     font-weight: 700;
     color: var(--read-primary);
     word-break: break-word;
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+}
+
+.popup-context-meaning {
+    color: var(--read-primary);
+    font-weight: 700;
+}
+
+.popup-literal-meaning {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--read-text-muted);
 }
 
 .popup-actions-top {

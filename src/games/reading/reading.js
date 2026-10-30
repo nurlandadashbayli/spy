@@ -788,11 +788,12 @@ class ReadingApp {
         if (!chunk || !chunk.items.length) {
             const fallbackSentence = this.getSentenceAroundElement(wordSpan);
             const rawWord = (wordSpan.dataset.word || wordSpan.textContent || '').trim();
+            const cleanWord = rawWord.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '') || rawWord;
             return {
-                plainSentence: fallbackSentence || rawWord,
-                markedSentence: fallbackSentence ? fallbackSentence.replace(rawWord, `**${rawWord}**`) : `**${rawWord}**`,
-                htmlSourceSentence: this.escapeHtml(fallbackSentence || rawWord),
-                fullWord: rawWord,
+                plainSentence: fallbackSentence || cleanWord,
+                taggedSentence: fallbackSentence ? fallbackSentence.replace(cleanWord, `<b>${cleanWord}</b>`) : `<b>${cleanWord}</b>`,
+                htmlSourceSentence: this.escapeHtml(fallbackSentence || cleanWord),
+                fullWord: cleanWord,
                 wordSpans: [wordSpan],
                 sentenceSpans: [wordSpan]
             };
@@ -816,28 +817,28 @@ class ReadingApp {
             fullWord += chunk.items[k].span.textContent.trim();
         }
 
-        let markedSentence = '';
+        let taggedSentence = '';
         let htmlSourceSentence = '';
         for (let i = 0; i < chunk.items.length; i++) {
             const wText = chunk.items[i].span.textContent.trim();
             const after = chunk.items[i].afterText;
             if (i === wordStartIdx) {
-                markedSentence += '**';
+                taggedSentence += '<b>';
                 htmlSourceSentence += '<span class="source-word-highlight">';
             }
-            markedSentence += wText;
+            taggedSentence += wText;
             htmlSourceSentence += this.escapeHtml(wText);
             if (i === wordEndIdx) {
-                markedSentence += '**';
+                taggedSentence += '</b>';
                 htmlSourceSentence += '</span>';
             }
-            markedSentence += after;
+            taggedSentence += after;
             htmlSourceSentence += this.escapeHtml(after);
         }
 
         return {
             plainSentence: chunk.text,
-            markedSentence: markedSentence.trim(),
+            taggedSentence: taggedSentence.trim(),
             htmlSourceSentence: htmlSourceSentence.trim(),
             fullWord: fullWord.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '') || fullWord,
             wordSpans,
@@ -984,52 +985,122 @@ class ReadingApp {
     // Translation Engine & Right-Side Sentence Translation Panel
     // =========================================================================
 
-    formatHighlightedSentenceTranslation(rawTranslatedSentence, fallbackWordMeaning = '') {
-        if (!rawTranslatedSentence) return { html: '', highlightedWord: '', cleanSentence: '' };
+    decodeHtmlEntities(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/\\u003c/gi, '<')
+            .replace(/\\u003e/gi, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&apos;/g, "'")
+            .replace(/&nbsp;/g, ' ');
+    }
 
-        let highlightedWord = '';
-        const markerRegex = /\*\*\s*([^*]+?)\s*\*\*/g;
-        const match = markerRegex.exec(rawTranslatedSentence);
-        if (match && match[1]) {
-            highlightedWord = match[1].trim();
+    async fetchWordDictionary(word, srcLang = 'de', targetLang = 'en') {
+        const cleanWord = word.trim();
+        const cacheKey = `dict_${srcLang}_${targetLang}_${cleanWord.toLowerCase()}`;
+        if (this.translationCache[cacheKey]) {
+            return this.translationCache[cacheKey];
         }
 
-        const cleanSentence = rawTranslatedSentence.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
+        const dictData = {
+            primary: '',
+            synonyms: []
+        };
 
-        if (highlightedWord) {
-            // Replace **word** markers with <mark class="translated-word-highlight">word</mark>
-            const parts = rawTranslatedSentence.split(/\*\*\s*([^*]+?)\s*\*\*/g);
-            let html = '';
-            for (let i = 0; i < parts.length; i++) {
-                if (i % 2 === 1) {
-                    html += `<mark class="translated-word-highlight">${this.escapeHtml(parts[i].trim())}</mark>`;
-                } else {
-                    html += this.escapeHtml(parts[i].replace(/\*/g, ''));
+        try {
+            const url = `https://clients5.google.com/translate_a/single?client=dict-chrome-ex&sl=${srcLang}&tl=${targetLang}&dt=t&dt=bd&q=${encodeURIComponent(cleanWord)}`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data[0] && data[0][0] && typeof data[0][0][0] === 'string') {
+                    dictData.primary = data[0][0][0].trim();
+                }
+                if (Array.isArray(data) && data.length > 1 && Array.isArray(data[1])) {
+                    data[1].forEach(posGroup => {
+                        if (Array.isArray(posGroup) && posGroup.length > 1 && Array.isArray(posGroup[1])) {
+                            posGroup[1].forEach(syn => {
+                                if (typeof syn === 'string' && syn.trim()) {
+                                    dictData.synonyms.push(syn.trim());
+                                }
+                            });
+                        }
+                    });
                 }
             }
-            return { html, highlightedWord, cleanSentence };
+        } catch (e) {
+            console.warn('Error fetching word dictionary:', e);
         }
 
-        // Fallback: if the endpoint stripped ** markers, match the standalone word meaning inside the sentence
-        let candidate = (fallbackWordMeaning || '').replace(/^to\s+/i, '').trim();
-        if (candidate && candidate.length >= 2) {
-            const escapedCand = candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const wordBoundaryRegex = new RegExp(`(\\b${escapedCand}(?:s|es|ed|d|ing|er|est)?\\b)`, 'i');
-            const fallbackMatch = cleanSentence.match(wordBoundaryRegex);
-            if (fallbackMatch) {
-                highlightedWord = fallbackMatch[1];
-                const idx = fallbackMatch.index;
+        if (!dictData.primary) {
+            dictData.primary = await this.translateText(cleanWord, srcLang, targetLang);
+        }
+
+        dictData.synonyms = Array.from(new Set(dictData.synonyms));
+        this.cacheTranslation(cacheKey, dictData);
+        return dictData;
+    }
+
+    formatHighlightedSentenceTranslation(rawTranslatedSentence, fallbackWordMeaning = '', wordSynonyms = []) {
+        if (!rawTranslatedSentence) return { html: '', inContextWord: '', cleanSentence: '' };
+
+        let raw = String(rawTranslatedSentence)
+            .replace(/\\u003c/gi, '<')
+            .replace(/\\u003e/gi, '>');
+
+        // 1. Tag Alignment check (<b>...</b> or <strong>...</strong>)
+        const tagRegex = /<(?:b|strong)>([\s\S]*?)<\/(?:b|strong)>/i;
+        const tagMatch = tagRegex.exec(raw);
+
+        if (tagMatch && tagMatch[1]) {
+            const inContextWord = this.decodeHtmlEntities(tagMatch[1].trim());
+            const highlightedHtml = this.decodeHtmlEntities(
+                raw.replace(/<(?:b|strong)>([\s\S]*?)<\/(?:b|strong)>/gi, (m, p1) => {
+                    return `<mark class="translated-word-highlight">${this.escapeHtml(this.decodeHtmlEntities(p1.trim()))}</mark>`;
+                })
+            );
+            const cleanSentence = this.decodeHtmlEntities(raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
+            return {
+                html: highlightedHtml,
+                inContextWord: inContextWord,
+                cleanSentence: cleanSentence
+            };
+        }
+
+        // 2. Fallback: Tag was not preserved. Match against primary meaning + dictionary synonyms
+        const cleanSentence = this.decodeHtmlEntities(raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
+        const candidates = [fallbackWordMeaning, ...wordSynonyms].filter(Boolean);
+
+        for (const cand of candidates) {
+            const cleanCand = cand.replace(/^to\s+/i, '').trim();
+            if (cleanCand.length < 2) continue;
+
+            const escapedCand = cleanCand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Check boundary match including standard English inflections (s, es, ed, d, ing, er, est)
+            const regex = new RegExp(`(\\b${escapedCand}(?:s|es|ed|d|ing|er|est)?\\b)`, 'i');
+            const match = cleanSentence.match(regex);
+            if (match) {
+                const matchedWord = match[1];
+                const idx = match.index;
                 const before = this.escapeHtml(cleanSentence.slice(0, idx));
-                const middle = `<mark class="translated-word-highlight">${this.escapeHtml(highlightedWord)}</mark>`;
-                const after = this.escapeHtml(cleanSentence.slice(idx + highlightedWord.length));
-                return { html: before + middle + after, highlightedWord, cleanSentence };
+                const middle = `<mark class="translated-word-highlight">${this.escapeHtml(matchedWord)}</mark>`;
+                const after = this.escapeHtml(cleanSentence.slice(idx + matchedWord.length));
+                return {
+                    html: before + middle + after,
+                    inContextWord: matchedWord,
+                    cleanSentence: cleanSentence
+                };
             }
         }
 
+        // 3. Fallback: Return plain sentence
         return {
             html: this.escapeHtml(cleanSentence),
-            highlightedWord: fallbackWordMeaning || '',
-            cleanSentence
+            inContextWord: fallbackWordMeaning || '',
+            cleanSentence: cleanSentence
         };
     }
 
@@ -1120,23 +1191,40 @@ class ReadingApp {
         }
 
         if (type === 'word') {
-            const markedQuery = (sentenceData && sentenceData.markedSentence) || `**${text}**`;
-            const [rawSentenceTrans, standaloneWordTrans] = await Promise.all([
-                this.translateText(markedQuery, srcLang, targetLang),
-                this.translateText(text, srcLang, targetLang)
+            const taggedQuery = (sentenceData && (sentenceData.taggedSentence || sentenceData.markedSentence)) || `<b>${text}</b>`;
+            const [rawSentenceTrans, dictResult] = await Promise.all([
+                this.translateText(taggedQuery, srcLang, targetLang, true),
+                this.fetchWordDictionary(text, srcLang, targetLang)
             ]);
 
             // Ensure user hasn't clicked a different word while awaiting
             if (!this.currentPopupData || this.currentPopupData.text !== text) return;
 
-            const formatted = this.formatHighlightedSentenceTranslation(rawSentenceTrans, standaloneWordTrans);
-            const wordMeaning = formatted.highlightedWord || standaloneWordTrans;
+            const primaryLiteral = dictResult.primary || '';
+            const synonyms = dictResult.synonyms || [];
+            const formatted = this.formatHighlightedSentenceTranslation(rawSentenceTrans, primaryLiteral, synonyms);
+            const inContextMeaning = formatted.inContextWord || primaryLiteral;
 
-            this.currentPopupData.translation = wordMeaning;
+            this.currentPopupData.translation = inContextMeaning;
+            this.currentPopupData.literalTranslation = primaryLiteral;
             this.currentPopupData.sentenceTranslation = formatted.cleanSentence;
 
             if (this.dom.popupWordMeaning) {
-                this.dom.popupWordMeaning.textContent = wordMeaning;
+                const normContext = inContextMeaning.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const normLiteral = primaryLiteral.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const isDifferent = normContext && normLiteral &&
+                    normContext !== normLiteral &&
+                    !normLiteral.startsWith(normContext.slice(0, 4)) &&
+                    !normContext.startsWith(normLiteral.slice(0, 4));
+
+                if (isDifferent) {
+                    this.dom.popupWordMeaning.innerHTML = `
+                        <span class="popup-context-meaning">${this.escapeHtml(inContextMeaning)}</span>
+                        <span class="popup-literal-meaning">(${this.escapeHtml(primaryLiteral)})</span>
+                    `;
+                } else {
+                    this.dom.popupWordMeaning.textContent = inContextMeaning || primaryLiteral;
+                }
             }
 
             if (this.dom.popupTranslation) {
@@ -1156,7 +1244,7 @@ class ReadingApp {
         requestAnimationFrame(() => this.repositionPopup());
     }
 
-    async translateText(text, srcLang = 'de', targetLang = 'en') {
+    async translateText(text, srcLang = 'de', targetLang = 'en', isHtml = false) {
         const cleanKey = text.toLowerCase().trim();
         const cacheKey = `${srcLang}_${targetLang}_${cleanKey}`;
 
@@ -1181,10 +1269,13 @@ class ReadingApp {
             return true;
         };
 
+        const containsHtml = isHtml || /<[a-z][\s\S]*>/i.test(text);
+        const formatParam = containsHtml ? '&format=html' : '';
+
         // 2. Primary Engine: Google Official Chrome Dictionary API (clients5.google.com)
-        // High availability, ultra-fast, 100% accurate neural translations, no echo
+        // High availability, ultra-fast, 100% accurate neural translations, tag-aligned
         try {
-            const chromeApiUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=${srcLang}&tl=${targetLang}&q=${encodeURIComponent(text)}`;
+            const chromeApiUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=${srcLang}&tl=${targetLang}${formatParam}&q=${encodeURIComponent(text)}`;
             const res = await fetch(chromeApiUrl);
             if (res.ok) {
                 const data = await res.json();
@@ -1204,7 +1295,7 @@ class ReadingApp {
 
         // 3. Secondary Engine: Google Translate GTX endpoint (translate.googleapis.com)
         try {
-            const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${srcLang}&tl=${targetLang}&dt=t&dt=bd&q=${encodeURIComponent(text)}`;
+            const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${srcLang}&tl=${targetLang}&dt=t&dt=bd${formatParam}&q=${encodeURIComponent(text)}`;
             const gRes = await fetch(googleUrl);
             if (gRes.ok) {
                 const gData = await gRes.json();
