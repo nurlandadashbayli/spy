@@ -441,14 +441,13 @@ class ReadingApp {
             }
 
             Object.values(localCustom).forEach(book => {
-                if (!book.id.startsWith('wiki-') && !book.isWebArticle && !this.booksManifest.find(b => b.id === book.id)) {
+                if (!book.id.startsWith('wiki-') && !book.isWebArticle && book.language !== 'fr' && book.language !== 'es' && !this.booksManifest.find(b => b.id === book.id)) {
                     this.booksManifest.unshift({
                         id: book.id,
                         title: book.title,
                         author: book.author || 'Custom Upload',
                         language: book.language || 'de',
                         languageName: book.languageName || 'German',
-                        languageFlag: book.languageFlag || '🌐',
                         description: book.description || 'Uploaded Book',
                         difficulty: book.difficulty || 'Custom Book',
                         difficultyLevel: book.difficultyLevel || 'intermediate',
@@ -470,7 +469,7 @@ class ReadingApp {
                 if (snapshot.exists()) {
                     const cloudMetaMap = snapshot.val();
                     Object.values(cloudMetaMap).forEach(meta => {
-                        if (!meta.id.startsWith('wiki-') && !meta.isWebArticle) {
+                        if (!meta.id.startsWith('wiki-') && !meta.isWebArticle && meta.language !== 'fr' && meta.language !== 'es') {
                             const existingIdx = this.booksManifest.findIndex(b => b.id === meta.id);
                             if (existingIdx >= 0) {
                                 this.booksManifest[existingIdx] = meta;
@@ -496,7 +495,7 @@ class ReadingApp {
 
                     // Add or update cloud books
                     Object.values(cloudMetaMap).forEach(meta => {
-                        if (!meta.id.startsWith('wiki-') && !meta.isWebArticle) {
+                        if (!meta.id.startsWith('wiki-') && !meta.isWebArticle && meta.language !== 'fr' && meta.language !== 'es') {
                             const existingIdx = this.booksManifest.findIndex(b => b.id === meta.id);
                             if (existingIdx === -1) {
                                 this.booksManifest.unshift(meta);
@@ -541,7 +540,7 @@ class ReadingApp {
 
             // 3. Try Firebase Realtime Database cloud library
             if (!bookData && db) {
-                this.showToast('☁️ Fetching book from Cloud Library...');
+                this.showToast('Fetching book from Cloud Library...');
                 const snapshot = await get(ref(db, `reading_books/${bookId}`));
                 if (snapshot.exists()) {
                     bookData = snapshot.val();
@@ -909,8 +908,7 @@ class ReadingApp {
 
         // Populate Popup UI
         if (this.dom.popupLangBadge) {
-            const flag = srcLang === 'de' ? '🇩🇪' : (srcLang === 'fr' ? '🇫🇷' : (srcLang === 'es' ? '🇪🇸' : '🌐'));
-            this.dom.popupLangBadge.innerHTML = `${flag} ${type === 'word' ? 'Word' : 'Sentence'} Translation`;
+            this.dom.popupLangBadge.textContent = `${type === 'word' ? 'Word' : 'Sentence'} Translation`;
         }
 
         if (this.dom.popupOriginal) {
@@ -956,7 +954,7 @@ class ReadingApp {
                 this.dom.popup.appendChild(wikiBtn);
             }
             wikiBtn.style.display = 'inline-flex';
-            wikiBtn.innerHTML = `<span>📖 Read Wikipedia: "${data.wikiTopic}" →</span>`;
+            wikiBtn.innerHTML = `<span>Read Wikipedia: "${data.wikiTopic}" →</span>`;
             wikiBtn.onclick = (e) => {
                 e.stopPropagation();
                 this.hidePopup();
@@ -1354,16 +1352,13 @@ class ReadingApp {
     updateVoiceLanguageBadge() {
         if (!this.dom.voiceLangBadge) return;
         const lang = this.currentBook ? (this.currentBook.language || 'de') : 'de';
-        const flags = { 'de': '🇩🇪', 'fr': '🇫🇷', 'es': '🇪🇸', 'it': '🇮🇹', 'en': '🇬🇧', 'ru': '🇷🇺', 'ja': '🇯🇵' };
-        const flag = flags[lang] || '🌐';
-        
         const voice = this.getVoiceForLanguage(lang);
         let voiceLabel = 'Google Voice';
         if (voice && voice.name) {
             voiceLabel = voice.name.replace(/^(Microsoft\s+|Apple\s+)/i, '');
             if (voiceLabel.length > 20) voiceLabel = voiceLabel.substring(0, 18) + '…';
         }
-        this.dom.voiceLangBadge.textContent = `${flag} ${voiceLabel}`;
+        this.dom.voiceLangBadge.textContent = `${lang.toUpperCase()} • ${voiceLabel}`;
     }
 
     buildSpeechChunks() {
@@ -1553,14 +1548,14 @@ class ReadingApp {
         // Check if finished all chunks in chapter
         if (chunkIndex >= this.voiceChunks.length) {
             if (this.currentBook && this.currentChapterIndex < this.currentBook.chapters.length - 1) {
-                this.showToast('📖 Chapter completed! Advancing to next story...');
+                this.showToast('Chapter completed. Advancing to next chapter...');
                 this.nextChapter();
                 setTimeout(() => {
                     this.voiceChunks = this.buildSpeechChunks();
                     this.playVoiceChunk(0, 0);
                 }, 900);
             } else {
-                this.showToast('🏁 Finished reading book!');
+                this.showToast('Finished reading book.');
                 this.stopVoiceReading();
             }
             return;
@@ -1852,11 +1847,11 @@ class ReadingApp {
             this.dom.voiceStatusIndicator.classList.toggle('paused', !isPlaying && this.isVoicePaused);
         }
         if (this.dom.voicePlayPauseBtn) {
-            this.dom.voicePlayPauseBtn.innerHTML = isPlaying ? '⏸' : '▶';
+            this.dom.voicePlayPauseBtn.textContent = isPlaying ? 'Pause' : 'Play';
             this.dom.voicePlayPauseBtn.title = isPlaying ? 'Pause (Space)' : 'Play (Space)';
         }
         if (this.dom.voiceStatusText) {
-            this.dom.voiceStatusText.textContent = isPlaying ? 'Reading aloud...' : (this.isVoicePaused ? 'Paused' : 'Ready to read');
+            this.dom.voiceStatusText.textContent = isPlaying ? 'Reading' : (this.isVoicePaused ? 'Paused' : 'Ready');
         }
     }
 
@@ -1894,7 +1889,7 @@ class ReadingApp {
                 book: this.currentBook ? this.currentBook.title : 'General',
                 date: new Date().toLocaleDateString()
             });
-            this.showToast('⭐ Saved to Vocabulary!');
+            this.showToast('Saved to Vocabulary');
         }
 
         this.saveVocabularyToStorage();
@@ -1907,10 +1902,10 @@ class ReadingApp {
         const isSaved = this.savedVocabulary.some(item => item.text.toLowerCase() === text.toLowerCase());
         if (isSaved) {
             this.dom.popupSaveBtn.classList.add('saved');
-            this.dom.popupSaveBtn.innerHTML = '⭐ Saved';
+            this.dom.popupSaveBtn.textContent = 'Saved';
         } else {
             this.dom.popupSaveBtn.classList.remove('saved');
-            this.dom.popupSaveBtn.innerHTML = '☆ Save';
+            this.dom.popupSaveBtn.textContent = 'Save';
         }
     }
 
@@ -1954,9 +1949,8 @@ class ReadingApp {
         if (items.length === 0) {
             this.dom.vocabList.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">⭐</div>
                     <p>No saved words yet.</p>
-                    <p style="font-size: 0.78rem; margin-top: 0.4rem;">Click any word or sentence in the book, then tap "Save" to build your personal vocabulary notebook!</p>
+                    <p style="font-size: 0.78rem; margin-top: 0.4rem;">Tap any word or sentence in the book, then select "Save" to add it to your vocabulary list.</p>
                 </div>
             `;
             return;
@@ -1968,12 +1962,12 @@ class ReadingApp {
             card.innerHTML = `
                 <div class="vocab-card-top">
                     <span class="vocab-word">${item.text}</span>
-                    <button class="popup-mini-btn vocab-speak-btn" title="Listen">🔊</button>
+                    <button class="popup-mini-btn vocab-speak-btn" title="Listen">Listen</button>
                 </div>
                 <div class="vocab-trans">${item.translation}</div>
                 <div class="vocab-meta">
                     <span>${item.book} • ${item.date}</span>
-                    <button class="popup-mini-btn vocab-del-btn" title="Remove" style="font-size: 0.75rem;">✕</button>
+                    <button class="popup-mini-btn vocab-del-btn" title="Remove">✕</button>
                 </div>
             `;
 
@@ -2086,7 +2080,7 @@ class ReadingApp {
         if (!this.dom.bookShelfGrid) return;
         this.dom.bookShelfGrid.innerHTML = '';
 
-        let books = this.booksManifest;
+        let books = this.booksManifest.filter(b => b.language !== 'fr' && b.language !== 'es');
         if (this.activeLibraryFilter === 'beginner') {
             books = books.filter(b => b.difficultyLevel === 'beginner' || (b.difficulty && b.difficulty.includes('Beginner')));
         } else if (this.activeLibraryFilter === 'intermediate') {
@@ -2095,40 +2089,26 @@ class ReadingApp {
             books = books.filter(b => b.difficultyLevel === 'advanced' || (b.difficulty && b.difficulty.includes('Advanced')));
         } else if (this.activeLibraryFilter === 'cloud') {
             books = books.filter(b => b.isCloud || b.source === 'cloud' || b.source === 'custom');
-        } else if (this.activeLibraryFilter && this.activeLibraryFilter !== 'all') {
-            books = books.filter(b => b.language === this.activeLibraryFilter);
         }
 
         if (books.length === 0) {
             this.dom.bookShelfGrid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--read-text-muted);">
-                    <div style="font-size: 2.8rem; margin-bottom: 0.6rem;">☁️</div>
-                    <div style="font-size: 1.05rem; font-weight: 700; color: var(--read-text); margin-bottom: 0.3rem;">No books found in this category</div>
-                    <div style="font-size: 0.85rem; max-width: 400px; margin: 0 auto;">Upload an .epub book or paste text below to add it to your cloud library!</div>
+                <div class="library-empty-state">
+                    <div class="library-empty-title">No books in this category</div>
+                    <div class="library-empty-sub">Use "Import File" or "Paste Text" above to add a book.</div>
                 </div>
             `;
             return;
         }
 
-        const iconMap = {
-            'grimms-maerchen': '🐺',
-            'deutsche-fabeln': '🦊',
-            'alltagsgeschichten': '☕',
-            'japanische-maerchen': '🌸',
-            'der-fremde': '👤',
-            'die-verwandlung': '🪲',
-            'le-tour-du-monde': '🚂',
-            'don-quijote': '🛡️'
-        };
-
         books.forEach(book => {
             const card = document.createElement('div');
             card.className = `book-card ${this.currentBook && this.currentBook.id === book.id ? 'active-book' : ''}`;
 
-            const icon = iconMap[book.id] || (book.isCloud ? '☁️' : '📚');
+            const monogram = (book.title || 'B').trim().charAt(0).toUpperCase();
             const coverHtml = book.cover
                 ? `<img src="${book.cover}" alt="${book.title}" class="book-cover-img" />`
-                : `<div class="book-cover-placeholder">${icon}</div>`;
+                : `<div class="book-cover-monogram">${monogram}</div>`;
 
             const diffClass = (book.difficultyLevel === 'beginner' || (book.difficulty && book.difficulty.includes('Beginner')))
                 ? 'diff-beginner'
@@ -2136,23 +2116,12 @@ class ReadingApp {
 
             const isStaticAsset = [
                 'grimms-maerchen', 'deutsche-fabeln', 'alltagsgeschichten',
-                'japanische-maerchen', 'der-fremde', 'die-verwandlung',
-                'le-tour-du-monde', 'don-quijote'
+                'japanische-maerchen', 'der-fremde', 'die-verwandlung'
             ].includes(book.id);
             const isDeletable = !isStaticAsset || book.isCloud || book.source === 'cloud' || book.source === 'custom';
 
-            const cloudTagHtml = book.isCloud
-                ? `<span class="badge-tag" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);">☁️ Cloud Synced</span>`
-                : `<span class="badge-tag">${book.featured ? 'Featured' : 'Read'}</span>`;
-
             const delBtnHtml = isDeletable
-                ? `<button class="book-card-del-btn" title="Delete from Library and Cloud" type="button">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                    <span>Delete</span>
-                   </button>`
+                ? `<button class="book-card-del-btn" title="Remove book" type="button">Remove</button>`
                 : '';
 
             card.innerHTML = `
@@ -2160,18 +2129,15 @@ class ReadingApp {
                     ${coverHtml}
                 </div>
                 <div class="book-card-content">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.2rem;">
-                        <span class="book-card-lang">${book.languageFlag || '🌐'} ${book.languageName || (book.language ? book.language.toUpperCase() : 'MULTI')}</span>
-                        <span class="diff-badge ${diffClass}">${book.difficulty || 'All Levels'}</span>
+                    <div class="book-card-top-row">
+                        <span class="diff-badge ${diffClass}">${book.difficulty || 'Book'}</span>
+                        ${book.isCloud ? `<span class="badge-tag">Uploaded</span>` : ''}
                     </div>
                     <div class="book-card-title">${book.title}</div>
-                    <div class="book-card-author">${book.author || 'Unknown Author'} ${book.year ? `(${book.year})` : ''}</div>
-                    <div class="book-card-desc">${book.description || 'Custom uploaded book.'}</div>
+                    <div class="book-card-author">${book.author || 'Unknown Author'}${book.year ? ` (${book.year})` : ''}</div>
+                    <div class="book-card-desc">${book.description || ''}</div>
                     <div class="book-card-footer">
-                        <div style="display: flex; align-items: center; gap: 0.4rem;">
-                            <span>📖 ${book.chaptersCount || 1} Chapters</span>
-                            ${cloudTagHtml}
-                        </div>
+                        <span>${book.chaptersCount || 1} ${(book.chaptersCount || 1) === 1 ? 'chapter' : 'chapters'}</span>
                         ${delBtnHtml}
                     </div>
                 </div>
@@ -2212,8 +2178,7 @@ class ReadingApp {
                     title: name,
                     author: 'Custom Upload',
                     language: 'de',
-                    languageName: 'German / Multi',
-                    languageFlag: '🇩🇪',
+                    languageName: 'German',
                     targetLanguage: 'en',
                     description: 'Custom HTML Book',
                     difficulty: 'Uploaded File',
@@ -2240,8 +2205,7 @@ class ReadingApp {
                     title: name,
                     author: 'Custom Text',
                     language: 'de',
-                    languageName: 'German / Multi',
-                    languageFlag: '🇩🇪',
+                    languageName: 'German',
                     targetLanguage: 'en',
                     description: `Text Document (${paragraphs.length} paragraphs)`,
                     difficulty: 'Uploaded Text',
@@ -2479,7 +2443,6 @@ class ReadingApp {
             author: bookAuthor,
             language: bookLang,
             languageName: langMap[bookLang] || bookLang.toUpperCase(),
-            languageFlag: bookLang === 'de' ? '🇩🇪' : (bookLang === 'fr' ? '🇫🇷' : (bookLang === 'es' ? '🇪🇸' : '🌐')),
             targetLanguage: 'en',
             description: `EPUB Book • ${chapters.length} chapters`,
             difficulty: 'Custom EPUB',
@@ -2513,7 +2476,6 @@ class ReadingApp {
             author: bookData.author || 'Custom Author',
             language: bookData.language || 'de',
             languageName: bookData.languageName || 'German',
-            languageFlag: bookData.languageFlag || '🌐',
             description: bookData.description || `Custom Book • ${bookData.chapters ? bookData.chapters.length : 1} Chapters`,
             difficulty: bookData.difficulty || 'Custom Book',
             difficultyLevel: bookData.difficultyLevel || 'intermediate',
@@ -2533,13 +2495,13 @@ class ReadingApp {
         // 2. Sync to Firebase Cloud Database
         if (db) {
             try {
-                this.showToast('☁️ Syncing book to Cloud Library...');
+                this.showToast('Syncing book to Cloud Library...');
                 await set(ref(db, `reading_books_meta/${bookData.id}`), meta);
                 await set(ref(db, `reading_books/${bookData.id}`), bookData);
-                this.showToast('✅ Saved to Cloud Library! Available on all your devices.');
+                this.showToast('Saved to Cloud Library.');
             } catch (err) {
                 console.error('Firebase cloud save error:', err);
-                this.showToast('Saved locally (Cloud sync failed or offline).');
+                this.showToast('Saved locally.');
             }
         }
 
@@ -2602,8 +2564,7 @@ class ReadingApp {
             title: title || 'Custom Story',
             author: 'Custom Text',
             language: 'de',
-            languageName: 'German / Multi',
-            languageFlag: '🇩🇪',
+            languageName: 'German',
             targetLanguage: 'en',
             description: `Custom text (${paragraphs.length} paragraphs)`,
             difficulty: 'Custom Text',
@@ -2658,9 +2619,7 @@ class ReadingApp {
             b.id == ebookId ||
             (ebookId === '36227' && b.id === 'der-fremde') ||
             (ebookId === '23393' && b.id === 'japanische-maerchen') ||
-            (ebookId === '22367' && b.id === 'die-verwandlung') ||
-            (ebookId === '800' && b.id === 'le-tour-du-monde') ||
-            (ebookId === '2000' && b.id === 'don-quijote')
+            (ebookId === '22367' && b.id === 'die-verwandlung')
         );
 
         if (existing) {
@@ -2724,19 +2683,19 @@ class ReadingApp {
         if (this.dom.gutenbergHint) {
             this.dom.gutenbergHint.style.display = 'block';
             this.dom.gutenbergHint.innerHTML = `
-                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.85rem; margin-top: 0.5rem;">
-                    <div style="color: #fca5a5; font-weight: 700; font-size: 0.84rem; margin-bottom: 0.25rem;">
-                        ⚠️ Project Gutenberg blocks direct in-browser downloads due to CORS policy.
+                <div class="gutenberg-fallback-box">
+                    <div class="gutenberg-fallback-title">
+                        Project Gutenberg blocks direct browser downloads due to CORS policy.
                     </div>
-                    <div style="color: var(--read-text-muted); font-size: 0.78rem; line-height: 1.45; margin-bottom: 0.7rem;">
-                        To read <strong>Gutenberg #${ebookId}</strong>, you can download it directly or copy-paste its text below:
+                    <div class="gutenberg-fallback-sub">
+                        To read <strong>Gutenberg #${ebookId}</strong>, open the text file or paste it directly:
                     </div>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <a href="${directUrl}" target="_blank" rel="noopener noreferrer" class="reader-icon-btn" style="text-decoration: none; font-size: 0.75rem;">
-                            📥 Open pg${ebookId}.txt in New Tab
+                    <div class="gutenberg-fallback-actions">
+                        <a href="${directUrl}" target="_blank" rel="noopener noreferrer" class="reader-icon-btn compact">
+                            Open pg${ebookId}.txt ↗
                         </a>
-                        <button type="button" class="reader-icon-btn primary" id="gutenberg-paste-helper-btn" style="font-size: 0.75rem;">
-                            📋 Paste Text Directly
+                        <button type="button" class="reader-icon-btn compact primary" id="gutenberg-paste-helper-btn">
+                            Paste Text
                         </button>
                     </div>
                 </div>
@@ -2788,7 +2747,7 @@ class ReadingApp {
             const div = document.createElement('div');
             div.className = 'web-suggestion-item';
             div.innerHTML = `
-                <span class="web-suggestion-title">📖 ${title}</span>
+                <span class="web-suggestion-title">${title}</span>
                 <span class="web-suggestion-meta">${lang.toUpperCase()} Wikipedia</span>
             `;
             div.addEventListener('click', () => {
@@ -2818,17 +2777,6 @@ class ReadingApp {
                 'Albert Camus', 'Philosophie', 'Künstliche Intelligenz', 'Franz Kafka',
                 'Berlin', 'Deutsche Literatur', 'Grimms Märchen', 'Psychologie', 'Quantenmechanik', 'Sonne'
             ],
-            'fr': [
-                'Albert Camus', "L'Étranger", 'Philosophie', 'Paris', 'Victor Hugo',
-                'Révolution française', 'Intelligence artificielle', 'Cinéma français'
-            ],
-            'es': [
-                'Don Quijote', 'Gabriel García Márquez', 'Filosofía', 'Madrid',
-                'Historia de España', 'Inteligencia artificial', 'Literatura española'
-            ],
-            'it': [
-                'Dante Alighieri', 'Divina Commedia', 'Roma', 'Leonardo da Vinci', 'Filosofia', 'Rinascimento'
-            ],
             'en': [
                 'Albert Camus', 'Philosophy', 'Artificial intelligence', 'German literature', 'Existentialism'
             ]
@@ -2841,7 +2789,7 @@ class ReadingApp {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'web-topic-chip';
-            btn.innerHTML = `<span>📖</span> <span>${t}</span>`;
+            btn.textContent = t;
             btn.addEventListener('click', () => {
                 if (this.dom.webSearchInput) this.dom.webSearchInput.value = t;
                 this.loadWikipediaArticle(t, lang);
@@ -2865,7 +2813,7 @@ class ReadingApp {
             cleanQuery = decodeURIComponent(urlMatch[2]).replace(/_/g, ' ');
         }
 
-        this.showToast(`🌐 Fetching "${cleanQuery}" from Wikipedia (${lang.toUpperCase()})...`);
+        this.showToast(`Fetching "${cleanQuery}" from Wikipedia (${lang.toUpperCase()})...`);
 
         try {
             const apiTitle = encodeURIComponent(cleanQuery.replace(/ /g, '_'));
@@ -2953,17 +2901,7 @@ class ReadingApp {
 
             const langNameMap = {
                 'de': 'German',
-                'fr': 'French',
-                'es': 'Spanish',
-                'it': 'Italian',
                 'en': 'English'
-            };
-            const langFlagMap = {
-                'de': '🇩🇪',
-                'fr': '🇫🇷',
-                'es': '🇪🇸',
-                'it': '🇮🇹',
-                'en': '🇬🇧'
             };
 
             const bookData = {
@@ -2972,7 +2910,6 @@ class ReadingApp {
                 author: `Wikipedia (${lang.toUpperCase()})`,
                 language: lang,
                 languageName: langNameMap[lang] || lang.toUpperCase(),
-                languageFlag: langFlagMap[lang] || '🌐',
                 targetLanguage: 'en',
                 description: `Wikipedia Article • ${chapters.length} sections`,
                 difficulty: 'Wikipedia Article',

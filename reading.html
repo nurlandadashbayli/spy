@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reader — E-Book & Bilingual Literary Reader</title>
+    <title>Reader — E-Book & Literary Reader</title>
     <!-- Literary Typography: Lora, Merriweather, Crimson Pro, Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,21 +21,15 @@
             <header id="reader-top-bar" class="reader-top-bar">
                 <div class="reader-top-bar-inner">
                     <div class="reader-top-left">
-                        <button id="reader-library-btn" class="reader-icon-btn" title="Open Book Library">
-                            <span class="btn-icon">📚</span>
+                        <button id="reader-library-btn" class="reader-icon-btn" title="Open Library">
                             <span class="btn-label">Library</span>
                         </button>
                         <button id="reader-toc-btn" class="reader-icon-btn" title="Table of Contents">
-                            <span class="btn-icon">☰</span>
                             <span class="btn-label">Contents</span>
-                        </button>
-                        <button id="reader-web-btn" class="reader-icon-btn" title="Read Wikipedia Articles">
-                            <span class="btn-icon">🌐</span>
-                            <span class="btn-label">Wikipedia</span>
                         </button>
                     </div>
 
-                    <div id="reader-title-trigger" class="reader-book-info-bar" title="Click to view Table of Contents">
+                    <div id="reader-title-trigger" class="reader-book-info-bar" title="View Table of Contents">
                         <div id="reader-book-title" class="reader-book-title">Japanische Märchen</div>
                         <div id="reader-chapter-sub" class="reader-chapter-subtitle">Chapter 1</div>
                     </div>
@@ -43,41 +37,39 @@
                     <div class="reader-top-right">
                         <span id="reader-lang-badge" class="badge-tag reader-lang-pill" title="Translation direction">DE → EN</span>
 
-                        <button id="reader-voice-btn" class="reader-icon-btn" title="Read Aloud (Google Voice)">
-                            <span class="btn-icon">🎧</span>
+                        <button id="reader-voice-btn" class="reader-icon-btn" title="Read Aloud">
                             <span class="btn-label">Listen</span>
                         </button>
 
-                        <button id="reader-vocab-btn" class="reader-icon-btn" title="Saved Vocabulary Notebook">
-                            <span class="btn-icon">🔖</span>
+                        <button id="reader-vocab-btn" class="reader-icon-btn" title="Saved Vocabulary">
                             <span class="btn-label">Vocab</span>
                             <span id="reader-vocab-count" class="vocab-count-pill">0</span>
                         </button>
 
-                        <button id="reader-settings-btn" class="reader-icon-btn reader-aa-btn" title="Typography & Theme Settings">
+                        <button id="reader-settings-btn" class="reader-icon-btn reader-aa-btn" title="Appearance & Audio Settings">
                             <span>Aa</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Thin Reading Progress Bar attached cleanly to bottom of top bar -->
+                <!-- Thin Reading Progress Bar -->
                 <div class="reader-progress-container">
                     <div id="reader-progress-bar" class="reader-progress-bar"></div>
                 </div>
             </header>
 
-            <!-- Active Web / Wikipedia Navigation Bar (Shown when reading web articles) -->
+            <!-- Active Web / Wikipedia Navigation Bar (Shown when reading Wikipedia articles) -->
             <div id="web-nav-bar" class="web-nav-bar">
                 <div class="web-nav-inner">
                     <div class="web-nav-left">
                         <button id="web-nav-back-btn" class="reader-icon-btn compact" disabled title="Previous Article">← Back</button>
                         <button id="web-nav-forward-btn" class="reader-icon-btn compact" disabled title="Next Article">Forward →</button>
-                        <span class="web-nav-badge">🌐 Wikipedia Reader</span>
+                        <span class="web-nav-badge">Wikipedia</span>
                         <span id="web-nav-title" class="web-nav-title">Article Title</span>
                     </div>
                     <div class="web-nav-right">
-                        <button id="web-nav-new-btn" class="reader-icon-btn compact">🔍 Search Topic</button>
-                        <a id="web-nav-source-link" href="#" target="_blank" rel="noopener noreferrer" class="reader-icon-btn compact">↗ Source</a>
+                        <button id="web-nav-new-btn" class="reader-icon-btn compact">Search Topic</button>
+                        <a id="web-nav-source-link" href="#" target="_blank" rel="noopener noreferrer" class="reader-icon-btn compact">Source ↗</a>
                     </div>
                 </div>
             </div>
@@ -120,11 +112,11 @@
 
                 <div class="popup-header">
                     <div class="popup-word-group">
-                        <div id="popup-lang-badge" class="popup-lang-badge">🇩🇪 Word</div>
+                        <div id="popup-lang-badge" class="popup-lang-badge">Word</div>
                         <div id="popup-original" class="popup-original-word">Wort</div>
                     </div>
                     <div class="popup-actions-top">
-                        <button id="popup-audio-btn" class="popup-mini-btn" title="Listen to pronunciation">🔊</button>
+                        <button id="popup-audio-btn" class="popup-mini-btn" title="Pronounce">Listen</button>
                         <button id="popup-close-btn" class="popup-mini-btn" title="Close">✕</button>
                     </div>
                 </div>
@@ -137,14 +129,14 @@
                 </div>
 
                 <div class="popup-footer">
-                    <button id="popup-read-from-here-btn" class="popup-action-btn primary" title="Start continuous voice reading from this word">
-                        <span>▶ Read from here</span>
+                    <button id="popup-read-from-here-btn" class="popup-action-btn primary" title="Start voice reading from this word">
+                        <span>Read from here</span>
                     </button>
                     <button id="popup-save-btn" class="popup-action-btn">
-                        <span>☆ Save</span>
+                        <span>Save</span>
                     </button>
                     <button id="popup-copy-btn" class="popup-action-btn">
-                        <span>📋 Copy</span>
+                        <span>Copy</span>
                     </button>
                 </div>
             </div>
@@ -155,7 +147,7 @@
             <!-- Left Drawer: Table of Contents -->
             <aside id="reader-toc-drawer" class="reader-drawer left">
                 <div class="drawer-header">
-                    <h3>Table of Contents</h3>
+                    <h3>Contents</h3>
                     <button class="reader-icon-btn compact drawer-close-btn">✕</button>
                 </div>
                 <div class="drawer-body">
@@ -172,7 +164,7 @@
                 <div class="drawer-body">
                     <!-- Page Themes -->
                     <div class="settings-section">
-                        <span class="settings-label">Page Theme</span>
+                        <span class="settings-label">Theme</span>
                         <div class="theme-selector-grid">
                             <button class="theme-opt-btn" data-theme="theme-light">
                                 <span class="theme-swatch light"></span>
@@ -202,20 +194,20 @@
                         <span class="settings-label">Typeface</span>
                         <div class="font-selector-list">
                             <button class="font-opt-btn active" data-font="font-serif" style="font-family: 'Lora', serif;">
-                                <span>Lora Serif</span>
-                                <span class="badge-tag">Book Default</span>
+                                <span>Lora</span>
+                                <span class="badge-tag">Serif</span>
                             </button>
                             <button class="font-opt-btn" data-font="font-literary" style="font-family: 'Crimson Pro', serif;">
                                 <span>Crimson Pro</span>
-                                <span class="badge-tag">Classic Print</span>
+                                <span class="badge-tag">Book</span>
                             </button>
                             <button class="font-opt-btn" data-font="font-classic" style="font-family: 'Merriweather', serif;">
                                 <span>Merriweather</span>
-                                <span class="badge-tag">Crisp Editorial</span>
+                                <span class="badge-tag">Editorial</span>
                             </button>
                             <button class="font-opt-btn" data-font="font-sans" style="font-family: 'Inter', sans-serif;">
-                                <span>Inter Sans</span>
-                                <span class="badge-tag">Clean Modern</span>
+                                <span>Inter</span>
+                                <span class="badge-tag">Sans</span>
                             </button>
                         </div>
                     </div>
@@ -253,23 +245,13 @@
 
                     <!-- Voice Read-Aloud Speed -->
                     <div class="settings-section">
-                        <span class="settings-label">Voice Reading Speed</span>
+                        <span class="settings-label">Voice Speed</span>
                         <div class="range-control-row">
-                            <span class="range-icon-muted">🐢</span>
+                            <span class="range-icon-muted">0.5×</span>
                             <input type="range" id="settings-voice-speed-slider" min="0.5" max="2.0" step="0.05" value="1.0">
-                            <span class="range-icon-muted">🐇</span>
+                            <span class="range-icon-muted">2.0×</span>
                             <span id="settings-voice-speed-val" class="range-val">1.0x</span>
                         </div>
-                    </div>
-
-                    <!-- Reader Guide -->
-                    <div class="settings-tip-box">
-                        <div class="settings-tip-title">Reading Tips</div>
-                        <ul class="settings-tip-list">
-                            <li><strong>Single Word:</strong> Tap any word for instant translation & audio.</li>
-                            <li><strong>Full Sentence:</strong> Highlight a phrase or sentence to translate in context.</li>
-                            <li><strong>Read Aloud:</strong> Tap <em>"▶ Read from here"</em> on any word to listen with Google Voice.</li>
-                        </ul>
                     </div>
                 </div>
             </aside>
@@ -277,110 +259,93 @@
             <!-- Right Drawer: Saved Vocabulary Notebook -->
             <aside id="reader-vocab-drawer" class="reader-drawer">
                 <div class="drawer-header">
-                    <h3>Saved Vocabulary</h3>
+                    <h3>Vocabulary</h3>
                     <button class="reader-icon-btn compact drawer-close-btn">✕</button>
                 </div>
                 <div class="drawer-subheader">
-                    <input type="text" id="vocab-search-input" class="reader-input" placeholder="Search saved words or translations...">
+                    <input type="text" id="vocab-search-input" class="reader-input" placeholder="Search saved words...">
                 </div>
                 <div class="drawer-body">
                     <div id="reader-vocab-list" class="vocab-list"></div>
                 </div>
                 <div class="drawer-footer">
-                    <button id="export-vocab-csv-btn" class="reader-icon-btn primary flex-1">📥 Export CSV (Anki)</button>
+                    <button id="export-vocab-csv-btn" class="reader-icon-btn primary flex-1">Export CSV</button>
                     <button id="export-vocab-json-btn" class="reader-icon-btn">JSON</button>
-                    <button id="clear-vocab-btn" class="reader-icon-btn danger-btn" title="Clear All">🗑️</button>
+                    <button id="clear-vocab-btn" class="reader-icon-btn danger-btn" title="Clear All">Clear</button>
                 </div>
             </aside>
 
-            <!-- Book Library Modal -->
+            <!-- Clean, Minimal Book Library Modal -->
             <div id="reader-library-modal" class="library-modal-overlay">
                 <div class="library-modal">
                     <div class="library-header">
                         <div class="library-title-group">
                             <h2>Library</h2>
-                            <p>Select a book to read or import your own EPUB or text file.</p>
                         </div>
-                        <button class="reader-icon-btn compact drawer-close-btn">✕</button>
+                        <div class="library-header-actions">
+                            <input type="file" id="custom-book-file-input" accept=".epub,.txt,.html,.xhtml" style="display: none;">
+                            <button type="button" class="reader-icon-btn compact" onclick="document.getElementById('custom-book-file-input').click()">
+                                Import File
+                            </button>
+                            <button type="button" id="open-paste-modal-btn" class="reader-icon-btn compact">
+                                Paste Text
+                            </button>
+                            <button type="button" id="reader-web-btn" class="reader-icon-btn compact">
+                                Wikipedia
+                            </button>
+                            <button type="button" class="reader-icon-btn compact drawer-close-btn">✕</button>
+                        </div>
                     </div>
 
-                    <!-- Difficulty & Language Filter Tabs -->
+                    <!-- Clean Filter Bar -->
                     <div class="library-filter-bar">
-                        <button class="lib-filter-btn active" data-filter="all">All Books</button>
-                        <button class="lib-filter-btn" data-filter="cloud">☁️ Uploaded</button>
-                        <button class="lib-filter-btn" data-filter="beginner">🌱 Beginner (A1–A2)</button>
-                        <button class="lib-filter-btn" data-filter="intermediate">🌿 Intermediate (B1–B2)</button>
-                        <button class="lib-filter-btn" data-filter="advanced">🌳 Advanced (C1)</button>
-                        <button class="lib-filter-btn" data-filter="fr">🇫🇷 French</button>
-                        <button class="lib-filter-btn" data-filter="es">🇪🇸 Spanish</button>
+                        <button class="lib-filter-btn active" data-filter="all">All</button>
+                        <button class="lib-filter-btn" data-filter="beginner">Beginner (A1–A2)</button>
+                        <button class="lib-filter-btn" data-filter="intermediate">Intermediate (B1–B2)</button>
+                        <button class="lib-filter-btn" data-filter="advanced">Advanced (C1)</button>
+                        <button class="lib-filter-btn" data-filter="cloud">Uploaded</button>
                     </div>
 
                     <div class="library-body">
                         <div id="reader-bookshelf-grid" class="book-shelf-grid"></div>
 
-                        <!-- Import & Gutenberg Section -->
-                        <div class="library-import-section">
-                            <div class="library-upload-grid">
-                                <!-- Upload Custom Book -->
-                                <div class="custom-book-zone" onclick="document.getElementById('custom-book-file-input').click()">
-                                    <input type="file" id="custom-book-file-input" accept=".epub,.txt,.html,.xhtml" style="display: none;">
-                                    <div class="zone-icon">📥</div>
-                                    <div class="zone-title">Open EPUB or Text File</div>
-                                    <div class="zone-sub">Import any .epub, .txt, or .html book</div>
-                                </div>
-
-                                <!-- Paste Text Directly -->
-                                <div class="custom-book-zone" id="open-paste-modal-btn">
-                                    <div class="zone-icon">📋</div>
-                                    <div class="zone-title">Paste Text or Story</div>
-                                    <div class="zone-sub">Paste any article, chapter, or excerpt</div>
-                                </div>
+                        <!-- Compact Gutenberg Footer Bar -->
+                        <div class="gutenberg-compact-bar">
+                            <span class="gutenberg-compact-label">Project Gutenberg</span>
+                            <div class="gutenberg-input-row">
+                                <input type="text" id="gutenberg-url-input" class="gutenberg-input" placeholder="eBook ID or URL (e.g. 23393, 36227)">
+                                <button id="gutenberg-fetch-btn" class="reader-icon-btn compact primary">Open</button>
                             </div>
-
-                            <!-- Load from Gutenberg URL -->
-                            <div class="gutenberg-box">
-                                <div class="gutenberg-box-header">
-                                    <span class="gutenberg-box-title">Import from Project Gutenberg</span>
-                                    <span class="gutenberg-box-examples">Examples: #36227, #23393, #22367</span>
-                                </div>
-                                <div class="gutenberg-input-row">
-                                    <input type="text" id="gutenberg-url-input" class="gutenberg-input" placeholder="Enter Gutenberg URL or eBook ID (e.g. 23393)">
-                                    <button id="gutenberg-fetch-btn" class="reader-icon-btn primary">Load Book</button>
-                                </div>
-                                <div id="gutenberg-help-hint" class="gutenberg-help-hint" style="display: none;"></div>
-                            </div>
+                            <div id="gutenberg-help-hint" class="gutenberg-help-hint" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Web & Wikipedia Article Browser Modal -->
+            <!-- Wikipedia Reader Modal -->
             <div id="reader-web-modal" class="library-modal-overlay">
                 <div class="library-modal modal-medium">
                     <div class="library-header">
                         <div class="library-title-group">
                             <h2>Wikipedia Reader</h2>
-                            <p>Read any Wikipedia article formatted like a clean e-book chapter with instant translations.</p>
+                            <p>Read any Wikipedia article formatted as a book chapter with instant word translations.</p>
                         </div>
                         <button class="reader-icon-btn compact drawer-close-btn">✕</button>
                     </div>
                     <div class="library-body">
                         <div class="web-search-section">
-                            <label class="settings-label">Search Wikipedia or Paste Article URL</label>
+                            <label class="settings-label">Article Topic or URL</label>
                             <div class="web-search-bar">
                                 <select id="web-lang-select" class="gutenberg-input web-lang-select">
-                                    <option value="de" selected>🇩🇪 German</option>
-                                    <option value="fr">🇫🇷 French</option>
-                                    <option value="es">🇪🇸 Spanish</option>
-                                    <option value="it">🇮🇹 Italian</option>
-                                    <option value="en">🇬🇧 English</option>
+                                    <option value="de" selected>German (DE)</option>
+                                    <option value="en">English (EN)</option>
                                 </select>
                                 <div class="web-search-input-wrap">
                                     <input type="text" id="web-search-input" class="gutenberg-input" placeholder="Search topic (e.g. Albert Camus, Philosophie, Berlin)..." autocomplete="off">
                                     <div id="web-search-suggestions" class="web-suggestions-dropdown" style="display: none;"></div>
                                 </div>
                                 <button id="web-search-submit-btn" class="reader-icon-btn primary">
-                                    <span>Read Article</span>
+                                    <span>Read</span>
                                 </button>
                             </div>
                         </div>
@@ -398,14 +363,14 @@
                 <div class="library-modal modal-narrow">
                     <div class="library-header">
                         <div class="library-title-group">
-                            <h2>Paste Text to Read</h2>
-                            <p>Paste any foreign language text, story, or article to read in the e-book viewer.</p>
+                            <h2>Paste Text</h2>
+                            <p>Paste any German text, story, or article to read.</p>
                         </div>
                         <button class="reader-icon-btn compact drawer-close-btn">✕</button>
                     </div>
                     <div class="library-body">
-                        <input type="text" id="paste-book-title-input" class="gutenberg-input" placeholder="Document Title (e.g. Meine Geschichte)">
-                        <textarea id="paste-book-text-input" class="reader-textarea" placeholder="Paste your text here..."></textarea>
+                        <input type="text" id="paste-book-title-input" class="gutenberg-input" placeholder="Title">
+                        <textarea id="paste-book-text-input" class="reader-textarea" placeholder="Paste text here..."></textarea>
                         <div class="modal-actions-end">
                             <button class="reader-icon-btn drawer-close-btn" type="button">Cancel</button>
                             <button id="paste-book-submit-btn" class="reader-icon-btn primary" type="button">Start Reading</button>
@@ -414,7 +379,7 @@
                 </div>
             </div>
 
-            <!-- Compact E-Reader Audio Bar (Voice Read-Aloud) -->
+            <!-- Compact E-Reader Audio Bar -->
             <div id="reader-voice-player" class="reader-voice-player" style="display: none;">
                 <div class="voice-player-container">
                     <div class="voice-player-left">
@@ -427,10 +392,10 @@
                     </div>
 
                     <div class="voice-player-center">
-                        <button id="voice-prev-btn" class="voice-btn" title="Previous sentence">⏮</button>
-                        <button id="voice-play-pause-btn" class="voice-btn play-btn" title="Play / Pause (Space)">▶</button>
-                        <button id="voice-next-btn" class="voice-btn" title="Next sentence">⏭</button>
-                        <button id="voice-stop-btn" class="voice-btn stop-btn" title="Stop">⏹</button>
+                        <button id="voice-prev-btn" class="voice-btn" title="Previous sentence">Prev</button>
+                        <button id="voice-play-pause-btn" class="voice-btn play-btn" title="Play / Pause (Space)">Play</button>
+                        <button id="voice-next-btn" class="voice-btn" title="Next sentence">Next</button>
+                        <button id="voice-stop-btn" class="voice-btn stop-btn" title="Stop">Stop</button>
                     </div>
 
                     <div class="voice-player-right">
@@ -446,7 +411,7 @@
                             <input type="range" id="voice-speed-slider" class="voice-speed-slider" min="0.5" max="2.0" step="0.05" value="1.0" title="Adjust reading speed">
                             <span id="voice-speed-val" class="voice-speed-val">1.0x</span>
                         </div>
-                        <button id="voice-close-btn" class="voice-btn close-btn" title="Close Audio Bar">✕</button>
+                        <button id="voice-close-btn" class="voice-btn close-btn" title="Close">✕</button>
                     </div>
                 </div>
             </div>
