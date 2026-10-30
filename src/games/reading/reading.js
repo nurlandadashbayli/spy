@@ -76,17 +76,17 @@ class ReadingApp {
     }
 
     async init() {
-        this.loadSettings();
-        this.loadSavedVocabulary();
-        this.loadTranslationCache();
-
-        await this.loadOfflineDictionary();
-        await this.loadManifest();
-
         this.cacheDOM();
+        this.loadSettings();
         this.applySettings();
         this.bindEvents();
+        this.loadSavedVocabulary();
+        this.loadTranslationCache();
         this.initVoiceSystem();
+
+        // Load offline dictionary and manifest in parallel
+        this.loadOfflineDictionary().catch(err => console.warn('Offline dict load err:', err));
+        this.loadManifest().catch(err => console.warn('Manifest load err:', err));
 
         // Load default book: Japanische Märchen (Gutenberg 23393)
         let defaultBookId = localStorage.getItem('reading_active_book_id') || 'japanische-maerchen';
@@ -555,6 +555,13 @@ class ReadingApp {
             }
 
             if (!bookData) {
+                if (bookId !== 'japanische-maerchen') {
+                    console.warn(`Book "${bookId}" not found, falling back to japanische-maerchen`);
+                    try {
+                        localStorage.setItem('reading_active_book_id', 'japanische-maerchen');
+                    } catch (e) {}
+                    return this.loadBook('japanische-maerchen', 0);
+                }
                 throw new Error(`Book "${bookId}" not found in assets, local storage, or cloud library.`);
             }
 
@@ -3123,12 +3130,18 @@ class ReadingApp {
 
 // Auto-initialize when loaded
 let readingAppInstance = null;
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('reading-app')) {
+function startReadingApp() {
+    if (document.getElementById('reading-app') && !readingAppInstance) {
         readingAppInstance = new ReadingApp();
         readingAppInstance.init();
         window.readingApp = readingAppInstance;
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startReadingApp);
+} else {
+    startReadingApp();
+}
 
 export default ReadingApp;
