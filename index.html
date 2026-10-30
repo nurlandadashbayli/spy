@@ -1,139 +1,475 @@
 <!DOCTYPE html>
-<html lang="az"><head><base href="https://sonxeber.az/">
-<title>Sonxeber.az - En Son xeberler, Azerbaycan xeberleri 2026, Xeberler bu gun, En aktual xeberler 2026</title>
-<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Sonxeber.az - En Son xeberler, Azerbaycan xeberleri 2026, Xeberler bu gun, En aktual xeberler 2026 Azərbaycan və dünyada baş verən ən son xəbərlər" /> 
-<meta name="keyword" content="Sonxeber.az - En Son xeberler, Azerbaycan xeberleri 2026, Xeberler bu gun, En aktual xeberler 2026 " />
-<meta property="og:title" content="Sonxeber.az - En Son xeberler, Azerbaycan xeberleri 2026, Xeberler bu gun, En aktual xeberler 2026" /> 
-<meta property="og:image" content="https://sonxeber.az/images/fbcover.jpg" />
-<meta property="og:image:width" content="470" />
-<meta property="og:image:height" content="265" />
-<meta property="og:description" content="Sonxeber.az - En Son xeberler, Azerbaycan xeberleri 2026, Xeberler bu gun, En aktual xeberler 2026" />
-<meta property="og:site_name" content="Sonxeber.az" />
-<meta property="fb:app_id" content="482019618623092" />
-<meta property="og:locale" content="az_AZ" />
-<meta property="og:type" content="article" />
-<link rel="canonical" href="https://sonxeber.az/" />
-<meta property="og:url" content="https://sonxeber.az/" />
-<meta name="google-site-verification" content="_yiBellAFII_mJngL-HkiIzu5bJednIwrW8gy-_jOkk" /><link href="/favicon.png" rel="shortcut icon" type="image/x-icon" />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reader — E-Book & Bilingual Literary Reader</title>
+    <!-- Literary Typography: Lora, Merriweather, Crimson Pro, Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+    <!-- Reading Stylesheet -->
+    <link rel="stylesheet" href="src/games/reading/reading.css">
+    <!-- JSZip for in-browser EPUB parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body class="reading-page-body">
+    <div id="reading-app" class="reading-app-container theme-sepia">
+        <div class="reading-screen">
 
+            <!-- Minimal E-Reader Top Bar -->
+            <header id="reader-top-bar" class="reader-top-bar">
+                <div class="reader-top-bar-inner">
+                    <div class="reader-top-left">
+                        <button id="reader-library-btn" class="reader-icon-btn" title="Open Book Library">
+                            <span class="btn-icon">📚</span>
+                            <span class="btn-label">Library</span>
+                        </button>
+                        <button id="reader-toc-btn" class="reader-icon-btn" title="Table of Contents">
+                            <span class="btn-icon">☰</span>
+                            <span class="btn-label">Contents</span>
+                        </button>
+                        <button id="reader-web-btn" class="reader-icon-btn" title="Read Wikipedia Articles">
+                            <span class="btn-icon">🌐</span>
+                            <span class="btn-label">Wikipedia</span>
+                        </button>
+                    </div>
 
-<link href="/allmini.css" rel="stylesheet"> <script src="/allmini.js" type="text/javascript"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.1/css/swiper.min.css" type="text/css" />
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.1/js/swiper.js"></script>
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-WD5VVX6');</script>
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WD5VVX6"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-</head><body>
-<div id="wrap">
-<div id="topbanners"><ins data-revive-zoneid="533" data-revive-id="144e1bb6fa796840b2323709bbb2f595"></ins>
-<script async src="//ads2.imv.az/www/delivery/asyncjs.php"></script></div><header>
-<div id="header" class="navi clearfix"><div class="container">
+                    <div id="reader-title-trigger" class="reader-book-info-bar" title="Click to view Table of Contents">
+                        <div id="reader-book-title" class="reader-book-title">Japanische Märchen</div>
+                        <div id="reader-chapter-sub" class="reader-chapter-subtitle">Chapter 1</div>
+                    </div>
 
+                    <div class="reader-top-right">
+                        <span id="reader-lang-badge" class="badge-tag reader-lang-pill" title="Translation direction">DE → EN</span>
 
-<a id="bolmeler" href="#bolmeler"></a>
+                        <button id="reader-voice-btn" class="reader-icon-btn" title="Read Aloud (Google Voice)">
+                            <span class="btn-icon">🎧</span>
+                            <span class="btn-label">Listen</span>
+                        </button>
 
-<a class="logo" href="/" title="En Son xeberler, Azerbaycan xeberleri 2026, Xeberler bu gun, En aktual xeberler 2026" onclick="myga('home-alink');"><img src="/logo.png?32" /></a>
+                        <button id="reader-vocab-btn" class="reader-icon-btn" title="Saved Vocabulary Notebook">
+                            <span class="btn-icon">🔖</span>
+                            <span class="btn-label">Vocab</span>
+                            <span id="reader-vocab-count" class="vocab-count-pill">0</span>
+                        </button>
 
+                        <button id="reader-settings-btn" class="reader-icon-btn reader-aa-btn" title="Typography & Theme Settings">
+                            <span>Aa</span>
+                        </button>
+                    </div>
+                </div>
 
-<div class="valyutas hidden-xs">
-<a href="/valyuta-mezennesi" title="Valyuta mezennesi">
-Valyuta</a></div>
+                <!-- Thin Reading Progress Bar attached cleanly to bottom of top bar -->
+                <div class="reader-progress-container">
+                    <div id="reader-progress-bar" class="reader-progress-bar"></div>
+                </div>
+            </header>
 
-<div id="butsearch" onclick="myga('top-searchbutton')"></div>
+            <!-- Active Web / Wikipedia Navigation Bar (Shown when reading web articles) -->
+            <div id="web-nav-bar" class="web-nav-bar">
+                <div class="web-nav-inner">
+                    <div class="web-nav-left">
+                        <button id="web-nav-back-btn" class="reader-icon-btn compact" disabled title="Previous Article">← Back</button>
+                        <button id="web-nav-forward-btn" class="reader-icon-btn compact" disabled title="Next Article">Forward →</button>
+                        <span class="web-nav-badge">🌐 Wikipedia Reader</span>
+                        <span id="web-nav-title" class="web-nav-title">Article Title</span>
+                    </div>
+                    <div class="web-nav-right">
+                        <button id="web-nav-new-btn" class="reader-icon-btn compact">🔍 Search Topic</button>
+                        <a id="web-nav-source-link" href="#" target="_blank" rel="noopener noreferrer" class="reader-icon-btn compact">↗ Source</a>
+                    </div>
+                </div>
+            </div>
 
-<a id="valyutaicon" href="/valyuta-mezennesi" title="Valyuta mezennesi">&#36;</a>
+            <!-- Main E-Book Page Viewport -->
+            <main id="reader-viewport" class="reader-viewport">
+                <article id="reader-content-wrap" class="reader-content-wrap font-serif">
 
-<form id="searchform" method="post" action="/search/">
-<input id="inputsearch" type="text" name="query" value="" placeholder="Axtarış.." />
-<input id="submitsearch" type="submit" name="submit" value=" " onclick="myga('search-main');" />
-</form>
+                    <!-- Chapter Header -->
+                    <header class="chapter-header">
+                        <div id="reader-chapter-meta" class="chapter-meta">Book • Chapter 1</div>
+                        <h1 id="reader-chapter-heading" class="chapter-main-title">Loading Book...</h1>
+                        <div id="reader-chapter-ornament" class="chapter-ornament"></div>
+                    </header>
 
+                    <!-- Interactive Tokenized Book Text -->
+                    <div id="reader-body-content" class="reader-body">
+                        <p>Loading literary text...</p>
+                    </div>
 
-<input type="text" name="frinputsearch" id="frinputsearch" value=""/>
+                    <!-- Chapter Footer Pagination -->
+                    <footer class="reader-pagination">
+                        <button id="reader-prev-chapter-btn" class="chapter-nav-btn prev" disabled>
+                            <span class="nav-dir">Previous Chapter</span>
+                            <span class="nav-label">← Previous</span>
+                        </button>
 
+                        <button id="reader-next-chapter-btn" class="chapter-nav-btn next">
+                            <span class="nav-dir">Next Chapter</span>
+                            <span class="nav-label">Next →</span>
+                        </button>
+                    </footer>
 
-</div></div>
+                </article>
+            </main>
 
-<div id="cats" class="cats clearfix"><div class="container">
-<ul id="ulcats">
-<li><a href="/sosial-xeberler/" title="Sosial xəbərlər">Sosial</a></li><li><a href="/iqtisadiyyat-xeberleri/" title="İqtisadiyyat xəbərləri">İqtisadiyyat</a></li><li><a href="/siyaset-xeberleri/" title="Siyasət xəbərləri">Siyasət</a></li><li><a href="/hadise-xeberleri/" title="Hadisə xəbərləri">Hadisə</a></li><li><a href="/kriminal-xeberler/" title="Kriminal xəbərlər">Kriminal</a></li><li><a href="/medeniyyet-xeberleri/" title="Mədəniyyət xəbərləri">Mədəniyyət</a></li><li><a href="/sou-biznes-xeberleri/" title="Şou-biznes xəbərlər">Şou-biznes</a></li><li><a href="/idman-xeberleri/" title="İdman xəbərləri">İdman</a></li><li><a href="/maraqli-xeberler/" title="Maraqlı xəbərlər">Maraqlı</a></li><li><a href="/dunya-xeberleri/" title="Dünyada xəbərlər">Dünyada</a></li><li><a href="/mini-futbol-xeberleri/" title="Mini Futbol xəbərlər">Mini Futbol</a></li><li><a href="javascript:void(0);" onclick="var p = window.location.pathname; window.location.href = window.location.origin + p.substring(0, p.lastIndexOf('/')) + '/games.html';">Reklam</a></li></ul>
-</div></div>
-</header>
-<div id="maincont" class="container"> 
-<div class="centerblok clearfix">
-<div class="swiper-container"><div class="swiper-wrapper"><div class="swiper-slide"><a href="/395680/azerbaycanin-serbest-gulescisi-yusif-abdullayev-bolqaristanin-samokov-seherinde-kecirilen-u15-avropa-cempionatinda-qizil-medal-qazanib.-oxu.az-xeber-v"><img src="/uploads/266cf14921561f43d6b11e5d493774a7.png" /> <span>Azərbaycan güləşçisi Avropa çempionu oldu - FOTO</span></a></div><div class="swiper-slide"><a href="/395679/sakinlerin-nezerine-bezi-erazilerde-qaz-olmayacaq"><img src="/uploads/38d5206bf45f9e0f86c0f327a33152a3.png" /> <span>Sakinlərin NƏZƏRİNƏ: Bəzi ərazilərdə qaz olmayacaq</span></a></div><div class="swiper-slide"><a href="/395677/hava-keskin-deyisir-bu-tarixedek-guclu-kulek-xeberdarligi"><img src="/uploads/9008baab34a06c5724d0c1d80a791d67.jpg" /> <span>Hava kəskin dəyişir - Bu tarixədək GÜCLÜ KÜLƏK XƏBƏRDARLIĞI</span></a></div><div class="swiper-slide"><a href="/395676/leyla-eliyeva-ve-alyona-eliyeva-sosial-reabilitasiya-merkezini-ziyaret-edibler"><img src="/uploads/e1f4963a1ef8e1a39db76bca6e119540.png" /> <span>Leyla Əliyeva və Alyona Əliyeva Sosial Reabilitasiya Mərkəzini ziyarət ediblər</span></a></div><div class="swiper-slide"><a href="/395655/iran-polisinden-azerbaycanin-tebrizdeki-konsulunun-helak-oldugu-qeza-ile-bagli-aciqlama"><img src="/uploads/1b21234c3aafb46c9907e933b30ab45e.png" /> <span>İran polisindən Azərbaycanın Təbrizdəki konsulunun həlak olduğu qəza ilə bağlı AÇIQLAMA</span></a></div><div class="swiper-slide"><a href="/395624/abs-ve-iran-arasindaki-sazisin-teferruati-aciqlandi"><img src="/uploads/6291834e971fbfb421063c3e5651141e.png" /> <span>ABŞ və İran arasındakı sazişin təfərrüatı açıqlandı</span></a></div></div>
-        <div class="swiper-button-next swiper-button-white"></div><div class="swiper-button-prev swiper-button-white"></div>
-        <div class="swiper-pagination"></div></div><h1><a href="/son-xeberler" title="Son xeberler , en son Azerbaycan xeberleri ">Son xəbərlər</a></h1><div class="newslister clearfix" id="prodwrap"><div class="nart"><a class="thumb_zoom" href="/395654/yayin-gorunmeyen-tehlukesi-bezi-qidalar-sizi-zeherleye-biler" title="Yayın görünməyən təhlükəsi: Bəzi qidalar sizi zəhərləyə bilər"><div class="imgholder"><img src="/uploads/ss_395654_604a5e7df8f07b54826e98abdb4b59c3.jpg" alt="." /> </div><h3>Yayın görünməyən təhlükəsi: Bəzi qidalar sizi zəhərləyə bilər</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395653/rusiyada-seher-meri-vefat-etdi" title="Rusiyada şəhər meri vəfat etdi"><div class="imgholder"><img src="/uploads/ss_395653_d9689231768a894294ac3a18c8f9517c.jpg" alt="." /> </div><h3>Rusiyada şəhər meri vəfat etdi</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395652/pomidoru-iri-ve-bol-yetisdirmeyin-sirri-bu-metbex-tullantisini-zibilliye-atmayin" title="Pomidoru iri və bol yetişdirməyin SİRRİ - bu mətbəx tullantısını zibilliyə atmayın"><div class="imgholder"><img src="/uploads/ss_395652_072b39ac3983b980170fa4473f5d96fd.jpg" alt="." /> </div><h3>Pomidoru iri və bol yetişdirməyin SİRRİ - bu mətbəx tullantısını zibilliyə atmayın</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395651/niye-seherler-xususen-de-bazar-ve-birinci-gunler-paltar-yumamalisiniz-xalq-inanclari" title="Niyə səhərlər, xüsusən də bazar və birinci günlər paltar yumamalısınız? - Xalq inancları"><div class="imgholder"><img src="/uploads/ss_395651_2744e4dbc41b7e7ad323f7aef648ceaa.jpg" alt="." /> </div><h3>Niyə səhərlər, xüsusən də bazar və birinci günlər paltar yumamalısınız? - Xalq inancları</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395680/azerbaycanin-serbest-gulescisi-yusif-abdullayev-bolqaristanin-samokov-seherinde-kecirilen-u15-avropa-cempionatinda-qizil-medal-qazanib.-oxu.az-xeber-v" title="Azərbaycan güləşçisi Avropa çempionu oldu - FOTO"><div class="imgholder"><img src="/uploads/ss_395680_266cf14921561f43d6b11e5d493774a7.jpg" alt="." /> </div><h3>Azərbaycan güləşçisi Avropa çempionu oldu - FOTO</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395650/bild-almanlarin-ekseriyyeti-bundesverin-olkeni-mudafie-ede-bileceyine-inanmir" title="Bild: Almanların əksəriyyəti Bundesverin ölkəni müdafiə edə biləcəyinə inanmır"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395650_5b182799e3131020b746387766ffac8b.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Bild: Almanların əksəriyyəti Bundesverin ölkəni müdafiə edə biləcəyinə inanmır</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395649/isvecrede-referendum-ehali-sayi-azaldilir-olke-sengenden-cixir" title="İsveçrədə referendum: Əhali sayı azaldılır, ölkə Şengendən çıxır"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395649_83a6896a2c6c9199493a37c27424f100.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>İsveçrədə referendum: Əhali sayı azaldılır, ölkə Şengendən çıxır</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395648/rusiya-kiyev-vilayetini-oresnik-ballistik-raketi-ile-vurub" title="Rusiya Kiyev vilayətini &quot;Oreşnik&quot; ballistik raketi ilə vurub"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395648_74430782330c025b53de0d0f4b076cd0.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Rusiya Kiyev vilayətini &quot;Oreşnik&quot; ballistik raketi ilə vurub</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395647/hindistana-yanacaq-dasiyan-tanker-fevraldan-beri-ilk-defe-hormuz-bogazindan-kecib" title="Hindistana yanacaq daşıyan tanker fevraldan bəri ilk dəfə Hörmüz boğazından keçib"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395647_c9ac31fb76d3ce0a7731b99541221203.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Hindistana yanacaq daşıyan tanker fevraldan bəri ilk dəfə Hörmüz boğazından keçib</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395646/pul-haqqinda-maraqli-faktlar-niye-eskinaslar-yuyulduqda-parcalanmir" title="Pul haqqında maraqlı faktlar: niyə əskinaslar yuyulduqda parçalanmır?"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395646_b9661fb6fe259310b88f23326f4bc07a.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Pul haqqında maraqlı faktlar: niyə əskinaslar yuyulduqda parçalanmır?</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395645/infarktdan-evvel-urek-nece-agriyir-neyi-bilmek-vacibdir" title="İnfarktdan əvvəl ürək necə ağrıyır, nəyi bilmək vacibdir?"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395645_0267ef7e721d72b955c5506722282f3e.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>İnfarktdan əvvəl ürək necə ağrıyır, nəyi bilmək vacibdir?</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395644/daily-mail-vens-2028-ci-il-prezident-seckilerinden-geri-cekile-biler" title="&quot;Daily Mail&quot;: Vens 2028-ci il prezident seçkilərindən geri çəkilə bilər"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395644_57a9f5c8ebc0a8e382dd773fd8b64c99.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>&quot;Daily Mail&quot;: Vens 2028-ci il prezident seçkilərindən geri çəkilə bilər</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395643/pentaqon-rehberi-herbcilerin-sayini-artirmagi-planlasdirir" title="Pentaqon rəhbəri hərbçilərin sayını artırmağı planlaşdırır"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395643_ba25dba0819f5d766d35b9154a4f58fd.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Pentaqon rəhbəri hərbçilərin sayını artırmağı planlaşdırır</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395642/qiyamet-gunu-radiosu-yeniden-efirde-sirli-mesaj-yayimlandi" title="&quot;Qiyamət günü radiosu&quot; yenidən efirdə: Sirli mesaj yayımlandı"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395642_8108d1b950487c32ec4c204eb54f46bf.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>&quot;Qiyamət günü radiosu&quot; yenidən efirdə: Sirli mesaj yayımlandı</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395641/sokedici-kesf-wi-fi-artiq-sadece-internet-deyil-insanlari-izleyen-sistem-hazirlanib" title="Şokedici kəşf: &quot;Wi-Fi&quot; artıq sadəcə internet deyil - İnsanları izləyən sistem hazırlanıb"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395641_5343dbe1a1c397efef86ea0bb87c5294.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Şokedici kəşf: &quot;Wi-Fi&quot; artıq sadəcə internet deyil - İnsanları izləyən sistem hazırlanıb</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395640/nuhun-gemisi-ziyaretcilere-acilir-ici-heyvanlarla-doludur" title="Nuhun gəmisi ziyarətçilərə açılır: İçi heyvanlarla doludur"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395640_084627c28976d54b3e0741d89d5f824b.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Nuhun gəmisi ziyarətçilərə açılır: İçi heyvanlarla doludur</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395639/60-yasdan-sonra-qadini-ne-qocaldir-bunlar-yasinizin-uste-10-il-getirir" title="60 yaşdan sonra qadını NƏ QOCALDIR? - Bunlar yaşınızın üstə 10 il gətirir"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395639_4a944dcc3b2a21d964cfcd9417f39338.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>60 yaşdan sonra qadını NƏ QOCALDIR? - Bunlar yaşınızın üstə 10 il gətirir</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395638/pakistan-tezlikle-abs-iran-danisiqlarina-ev-sahibliyi-edeceyine-umid-edir" title="Pakistan tezliklə ABŞ-İran danışıqlarına ev sahibliyi edəcəyinə ümid edir"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395638_96e600e2f00b3e6b89437421b0760b8a.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Pakistan tezliklə ABŞ-İran danışıqlarına ev sahibliyi edəcəyinə ümid edir</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395637/berdede-bas-veren-avtomobil-qezasinda-bir-nefer-olub" title="Bərdədə baş verən avtomobil qəzasında bir nəfər ölüb"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395637_5e841c0c15ceade210d3065c158d35b5.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Bərdədə baş verən avtomobil qəzasında bir nəfər ölüb</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395679/sakinlerin-nezerine-bezi-erazilerde-qaz-olmayacaq" title="Sakinlərin NƏZƏRİNƏ: Bəzi ərazilərdə qaz olmayacaq"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395679_38d5206bf45f9e0f86c0f327a33152a3.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Sakinlərin NƏZƏRİNƏ: Bəzi ərazilərdə qaz olmayacaq</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395678/intensiv-yagis-yagacaq-xeberdarliq" title="İntensiv yağış yağacaq - XƏBƏRDARLIQ"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395678_98301647c260594a43334b0185f557fd.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>İntensiv yağış yağacaq - XƏBƏRDARLIQ</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395636/avtomobil-bazarinda-yeni-bohran-sintetik-yaglara-limit-qoyuldu" title="Avtomobil bazarında yeni böhran: Sintetik yağlara limit qoyuldu"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395636_19beb1c00f099806a9cc55ae4cbe0e5f.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Avtomobil bazarında yeni böhran: Sintetik yağlara limit qoyuldu</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395635/her-gun-et-yemek-omru-uzadir-cin-alimlerinden-diqqetceken-arasdirma" title="Hər gün ət yemək ömrü uzadır? - Çin alimlərindən diqqətçəkən araşdırma"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395635_b6103a0a9100b9a473ea364ba4a3a603.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Hər gün ət yemək ömrü uzadır? - Çin alimlərindən diqqətçəkən araşdırma</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395677/hava-keskin-deyisir-bu-tarixedek-guclu-kulek-xeberdarligi" title="Hava kəskin dəyişir - Bu tarixədək GÜCLÜ KÜLƏK XƏBƏRDARLIĞI"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395677_9008baab34a06c5724d0c1d80a791d67.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Hava kəskin dəyişir - Bu tarixədək GÜCLÜ KÜLƏK XƏBƏRDARLIĞI</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395634/yumurtalarin-saxlanmasinda-en-cox-edilen-sehv" title="Yumurtaların saxlanmasında ən çox edilən SƏHV"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395634_d8d1b9bf59f465969b7bceefa6816a25.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Yumurtaların saxlanmasında ən çox edilən SƏHV</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395633/eltiler-arasinda-dava-zamani-6-yasli-usaq-bicaq-xesareti-aldi" title="Eltilər arasında dava zamanı 6 yaşlı uşaq bıçaq xəsarəti aldı"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395633_1ee5a2890c199867de02b91648a76a90.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Eltilər arasında dava zamanı 6 yaşlı uşaq bıçaq xəsarəti aldı</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395632/tramp-si-cinpinle-gorusunde-yaponiyanin-bas-nazirini-mudafie-edib" title="Tramp Si Cinpinlə görüşündə Yaponiyanın Baş nazirini müdafiə edib"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395632_b07bedf12fa7539734493272b9c5df10.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Tramp Si Cinpinlə görüşündə Yaponiyanın Baş nazirini müdafiə edib</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395631/levandovski-barselonanin-tarixinde-en-yaxsi-10-bombardir-sirasina-daxil-olub" title="Levandovski &quot;Barselona&quot;nın tarixində ən yaxşı 10 bombardir sırasına daxil olub"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395631_99f1e241c56fd62dd0a7a21c0d9050a7.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Levandovski &quot;Barselona&quot;nın tarixində ən yaxşı 10 bombardir sırasına daxil olub</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395630/pasinyan-axalkalaki-qars-demir-yolunun-fealiyyete-basladigini-bildirib" title="Paşinyan Axalkalaki-Qars dəmir yolunun fəaliyyətə başladığını bildirib"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395630_87a80524f77d77cc8d53a1fd3f5e3ee8.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Paşinyan Axalkalaki-Qars dəmir yolunun fəaliyyətə başladığını bildirib</h3></a> <span class="dttime">24 may</span></div><div class="nart"><a class="thumb_zoom" href="/395629/kaliforniyada-kimyevi-madde-sizmasi-ile-elaqedar-fovqelade-veziyyet-elan-edildi" title="Kaliforniyada kimyəvi maddə sızması ilə əlaqədar fövqəladə vəziyyət elan edildi"><div class="imgholder"><img loading="lazy" class="lazyload" data-src="/uploads/ss_395629_8bef132e86f75ebe484feb6f0b169247.jpg"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdj+PLtx38ACaYD4rhyz+gAAAAASUVORK5CYII=" alt="."   /></div><h3>Kaliforniyada kimyəvi maddə sızması ilə əlaqədar fövqəladə vəziyyət elan edildi</h3></a> <span class="dttime">24 may</span></div></div><div class="pagination"><b>1</b>  <a href="/xeberler/?start=2">2</a> <a href="/xeberler/?start=3">3</a> <a href="/xeberler/?start=4">4</a>       <a href="/xeberler/?start=2">&gt;&gt;</a></div> </div> 
-<div id="rightblok" class="clearfix">
-<iframe src="https://sonxeber.az/banner/banner_62_69fc2ee534.html?1277564702"  width="240" height="400" frameborder="0" allowfullscreen="" scrolling="no" style="overflow: hidden !important; max-width: 100%;"></iframe>
+            <!-- Floating Dictionary / Translation Pop-up -->
+            <div id="translation-popup" class="translation-popup" style="display: none;">
+                <div id="popup-arrow" class="popup-arrow"></div>
 
+                <div class="popup-header">
+                    <div class="popup-word-group">
+                        <div id="popup-lang-badge" class="popup-lang-badge">🇩🇪 Word</div>
+                        <div id="popup-original" class="popup-original-word">Wort</div>
+                    </div>
+                    <div class="popup-actions-top">
+                        <button id="popup-audio-btn" class="popup-mini-btn" title="Listen to pronunciation">🔊</button>
+                        <button id="popup-close-btn" class="popup-mini-btn" title="Close">✕</button>
+                    </div>
+                </div>
 
+                <div class="popup-body">
+                    <div id="popup-sentence-preview" class="popup-sentence-preview" style="display: none;"></div>
+                    <div id="popup-translation" class="popup-translation-result">
+                        Translating...
+                    </div>
+                </div>
 
+                <div class="popup-footer">
+                    <button id="popup-read-from-here-btn" class="popup-action-btn primary" title="Start continuous voice reading from this word">
+                        <span>▶ Read from here</span>
+                    </button>
+                    <button id="popup-save-btn" class="popup-action-btn">
+                        <span>☆ Save</span>
+                    </button>
+                    <button id="popup-copy-btn" class="popup-action-btn">
+                        <span>📋 Copy</span>
+                    </button>
+                </div>
+            </div>
 
-<a href="https://medialiteracy.media.gov.az/" rel="nofollow" target="_blank"><img src="/banner/mediainkisaf2.jpg" alt="." /></a><br/><br/><div class="blk blkpop clearfix"><div class="title_blk">Son xəbərlər</div> <div class="blk_as"><a href="/395505/etin-qiymeti-39-manata-qalxdi" title="Ətin qiyməti 39 manata QALXDI"><img src="/uploads/ss_395505_a4c902bc8c39e710955bb51b854bbb6b.jpg" alt="." class="lazyload" />  Ətin qiyməti 39 manata QALXDI</a><a href="/395525/badimcani-bele-bisirin-dadi-etden-daha-lezzetli-olur" title="Badımcanı belə bişirin, dadı ətdən daha ləzzətli olur"><img src="/uploads/ss_395525_badimcan_zc.jpg" alt="." class="lazyload" />  Badımcanı belə bişirin, dadı ətdən daha ləzzətli olur</a><a href="/395612/azerbaycanda-pensiyalarla-bagli-yenilik" title="Azərbaycanda pensiyalarla bağlı YENİLİK"><img src="/uploads/ss_395612_88710c70006be7c744d8469ca5f3947e.jpg" alt="." class="lazyload" />  Azərbaycanda pensiyalarla bağlı YENİLİK</a><a href="/395620/azerbaycanda-dehset-insanlar-evlerini-terk-etdi-ne-bas-verir" title="Azərbaycanda DƏHŞƏT - İnsanlar EVLƏRİNİ TƏRK ETDİ - Nə baş verir?"><img src="/uploads/ss_395620_52cd89b4e5e7f9162a50f41c550aa246.jpg" alt="." class="lazyload" />  Azərbaycanda DƏHŞƏT - İnsanlar EVLƏRİNİ TƏRK ETDİ - Nə baş verir?</a><a href="/395564/mayin-25-de-qaz-olmayacaq" title="Mayın 25-də QAZ OLMAYACAQ"><img src="/uploads/ss_395564_c5f483215adf516756cceb5cd026b0bc.jpg" alt="." class="lazyload" />  Mayın 25-də QAZ OLMAYACAQ</a><a href="/395489/ardicil-5-gun-is-olmayacaq" title="Ardıcıl 5 gün iş olmayacaq"><img src="/uploads/ss_395489_2ccaafcb9e739a7e3873ce1e9a558512.jpg" alt="." class="lazyload" />  Ardıcıl 5 gün iş olmayacaq</a><a href="/395611/bu-pullar-etibarsiz-sayilir-merkezi-bankdan-xeberdarliq" title="Bu pullar etibarsız sayılır - MƏRKƏZİ BANKDAN XƏBƏRDARLIQ"><img src="/uploads/ss_395611_da3d3c1a4f2eacbf3121b6594e83ef71.jpg" alt="." class="lazyload" />  Bu pullar etibarsız sayılır - MƏRKƏZİ BANKDAN XƏBƏRDARLIQ</a><a href="/395619/azerbaycanda-saygaclar-bu-cur-olacaq" title="Azərbaycanda sayğaclar BU CÜR OLACAQ"><img src="/uploads/ss_395619_19d84c0e9ac34cadd287fff6eb1be937.jpg" alt="." class="lazyload" />  Azərbaycanda sayğaclar BU CÜR OLACAQ</a><a href="/395613/etibarname-ile-masin-surenlerin-nezerine-gelen-aydan" title="Etibarnamə ilə maşın sürənlərin nəzərinə - GƏLƏN AYDAN..."><img src="/uploads/ss_395613_0da5b2a722a7a182cea01d389fcfebb6.jpg" alt="." class="lazyload" />  Etibarnamə ilə maşın sürənlərin nəzərinə - GƏLƏN AYDAN...</a><a href="/395528/eli-esedov-qerar-imzaladi-bu-sexslere-her-ay-100-manat-verilecek" title="Əli Əsədov QƏRAR İMZALADI - Bu şəxslərə hər ay 100 MANAT VERİLƏCƏK"><img src="/uploads/ss_395528_98aeb987df14d45835454a5204b8df98.jpg" alt="." class="lazyload" />  Əli Əsədov QƏRAR İMZALADI - Bu şəxslərə hər ay 100 MANAT VERİLƏCƏK</a><a href="/395486/bu-universitetin-qapisi-mohurlendi-telebeler-ayaga-qalxdi" title="Bu universitetin qapısı möhürləndi, tələbələr ayağa qalxdı"><img src="/uploads/ss_395486_img_0981.jpg" alt="." class="lazyload" />  Bu universitetin qapısı möhürləndi, tələbələr ayağa qalxdı</a><a href="/395606/maaslarin-odenis-qaydasi-deyisir-artiq-ayliq-verilmeyecek" title="Maaşların ödəniş QAYDASI DƏYİŞİR - Artıq aylıq verilməyəcək"><img src="/uploads/ss_395606_b19fcbcfe651e02d2059b3a0fe75a4f4.jpg" alt="." class="lazyload" />  Maaşların ödəniş QAYDASI DƏYİŞİR - Artıq aylıq verilməyəcək</a><a href="/395622/bu-gun-tebrizde-vefat-eden-konsulumuzun-fotosu" title="Bu gün Təbrizdə vəfat edən konsulumuzun FOTOSU"><img src="/uploads/ss_395622_edc85f85f8748b0de57b651f8eab33db.jpg" alt="." class="lazyload" />  Bu gün Təbrizdə vəfat edən konsulumuzun FOTOSU</a><a href="/395578/azerbaycanda-taninmis-idmanci-mesqden-sonra-oldu-foto" title="Azərbaycanda tanınmış idmançı məşqdən sonra öldü - FOTO"><img src="/uploads/ss_395578_6eb593f8615abda91781e902f1ecd36b.jpg" alt="." class="lazyload" />  Azərbaycanda tanınmış idmançı məşqdən sonra öldü - FOTO</a><a href="/395621/leyla-eliyeva-bakida-toyda-video" title="Leyla Əliyeva Bakıda toyda - VİDEO"><img src="/uploads/ss_395621_fd7c1606c2f0d23a750f06c9fd96a69f.jpg" alt="." class="lazyload" />  Leyla Əliyeva Bakıda toyda - VİDEO</a></div></div><br/>
+            <!-- Backdrop Overlay for Drawers -->
+            <div id="reader-drawer-overlay" class="reader-drawer-overlay"></div>
 
+            <!-- Left Drawer: Table of Contents -->
+            <aside id="reader-toc-drawer" class="reader-drawer left">
+                <div class="drawer-header">
+                    <h3>Table of Contents</h3>
+                    <button class="reader-icon-btn compact drawer-close-btn">✕</button>
+                </div>
+                <div class="drawer-body">
+                    <ul id="reader-toc-list" class="toc-list"></ul>
+                </div>
+            </aside>
 
-<div class="blk_rek">
-<a href="https://unvan.az" title="Pulsuz elanlar sayti" onclick="myga('sonxeber-unvanright')">Unvan.az elanlar sayti</a> </div>
+            <!-- Right Drawer: Appearance & Voice Settings (Aa) -->
+            <aside id="reader-settings-drawer" class="reader-drawer">
+                <div class="drawer-header">
+                    <h3>Appearance & Audio</h3>
+                    <button class="reader-icon-btn compact drawer-close-btn">✕</button>
+                </div>
+                <div class="drawer-body">
+                    <!-- Page Themes -->
+                    <div class="settings-section">
+                        <span class="settings-label">Page Theme</span>
+                        <div class="theme-selector-grid">
+                            <button class="theme-opt-btn" data-theme="theme-light">
+                                <span class="theme-swatch light"></span>
+                                <span>Paper</span>
+                            </button>
+                            <button class="theme-opt-btn active" data-theme="theme-sepia">
+                                <span class="theme-swatch sepia"></span>
+                                <span>Sepia</span>
+                            </button>
+                            <button class="theme-opt-btn" data-theme="theme-midnight">
+                                <span class="theme-swatch midnight"></span>
+                                <span>Midnight</span>
+                            </button>
+                            <button class="theme-opt-btn" data-theme="theme-dark">
+                                <span class="theme-swatch dark"></span>
+                                <span>Charcoal</span>
+                            </button>
+                            <button class="theme-opt-btn" data-theme="theme-forest">
+                                <span class="theme-swatch forest"></span>
+                                <span>Sage</span>
+                            </button>
+                        </div>
+                    </div>
 
-<div class="blk_rekinline">
-<a title="VIPEMLAK.az  Dasinmaz emlak elanlari , ev alqi satqisi" href="https://vipemlak.az/" target="_blank"><img alt="vipemlak.az"  src="/banner/vipemlak_menu4_2.png"></a> </div>
+                    <!-- Typeface -->
+                    <div class="settings-section">
+                        <span class="settings-label">Typeface</span>
+                        <div class="font-selector-list">
+                            <button class="font-opt-btn active" data-font="font-serif" style="font-family: 'Lora', serif;">
+                                <span>Lora Serif</span>
+                                <span class="badge-tag">Book Default</span>
+                            </button>
+                            <button class="font-opt-btn" data-font="font-literary" style="font-family: 'Crimson Pro', serif;">
+                                <span>Crimson Pro</span>
+                                <span class="badge-tag">Classic Print</span>
+                            </button>
+                            <button class="font-opt-btn" data-font="font-classic" style="font-family: 'Merriweather', serif;">
+                                <span>Merriweather</span>
+                                <span class="badge-tag">Crisp Editorial</span>
+                            </button>
+                            <button class="font-opt-btn" data-font="font-sans" style="font-family: 'Inter', sans-serif;">
+                                <span>Inter Sans</span>
+                                <span class="badge-tag">Clean Modern</span>
+                            </button>
+                        </div>
+                    </div>
 
-<div class="blk_rekinline">
-<a title="turlar Azerbaycan, Daxili turlar, xarici turlar, tur paketler, Ucuz turlar" href="https://turlar.az" target="_blank">turlar.az</a> <br/>
-</div>
-</div>
+                    <!-- Font Size -->
+                    <div class="settings-section">
+                        <span class="settings-label">Font Size</span>
+                        <div class="range-control-row">
+                            <span class="range-icon-small">A</span>
+                            <input type="range" id="settings-font-size-slider" min="15" max="28" step="1" value="19">
+                            <span class="range-icon-large">A</span>
+                            <span id="font-size-val" class="range-val">19px</span>
+                        </div>
+                    </div>
 
+                    <!-- Line Spacing -->
+                    <div class="settings-section">
+                        <span class="settings-label">Line Spacing</span>
+                        <div class="range-control-row">
+                            <span class="range-icon-muted">↕</span>
+                            <input type="range" id="settings-line-height-slider" min="1.4" max="2.4" step="0.1" value="1.85">
+                            <span id="line-height-val" class="range-val">1.9</span>
+                        </div>
+                    </div>
 
-<a href="#" id="scrollToTop"></a>
-</div>
-<footer id="footer"><div class="container">
+                    <!-- Page Margin / Width -->
+                    <div class="settings-section">
+                        <span class="settings-label">Page Width</span>
+                        <div class="range-control-row">
+                            <span class="range-icon-muted">↔</span>
+                            <input type="range" id="settings-width-slider" min="560" max="1050" step="20" value="740">
+                            <span id="width-val" class="range-val">740px</span>
+                        </div>
+                    </div>
 
-<a class="logo" href="/"><img src="/logo2.png?2" /></a>
+                    <!-- Voice Read-Aloud Speed -->
+                    <div class="settings-section">
+                        <span class="settings-label">Voice Reading Speed</span>
+                        <div class="range-control-row">
+                            <span class="range-icon-muted">🐢</span>
+                            <input type="range" id="settings-voice-speed-slider" min="0.5" max="2.0" step="0.05" value="1.0">
+                            <span class="range-icon-muted">🐇</span>
+                            <span id="settings-voice-speed-val" class="range-val">1.0x</span>
+                        </div>
+                    </div>
 
-Sonxeber.az Azərbaycanın xəbər saytı, Azərbaycandan ən son xəbərləri yayımlayır. Iqtisadi xeberler, Şou biznes xəbərləri , siyasi xeberler, kriminal xeberler, idman xeberleri, muharibe xeberleri, maliyye xeberleri, <a href="/son-xeberler" target="_blank"  title="son xeberler" >son xeberler</a> təqdim edən ictimai-sosial saytdır. xeberler bu gun 2022<br />
-Email: info [ @ ] sonxeber.az<br />
-<br> <b><a href="/contact">Bizimlə əlaqə</a></b>
-<a href="/page/policy-xeber">Redaksiya siyasəti</a>
+                    <!-- Reader Guide -->
+                    <div class="settings-tip-box">
+                        <div class="settings-tip-title">Reading Tips</div>
+                        <ul class="settings-tip-list">
+                            <li><strong>Single Word:</strong> Tap any word for instant translation & audio.</li>
+                            <li><strong>Full Sentence:</strong> Highlight a phrase or sentence to translate in context.</li>
+                            <li><strong>Read Aloud:</strong> Tap <em>"▶ Read from here"</em> on any word to listen with Google Voice.</li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
 
+            <!-- Right Drawer: Saved Vocabulary Notebook -->
+            <aside id="reader-vocab-drawer" class="reader-drawer">
+                <div class="drawer-header">
+                    <h3>Saved Vocabulary</h3>
+                    <button class="reader-icon-btn compact drawer-close-btn">✕</button>
+                </div>
+                <div class="drawer-subheader">
+                    <input type="text" id="vocab-search-input" class="reader-input" placeholder="Search saved words or translations...">
+                </div>
+                <div class="drawer-body">
+                    <div id="reader-vocab-list" class="vocab-list"></div>
+                </div>
+                <div class="drawer-footer">
+                    <button id="export-vocab-csv-btn" class="reader-icon-btn primary flex-1">📥 Export CSV (Anki)</button>
+                    <button id="export-vocab-json-btn" class="reader-icon-btn">JSON</button>
+                    <button id="clear-vocab-btn" class="reader-icon-btn danger-btn" title="Clear All">🗑️</button>
+                </div>
+            </aside>
 
- <br>
-<div class="clear"><br>
+            <!-- Book Library Modal -->
+            <div id="reader-library-modal" class="library-modal-overlay">
+                <div class="library-modal">
+                    <div class="library-header">
+                        <div class="library-title-group">
+                            <h2>Library</h2>
+                            <p>Select a book to read or import your own EPUB or text file.</p>
+                        </div>
+                        <button class="reader-icon-btn compact drawer-close-btn">✕</button>
+                    </div>
 
-<script>document.write("<a href='//www.liveinternet.ru/click' "+
-"target=_blank><img src='//counter.yadro.ru/hit?t26.6;r"+
-escape(document.referrer)+((typeof(screen)=="undefined")?"":
-";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?
-screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
-";"+Math.random()+ "' alt='' border='0' width='88' height='15'><\/a>");</script> 0.014 | a: 0</div>
-</div> 
-</footer>
-</div>
+                    <!-- Difficulty & Language Filter Tabs -->
+                    <div class="library-filter-bar">
+                        <button class="lib-filter-btn active" data-filter="all">All Books</button>
+                        <button class="lib-filter-btn" data-filter="cloud">☁️ Uploaded</button>
+                        <button class="lib-filter-btn" data-filter="beginner">🌱 Beginner (A1–A2)</button>
+                        <button class="lib-filter-btn" data-filter="intermediate">🌿 Intermediate (B1–B2)</button>
+                        <button class="lib-filter-btn" data-filter="advanced">🌳 Advanced (C1)</button>
+                        <button class="lib-filter-btn" data-filter="fr">🇫🇷 French</button>
+                        <button class="lib-filter-btn" data-filter="es">🇪🇸 Spanish</button>
+                    </div>
 
+                    <div class="library-body">
+                        <div id="reader-bookshelf-grid" class="book-shelf-grid"></div>
 
-<div id="insertmid" data-target="article p" data-class="banner3" data-eq="2" data-timeout="2" data-url="https://azjob.az" data-img="/banner/azjob1000_2.png" style="display: none;"></div>
+                        <!-- Import & Gutenberg Section -->
+                        <div class="library-import-section">
+                            <div class="library-upload-grid">
+                                <!-- Upload Custom Book -->
+                                <div class="custom-book-zone" onclick="document.getElementById('custom-book-file-input').click()">
+                                    <input type="file" id="custom-book-file-input" accept=".epub,.txt,.html,.xhtml" style="display: none;">
+                                    <div class="zone-icon">📥</div>
+                                    <div class="zone-title">Open EPUB or Text File</div>
+                                    <div class="zone-sub">Import any .epub, .txt, or .html book</div>
+                                </div>
 
+                                <!-- Paste Text Directly -->
+                                <div class="custom-book-zone" id="open-paste-modal-btn">
+                                    <div class="zone-icon">📋</div>
+                                    <div class="zone-title">Paste Text or Story</div>
+                                    <div class="zone-sub">Paste any article, chapter, or excerpt</div>
+                                </div>
+                            </div>
 
+                            <!-- Load from Gutenberg URL -->
+                            <div class="gutenberg-box">
+                                <div class="gutenberg-box-header">
+                                    <span class="gutenberg-box-title">Import from Project Gutenberg</span>
+                                    <span class="gutenberg-box-examples">Examples: #36227, #23393, #22367</span>
+                                </div>
+                                <div class="gutenberg-input-row">
+                                    <input type="text" id="gutenberg-url-input" class="gutenberg-input" placeholder="Enter Gutenberg URL or eBook ID (e.g. 23393)">
+                                    <button id="gutenberg-fetch-btn" class="reader-icon-btn primary">Load Book</button>
+                                </div>
+                                <div id="gutenberg-help-hint" class="gutenberg-help-hint" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Web & Wikipedia Article Browser Modal -->
+            <div id="reader-web-modal" class="library-modal-overlay">
+                <div class="library-modal modal-medium">
+                    <div class="library-header">
+                        <div class="library-title-group">
+                            <h2>Wikipedia Reader</h2>
+                            <p>Read any Wikipedia article formatted like a clean e-book chapter with instant translations.</p>
+                        </div>
+                        <button class="reader-icon-btn compact drawer-close-btn">✕</button>
+                    </div>
+                    <div class="library-body">
+                        <div class="web-search-section">
+                            <label class="settings-label">Search Wikipedia or Paste Article URL</label>
+                            <div class="web-search-bar">
+                                <select id="web-lang-select" class="gutenberg-input web-lang-select">
+                                    <option value="de" selected>🇩🇪 German</option>
+                                    <option value="fr">🇫🇷 French</option>
+                                    <option value="es">🇪🇸 Spanish</option>
+                                    <option value="it">🇮🇹 Italian</option>
+                                    <option value="en">🇬🇧 English</option>
+                                </select>
+                                <div class="web-search-input-wrap">
+                                    <input type="text" id="web-search-input" class="gutenberg-input" placeholder="Search topic (e.g. Albert Camus, Philosophie, Berlin)..." autocomplete="off">
+                                    <div id="web-search-suggestions" class="web-suggestions-dropdown" style="display: none;"></div>
+                                </div>
+                                <button id="web-search-submit-btn" class="reader-icon-btn primary">
+                                    <span>Read Article</span>
+                                </button>
+                            </div>
+                        </div>
 
+                        <div class="web-topics-section">
+                            <label class="settings-label">Suggested Topics</label>
+                            <div id="web-quick-topics" class="web-quick-topics"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Paste Text Modal -->
+            <div id="reader-paste-modal" class="library-modal-overlay">
+                <div class="library-modal modal-narrow">
+                    <div class="library-header">
+                        <div class="library-title-group">
+                            <h2>Paste Text to Read</h2>
+                            <p>Paste any foreign language text, story, or article to read in the e-book viewer.</p>
+                        </div>
+                        <button class="reader-icon-btn compact drawer-close-btn">✕</button>
+                    </div>
+                    <div class="library-body">
+                        <input type="text" id="paste-book-title-input" class="gutenberg-input" placeholder="Document Title (e.g. Meine Geschichte)">
+                        <textarea id="paste-book-text-input" class="reader-textarea" placeholder="Paste your text here..."></textarea>
+                        <div class="modal-actions-end">
+                            <button class="reader-icon-btn drawer-close-btn" type="button">Cancel</button>
+                            <button id="paste-book-submit-btn" class="reader-icon-btn primary" type="button">Start Reading</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Compact E-Reader Audio Bar (Voice Read-Aloud) -->
+            <div id="reader-voice-player" class="reader-voice-player" style="display: none;">
+                <div class="voice-player-container">
+                    <div class="voice-player-left">
+                        <div class="voice-status-group">
+                            <span id="voice-status-indicator" class="voice-status-indicator"></span>
+                            <span id="voice-status-text" class="voice-status-text">Ready</span>
+                            <span id="voice-lang-badge" class="badge-tag">Google Voice</span>
+                        </div>
+                        <div id="voice-text-preview" class="voice-text-preview">Click any word in the book to start listening</div>
+                    </div>
 
+                    <div class="voice-player-center">
+                        <button id="voice-prev-btn" class="voice-btn" title="Previous sentence">⏮</button>
+                        <button id="voice-play-pause-btn" class="voice-btn play-btn" title="Play / Pause (Space)">▶</button>
+                        <button id="voice-next-btn" class="voice-btn" title="Next sentence">⏭</button>
+                        <button id="voice-stop-btn" class="voice-btn stop-btn" title="Stop">⏹</button>
+                    </div>
 
+                    <div class="voice-player-right">
+                        <div class="voice-speed-group">
+                            <span class="voice-speed-icon">Speed</span>
+                            <div class="voice-speed-presets">
+                                <button class="voice-speed-pill" data-speed="0.75">0.75×</button>
+                                <button class="voice-speed-pill" data-speed="0.9">0.9×</button>
+                                <button class="voice-speed-pill active" data-speed="1.0">1.0×</button>
+                                <button class="voice-speed-pill" data-speed="1.25">1.25×</button>
+                                <button class="voice-speed-pill" data-speed="1.5">1.5×</button>
+                            </div>
+                            <input type="range" id="voice-speed-slider" class="voice-speed-slider" min="0.5" max="2.0" step="0.05" value="1.0" title="Adjust reading speed">
+                            <span id="voice-speed-val" class="voice-speed-val">1.0x</span>
+                        </div>
+                        <button id="voice-close-btn" class="voice-btn close-btn" title="Close Audio Bar">✕</button>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Toast Notification -->
+            <div id="reader-toast" class="reader-toast">Notification</div>
 
+        </div>
+    </div>
 
-
-
-
-<script title2="media inkisaf">
-window.digitalks=window.digitalks||new function(){var t=this;t._e=[],t._c={},t.config=function(c){var i;t._c=c,t._c.script_id?((i=document.createElement("script")).src="//data.digitalks.az/v1/scripts/"+t._c.script_id+"/track.js?&cb="+Math.random(),i.async=! 0,document.head.appendChild(i)):console.error("digitalks: script_id cannot be empty!")};["track","identify"].forEach(function(c){t[c]=function(){t._e.push([c]. concat(Array.prototype.slice.call(arguments,0)))}})}
-digitalks.config({ script_id: "88ea3717-6006-4804-b229-9a2f6566cb37", page_url: location.href, referrer: document.referrer
-}) </script>
-</body></html>
+    <!-- Application Script -->
+    <script type="module" src="src/games/reading/reading.js"></script>
+    <script>
+        // Filter buttons in library modal
+        document.addEventListener('click', (e) => {
+            const filterBtn = e.target.closest('.lib-filter-btn');
+            if (filterBtn && window.readingApp) {
+                document.querySelectorAll('.lib-filter-btn').forEach(b => b.classList.remove('active'));
+                filterBtn.classList.add('active');
+                window.readingApp.activeLibraryFilter = filterBtn.dataset.filter;
+                window.readingApp.renderBookshelf();
+            }
+        });
+    </script>
+</body>
+</html>
