@@ -569,6 +569,33 @@ class ReadingApp {
                 throw new Error(`Book "${bookId}" not found in assets, local storage, or cloud library.`);
             }
 
+            // Auto-heal books that were erroneously tagged as 'en' (English -> English) by EPUB metadata
+            if (!bookData.language || bookData.language === 'en') {
+                const detected = this.detectBookLanguage(bookData.chapters, 'de');
+                bookData.language = detected.code;
+                bookData.languageName = detected.name;
+                // Persist corrected language to local storage and cloud if it's a custom/uploaded book
+                try {
+                    const localCustom = JSON.parse(localStorage.getItem('reading_custom_books') || '{}');
+                    if (localCustom[bookId]) {
+                        localCustom[bookId].language = detected.code;
+                        localCustom[bookId].languageName = detected.name;
+                        localStorage.setItem('reading_custom_books', JSON.stringify(localCustom));
+                    }
+                    const manifestEntry = this.booksManifest.find(b => b.id === bookId);
+                    if (manifestEntry) {
+                        manifestEntry.language = detected.code;
+                        manifestEntry.languageName = detected.name;
+                    }
+                    if (db && (bookData.isCloud || bookData.source === 'cloud')) {
+                        set(ref(db, `reading_books/${bookId}/language`), detected.code).catch(() => {});
+                        set(ref(db, `reading_books/${bookId}/languageName`), detected.name).catch(() => {});
+                        set(ref(db, `reading_books_meta/${bookId}/language`), detected.code).catch(() => {});
+                        set(ref(db, `reading_books_meta/${bookId}/languageName`), detected.name).catch(() => {});
+                    }
+                } catch (e) {}
+            }
+
             this.currentBook = bookData;
             this.currentChapterIndex = Math.min(Math.max(0, chapterIndex), (this.currentBook.chapters?.length || 1) - 1);
 
@@ -584,13 +611,53 @@ class ReadingApp {
         }
     }
 
+    detectBookLanguage(chapters = [], rawMetaLang = 'de') {
+        const langMap = {
+            'de': 'German',
+            'it': 'Italian',
+            'ru': 'Russian',
+            'ja': 'Japanese',
+            'nl': 'Dutch'
+        };
+
+        // Sample text from first up to 3 chapters
+        const sampleText = (chapters || [])
+            .slice(0, 3)
+            .map(c => (c && c.html) ? c.html.replace(/<[^>]+>/g, ' ') : '')
+            .join(' ')
+            .slice(0, 6000);
+
+        if (sampleText.length > 20) {
+            if (/[а-яА-ЯёЁ]{3,}/.test(sampleText)) {
+                return { code: 'ru', name: 'Russian' };
+            }
+            const deMatches = sampleText.match(/\b(und|der|die|das|nicht|ist|ein|eine|mit|sich|auf|für|von|dem|den|zu|als|auch|es|an|werden|aus|er|hat|daß|dass|aber|wird|bei|war|noch|wie|einem|über|einen)\b|[äöüßÄÖÜ]/gi);
+            if (deMatches && deMatches.length >= 3) {
+                return { code: 'de', name: 'German' };
+            }
+            const itMatches = sampleText.match(/\b(che|non|per|una|con|del|della|sono|come|più|suo|sua|nel|nella|questo|questa|anche|essere|hanno)\b/gi);
+            if (itMatches && itMatches.length >= 5) {
+                return { code: 'it', name: 'Italian' };
+            }
+        }
+
+        const cleanMeta = (rawMetaLang || 'de').toLowerCase().split('-')[0].split('_')[0].slice(0, 2);
+        // Never return 'en' since target translation language is English ('en')
+        const finalCode = (!cleanMeta || cleanMeta === 'en') ? 'de' : cleanMeta;
+        return {
+            code: finalCode,
+            name: langMap[finalCode] || 'German'
+        };
+    }
+
     renderBookMeta() {
         if (!this.currentBook) return;
         if (this.dom.bookTitleEl) {
             this.dom.bookTitleEl.textContent = this.currentBook.title;
         }
         if (this.dom.langBadgeEl) {
-            const langCode = (this.currentBook.language || 'de').toUpperCase();
+            const rawCode = this.currentBook.language || 'de';
+            const langCode = (rawCode === 'en' ? 'de' : rawCode).toUpperCase();
             this.dom.langBadgeEl.textContent = `${langCode} → EN`;
         }
     }
@@ -1000,10 +1067,14 @@ class ReadingApp {
     }
 
     async fetchWordDictionary(word, srcLang = 'de', targetLang = 'en') {
+        const effectiveSrcLang = (!srcLang || srcLang === 'en' || srcLang === targetLang) ? 'de' : srcLang;
         const cleanWord = word.trim();
-        const cacheKey = `dict_${srcLang}_${targetLang}_${cleanWord.toLowerCase()}`;
+        const cacheKey = `dict_${effectiveSrcLang}_${targetLang}_${cleanWord.toLowerCase()}`;
         if (this.translationCache[cacheKey]) {
-            return this.translationCache[cacheKey];
+            const cached = this.translationCache[cacheKey];
+            if (cached && cached.primary && cached.primary.toLowerCase() !== cleanWord.toLowerCase()) {
+                return cached;
+            }
         }
 
         const dictData = {
@@ -1012,7 +1083,7 @@ class ReadingApp {
         };
 
         try {
-            const url = `https://clients5.google.com/translate_a/single?client=dict-chrome-ex&sl=${srcLang}&tl=${targetLang}&dt=t&dt=bd&q=${encodeURIComponent(cleanWord)}`;
+            const url = `https://clients5.google.com/translate_a/single?client=dict-chrome-ex&sl=${effectiveSrcLang}&tl=${targetLang}&dt=t&dt=bd&q=${encodeURIComponent(cleanWord)}`;
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
@@ -1035,8 +1106,8 @@ class ReadingApp {
             console.warn('Error fetching word dictionary:', e);
         }
 
-        if (!dictData.primary) {
-            dictData.primary = await this.translateText(cleanWord, srcLang, targetLang);
+        if (!dictData.primary || dictData.primary.toLowerCase() === cleanWord.toLowerCase()) {
+            dictData.primary = await this.translateText(cleanWord, effectiveSrcLang, targetLang);
         }
 
         dictData.synonyms = Array.from(new Set(dictData.synonyms));
@@ -1106,7 +1177,8 @@ class ReadingApp {
 
     async showTranslationPopup(data) {
         const { type, text, targetRect, contextSentence, sentenceData } = data;
-        const srcLang = this.currentBook ? this.currentBook.language : 'de';
+        const rawSrcLang = this.currentBook ? this.currentBook.language : 'de';
+        const srcLang = (!rawSrcLang || rawSrcLang === 'en') ? 'de' : rawSrcLang;
         const targetLang = 'en';
 
         this.currentPopupData = {
@@ -1245,6 +1317,9 @@ class ReadingApp {
     }
 
     async translateText(text, srcLang = 'de', targetLang = 'en', isHtml = false) {
+        if (!srcLang || srcLang === 'en' || srcLang === targetLang) {
+            srcLang = 'de';
+        }
         const cleanKey = text.toLowerCase().trim();
         const cacheKey = `${srcLang}_${targetLang}_${cleanKey}`;
 
@@ -1252,7 +1327,7 @@ class ReadingApp {
         if (this.translationCache[cacheKey]) {
             const cachedVal = this.translationCache[cacheKey];
             // If cached value was an untranslated echo of the source word, invalidate it
-            if (cachedVal.toLowerCase() !== cleanKey) {
+            if (typeof cachedVal === 'string' && cachedVal.toLowerCase() !== cleanKey) {
                 return cachedVal;
             }
         }
@@ -2705,13 +2780,14 @@ class ReadingApp {
             throw new Error('Could not extract any readable chapters from the EPUB.');
         }
 
+        const detectedLang = this.detectBookLanguage(chapters, rawLang);
         const safeId = 'epub-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
         return {
             id: safeId,
             title: bookTitle,
             author: bookAuthor,
-            language: bookLang,
-            languageName: langMap[bookLang] || bookLang.toUpperCase(),
+            language: detectedLang.code,
+            languageName: detectedLang.name,
             targetLanguage: 'en',
             description: `EPUB Book • ${chapters.length} chapters`,
             difficulty: 'Custom EPUB',
